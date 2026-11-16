@@ -12,7 +12,7 @@ from aerospike_helpers.expressions import vector as vector_exp
 from aerospike_helpers.operations import expression_operations as exp_ops
 from aerospike_helpers.operations import operations as base_ops
 
-from .config_helpers import SERVICE_CONTEXT, dynamic_config
+from .server_config_helpers import SERVICE_CONTEXT, set_server_dynamic_config
 
 # ---------------------------------------------------------------------------
 # Unit tests - no server required. Verifies VectorBin/VectorDistance compile
@@ -169,7 +169,7 @@ class TestVectorExpressionsIntegration(object):
     # dynamic, so each value is set on every node for the test and the original is restored afterwards.
     @pytest.fixture(params=["float", "double"])
     def vector_distance_precision(self, request) -> Iterator[str]:
-        with dynamic_config(
+        with set_server_dynamic_config(
             self.as_connection, context=SERVICE_CONTEXT, name="vector-distance-precision", value=request.param
         ):
             yield request.param

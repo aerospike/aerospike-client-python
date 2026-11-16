@@ -26,8 +26,14 @@ from aerospike_helpers.operations import expression_operations as exp_ops
 from aerospike_helpers.operations import hll_operations, list_operations, map_operations, operations
 
 from .as_status_codes import AerospikeStatus
-from .config_helpers import SERVICE_CONTEXT, TEST_NAMESPACE_CONTEXT, dynamic_config, get_config, set_config
 from .index_helpers import ensure_dropped_index, wait_for_index
+from .server_config_helpers import (
+    SERVICE_CONTEXT,
+    TEST_NAMESPACE_CONTEXT,
+    get_server_config,
+    set_server_config,
+    set_server_dynamic_config,
+)
 from .test_base_class import TestBaseClass
 from .test_expressions_vector import dot_product, euclidean_squared
 from .test_vector import MAX_DIMENSIONS, NAN_FLOAT32_VECTOR, TestVectorUnit
@@ -666,7 +672,7 @@ class TestGeneralPlanIntegration:
     def test_distance_follows_precision_setting(
         self, precision: str, factory: Callable, stored: list, query_values: list, as_float: float, as_double: float
     ):
-        with dynamic_config(
+        with set_server_dynamic_config(
             self.as_connection, context=SERVICE_CONTEXT, name="vector-distance-precision", value=precision
         ):
             result = self._dot_product_at_precision(factory, stored, query_values)
@@ -687,17 +693,18 @@ class TestGeneralPlanIntegration:
         query.order_by("dist", DOUBLE, DESC)
         query.top_k = 1000
 
-        original = get_config(self.as_connection, context=SERVICE_CONTEXT, name="vector-distance-precision")
+        setting = "vector-distance-precision"
+        original = get_server_config(self.as_connection, context=SERVICE_CONTEXT, name=setting)
         try:
-            set_config(self.as_connection, context=SERVICE_CONTEXT, name="vector-distance-precision", value="float")
+            set_server_config(self.as_connection, context=SERVICE_CONTEXT, name=setting, value="float")
         except e.RoleViolation:
-            pytest.skip("set-config of vector-distance-precision needs the sys-admin privilege")
+            pytest.skip(f"set-config of {setting} needs the sys-admin privilege")
         done = False
 
         def flip() -> None:
             value = "double"
             while not done:
-                set_config(self.as_connection, context=SERVICE_CONTEXT, name="vector-distance-precision", value=value)
+                set_server_config(self.as_connection, context=SERVICE_CONTEXT, name=setting, value=value)
                 value = "float" if value == "double" else "double"
 
         try:
@@ -709,7 +716,7 @@ class TestGeneralPlanIntegration:
                     done = True
                 flipper.result()
         finally:
-            set_config(self.as_connection, context=SERVICE_CONTEXT, name="vector-distance-precision", value=original)
+            set_server_config(self.as_connection, context=SERVICE_CONTEXT, name=setting, value=original)
         assert all(len(distances) == 1 for distances in runs)
 
     # Vector Phase 1 general test plan: AX-09
@@ -1269,7 +1276,7 @@ class TestGeneralPlanServerSettings:
     def test_rejection_without_error_details(self):
         query = self.as_connection.query(NAMESPACE, self.SET_NAME)
         query.order_by("score", INTEGER, DESC)
-        details_off = dynamic_config(
+        details_off = set_server_dynamic_config(
             self.as_connection, context=SERVICE_CONTEXT, name="error-details-max-verbosity", value="off"
         )
         with details_off:
@@ -1278,7 +1285,7 @@ class TestGeneralPlanServerSettings:
         assert excinfo.value.msg.endswith(" AEROSPIKE_ERR_REQUEST_INVALID")
 
     def _max_run_time_of_1_ms(self) -> Any:
-        return dynamic_config(
+        return set_server_dynamic_config(
             self.as_connection, context=TEST_NAMESPACE_CONTEXT, name="query-max-run-time-ms", value="1"
         )
 
@@ -1306,7 +1313,7 @@ class TestGeneralPlanServerSettings:
             except e.ForbiddenError as error:
                 return error
 
-        with dynamic_config(self.as_connection, context=SERVICE_CONTEXT, name="top-k-max-jobs", value="1"):
+        with set_server_dynamic_config(self.as_connection, context=SERVICE_CONTEXT, name="top-k-max-jobs", value="1"):
             with ThreadPoolExecutor(max_workers=16) as pool:
                 outcomes = [future.result(timeout=120) for future in [pool.submit(run) for _ in range(16)]]
         for outcome in outcomes:
