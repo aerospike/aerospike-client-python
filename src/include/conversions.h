@@ -257,8 +257,13 @@ as_status validate_operations_count(as_error *err, Py_ssize_t ops_count);
 
 // Operation counts at or above this are kept on the heap. 65,535 operations
 // take about 4 MB, and python.exe's main thread stack on Windows is 2 MB.
-// Keep in sync with AS_STACK_BINS_MAX in the C client's as_command.h, which
-// explains the threshold.
+//
+// Below 1,000, the operations (64 bytes each) take at most about 64 KB of
+// stack, which leaves most of a 512 KB macOS secondary thread stack for the C
+// client, whose bins and buffers for the same command can take about 70 KB more.
+// Commands this small are the common case, and they avoid a heap allocation.
+//
+// Keep in sync with AS_STACK_BINS_MAX in the C client's as_command.h.
 #define MAX_STACK_OPERATIONS 1000
 
 // Like as_record_init_auto() and as_queue_init_auto() in the C client's
