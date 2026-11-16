@@ -175,14 +175,13 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
                                    as_exp **exp_list, as_error *err,
                                    bool allow_base64_encoded_exprs);
 
-// only_from_partition_status: make *ps only when py_partition_filter has partition_status.
-// The C client refuses a Top-K query with partition status, since that resumes an earlier query.
+// is_top_k_query: make *ps only when py_partition_filter has partition_status. The C client
+// refuses a Top-K query with partition status, since that resumes an earlier query.
 as_status convert_partition_filter(AerospikeClient *self,
                                    PyObject *py_partition_filter,
                                    as_partition_filter *partition_filter,
                                    as_partitions_status **ps,
-                                   bool only_from_partition_status,
-                                   as_error *err);
+                                   bool is_top_k_query, as_error *err);
 
 as_status get_int_from_py_int(as_error *err, PyObject *py_long,
                               int *int_pointer, const char *py_object_name);

@@ -66,8 +66,7 @@ as_status convert_partition_filter(AerospikeClient *self,
                                    PyObject *py_partition_filter,
                                    as_partition_filter *filter,
                                    as_partitions_status **pss,
-                                   bool only_from_partition_status,
-                                   as_error *err)
+                                   bool is_top_k_query, as_error *err)
 {
     as_partitions_status *parts_all = NULL;
     as_partition_status *ps = NULL;
@@ -178,7 +177,7 @@ as_status convert_partition_filter(AerospikeClient *self,
         }
     }
 
-    if (only_from_partition_status && !parts_stat) {
+    if (is_top_k_query && !parts_stat) {
         return err->code;
     }
 
