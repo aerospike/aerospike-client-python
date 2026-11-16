@@ -213,7 +213,7 @@ class TestGeneralPlanIntegration:
         self.as_connection.put(key, bins, policy=policy)
         return key
 
-    def _read(self, key: tuple, expression: list, flags: int = aerospike.EXP_READ_DEFAULT) -> Any:
+    def _expression_read(self, key: tuple, expression: list, flags: int = aerospike.EXP_READ_DEFAULT) -> Any:
         _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("r", expression, flags)])
         return bins["r"]
 
@@ -315,7 +315,7 @@ class TestGeneralPlanIntegration:
         vector = Vector.of_int32([3, -4, 5])
         key = self._put("expression-write", {"embedding": vector})
         self.as_connection.operate(key, [exp_ops.expression_write("copy", exp.VectorBin("embedding").compile())])
-        assert self._read(key, exp.BinType("copy").compile()) == aerospike.AS_BYTES_VECTOR
+        assert self._expression_read(key, exp.BinType("copy").compile()) == aerospike.AS_BYTES_VECTOR
         copy = self.as_connection.get(key)[2]["copy"]
         assert isinstance(copy, Vector)
         assert bytes(copy) == bytes(vector)
@@ -396,8 +396,8 @@ class TestGeneralPlanIntegration:
         time.sleep(0.01)
         vector = Vector.of_float32([2.0, 3.0])
         newer = self._put("newer", {"embedding": vector})
-        threshold = self._read(newer, exp.LastUpdateTime().compile())
-        assert self._read(older, exp.LastUpdateTime().compile()) < threshold
+        threshold = self._expression_read(newer, exp.LastUpdateTime().compile())
+        assert self._expression_read(older, exp.LastUpdateTime().compile()) < threshold
 
         policy = {"expressions": exp.GE(exp.LastUpdateTime(), threshold).compile()}
         records = self.as_connection.scan(NAMESPACE, self.set_name).results(policy)
@@ -649,10 +649,10 @@ class TestGeneralPlanIntegration:
         key = self._put("huge", {"id": "huge", "embedding": huge})
         self._put("small", {"id": "small", "embedding": Vector.of_float32([1.0, 1.0])})
         element = list(huge.value)[0]
-        assert self._read(key, distance(DOT_PRODUCT, huge)) == pytest.approx(2 * element * element)
+        assert self._expression_read(key, distance(DOT_PRODUCT, huge)) == pytest.approx(2 * element * element)
 
         negated = Vector.of_float32([-3e38, -3e38])
-        assert self._read(key, distance(EUCLIDEAN_SQUARED, negated)) == math.inf
+        assert self._expression_read(key, distance(EUCLIDEAN_SQUARED, negated)) == math.inf
         read_dist = exp_ops.expression_read("dist", distance(EUCLIDEAN_SQUARED, negated))
         query = self._query([operations.read("id"), read_dist])
         query.order_by("dist", DOUBLE, ASC)
@@ -671,7 +671,7 @@ class TestGeneralPlanIntegration:
 
     def _dot_product_at_precision(self, factory: Callable, stored: list, query_values: list) -> float:
         key = self._put("precision", {"embedding": factory(stored)})
-        return self._read(key, distance(DOT_PRODUCT, factory(query_values)))
+        return self._expression_read(key, distance(DOT_PRODUCT, factory(query_values)))
 
     # Vector Phase 1 general test plan: AX-08
     @pytest.mark.parametrize("precision", ["float", "double"])
@@ -733,8 +733,8 @@ class TestGeneralPlanIntegration:
         assert len(first) == 262150
         key = self._put("literal", {"first": first, "second": second})
         expected = dot_product(list(first.value), list(second.value))
-        first_against_second = self._read(key, distance(DOT_PRODUCT, first, bin_name="second"))
-        second_against_first = self._read(key, distance(DOT_PRODUCT, second, bin_name="first"))
+        first_against_second = self._expression_read(key, distance(DOT_PRODUCT, first, bin_name="second"))
+        second_against_first = self._expression_read(key, distance(DOT_PRODUCT, second, bin_name="first"))
         assert first_against_second == second_against_first == expected
 
     # Vector Phase 1 general test plan: AX-11
@@ -772,7 +772,7 @@ class TestGeneralPlanIntegration:
         vector = Vector.of_float32([0.5, 1.5])
         key = self._put(0, {"embedding": vector})
         with pytest.raises(e.OpNotApplicable):
-            self._read(key, bin_expression.compile())
+            self._expression_read(key, bin_expression.compile())
         if literal is None:
             literal = bytes(vector)
         with pytest.raises(e.FilteredOut):
