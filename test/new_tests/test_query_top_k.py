@@ -131,13 +131,15 @@ class TestQueryTopKValidation:
         query.order_by("other", aerospike.Query.BinDataType.DOUBLE, aerospike.Query.Order.DESC)
         assert query.top_k == 10
 
+    # Vector Phase 1 general test plan: AT-01
+    @pytest.mark.parametrize("top_k", [1001, 2**20, 2**30, 2**31, 2**32 - 1])
     @pytest.mark.parametrize("api_method, args", [("results", []), ("foreach", [noop_callback])])
-    def test_top_k_out_of_range(self, query, api_method, args):
+    def test_top_k_out_of_range(self, query, api_method, args, top_k: int):
         query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
-        query.top_k = 1001
+        query.top_k = top_k
         with pytest.raises(e.ParamError) as excinfo:
             getattr(query, api_method)(*args)
-        assert excinfo.value.msg == "topK must be in [1, 1000]; got 1001"
+        assert excinfo.value.msg == f"topK must be in [1, 1000]; got {top_k}"
 
     @pytest.mark.parametrize("api_method, args", [("results", []), ("foreach", [noop_callback])])
     def test_top_k_zero(self, query, api_method, args):
@@ -214,8 +216,13 @@ class TestQueryTopKValidation:
             getattr(query, api_method)(*args)
         assert excinfo.value.msg == "Top-K is incompatible with maxRecords"
 
-    def test_top_k_on_background_query(self, query):
-        query.add_ops([operations.write("bin", 1)])
+    # Vector Phase 1 general test plan: AT-09
+    @pytest.mark.parametrize("background", ["operations", "udf"])
+    def test_top_k_on_background_query(self, query, background: str):
+        if background == "operations":
+            query.add_ops([operations.write("bin", 1)])
+        else:
+            query.apply("vector_udf", "write_bin", ["a", 1])
         query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
@@ -721,12 +728,17 @@ class TestQueryTopKServerLimits:
         assert [bins[BIN] for _, _, bins in records] == [99, 2, 1, 0]
 
     # CLIENT-5845 test plan: PQ-21
+    # Vector Phase 1 general test plan: AE-01
     # The server refuses a Top-K query with more than 32,768 operations when the query starts.
     @pytest.mark.parametrize("op_count", [32769, 65535])
     def test_top_k_with_more_than_max_operations(self, op_count: int):
         ops = [operations.read(f"x{i}") for i in range(op_count - 1)]
         with pytest.raises(e.InvalidRequest):
             self._query(ops).results()
+        with pytest.raises(e.InvalidRequest) as excinfo:
+            self._query(ops).results({"error_detail_verbosity": aerospike.ERROR_DETAIL_MESSAGE})
+        # The C client prefixes the server's detail with the node address.
+        assert excinfo.value.msg.endswith(f" request has {op_count} bin ops, max is 32768")
 
     # CLIENT-5845 test plan: PQ-21
     def test_top_k_with_too_many_operations(self):

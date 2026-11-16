@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import math
 import random
-from typing import Optional
+from typing import Iterator, Optional
 
 import pytest
 
@@ -11,6 +11,8 @@ from aerospike_helpers import Vector
 from aerospike_helpers.expressions import vector as vector_exp
 from aerospike_helpers.operations import expression_operations as exp_ops
 from aerospike_helpers.operations import operations as base_ops
+
+from .config_helpers import SERVICE_CONTEXT, dynamic_config
 
 # ---------------------------------------------------------------------------
 # Unit tests - no server required. Verifies VectorBin/VectorDistance compile
@@ -55,10 +57,17 @@ class TestVectorExpressionsUnit(object):
         ).compile()
         assert compiled[2][2] == {"bin": "embedding"}
 
-    def test_unknown_metric_raises_value_error(self):
+    # Vector Phase 1 general test plan: AX-14
+    @pytest.mark.parametrize("metric", [999, None, -1, 3])
+    def test_unknown_metric_raises_value_error(self, metric: Optional[int]):
         query_vector = Vector.of_float32([0.1, 0.2])
-        with pytest.raises(ValueError, match=r"^Unknown VectorDistanceMetric: 999$"):
-            vector_exp.VectorDistance(999, query_vector, "embedding")
+        with pytest.raises(ValueError, match=rf"^Unknown VectorDistanceMetric: {metric}$"):
+            vector_exp.VectorDistance(metric, query_vector, "embedding")
+
+    # Vector Phase 1 general test plan: AX-14
+    def test_missing_metric_raises_type_error(self):
+        with pytest.raises(TypeError, match=r"missing 1 required positional argument: 'metric'$"):
+            vector_exp.VectorDistance(query=Vector.of_float32([0.5]), bin="embedding")
 
     @pytest.mark.parametrize("bad_query", [4, [0.1, 0.2], b"\x01\x03\x01\x00\x00\x00\x00\x00\x00\x00", None])
     def test_non_vector_query_raises_type_error(self, bad_query):
@@ -156,28 +165,14 @@ class TestVectorExpressionsIntegration(object):
         _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("dist", dist_expr)])
         assert bins["dist"] == pytest.approx(expected, rel=1e-6)
 
-    def _set_vector_distance_precision(self, precision: str) -> None:
-        responses = self.as_connection.info_all(f"set-config:context=service;vector-distance-precision={precision}")
-        for error, response in responses.values():
-            assert error is None
-            assert response.strip() == "ok"
-
     # Since server 8.2.1, a distance comes back at the precision of the server's accumulator. The setting is
     # dynamic, so each value is set on every node for the test and the original is restored afterwards.
     @pytest.fixture(params=["float", "double"])
-    def vector_distance_precision(self, request) -> str:
-        service_config = self.as_connection.info_random_node("get-config:context=service")
-        prefix = "vector-distance-precision="
-        settings = [item[len(prefix):] for item in service_config.strip().split(";") if item.startswith(prefix)]
-        if not settings:
-            pytest.fail("vector-distance-precision not in service config")
-        original = settings[0]
-        try:
-            self._set_vector_distance_precision(request.param)
-        except aerospike.exception.RoleViolation:
-            pytest.skip("set-config of vector-distance-precision needs the sys-admin privilege")
-        yield request.param
-        self._set_vector_distance_precision(original)
+    def vector_distance_precision(self, request) -> Iterator[str]:
+        with dynamic_config(
+            self.as_connection, context=SERVICE_CONTEXT, name="vector-distance-precision", value=request.param
+        ):
+            yield request.param
 
     # CLIENT-5845 test plan: PE-01
     @pytest.mark.parametrize("metric, expected", REFERENCE_DISTANCES)
@@ -212,10 +207,11 @@ class TestVectorExpressionsIntegration(object):
     MISMATCH_QUERY_VALUES = [0.5, 0.5]
     MISMATCH_QUERY = Vector.of_float32(MISMATCH_QUERY_VALUES)
 
-    # Record 3 has no distance to the 2-dimension FLOAT32 query vector.
+    # Record 3 has no distance to the 2-dimension FLOAT32 query vector. A None embedding leaves the bin out.
+    # Vector Phase 1 general test plan: AX-03
     @pytest.fixture(
-        params=[Vector.of_float32([1, 2, 3]), Vector.of_int32([1, 2]), 7],
-        ids=["dimension-count", "element-type", "not-a-vector"],
+        params=[Vector.of_float32([1, 2, 3]), Vector.of_int32([1, 2]), 7, None],
+        ids=["dimension-count", "element-type", "not-a-vector", "missing-bin"],
     )
     def mismatched_key(self, request: pytest.FixtureRequest) -> tuple:
         for i, values in self.MISMATCH_STORED.items():
@@ -275,15 +271,21 @@ class TestVectorExpressionsIntegration(object):
         _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("dist", dist_expr)])
         assert bins["dist"] == pytest.approx(expected, rel=1e-3)
 
+    # Vector Phase 1 general test plan: AO-08
+    # Each metric is ranked in its natural direction and in the reverse one.
+    @pytest.mark.parametrize("reverse", [False, True], ids=["natural", "reverse"])
     @pytest.mark.parametrize(
-        "metric, distance, direction",
+        "metric, distance, natural_direction",
         [
             (vector_exp.VectorDistanceMetric.EUCLIDEAN_SQUARED, euclidean_squared, aerospike.Query.Order.ASC),
             (vector_exp.VectorDistanceMetric.DOT_PRODUCT, dot_product, aerospike.Query.Order.DESC),
             (vector_exp.VectorDistanceMetric.COSINE_SIMILARITY, cosine_similarity, aerospike.Query.Order.DESC),
         ],
     )
-    def test_knn_top_k_query_matches_bruteforce(self, metric, distance, direction):
+    def test_knn_top_k_query_matches_bruteforce(self, metric, distance, natural_direction, reverse: bool):
+        direction = natural_direction
+        if reverse:
+            direction = aerospike.Query.Order(1 - natural_direction)
         random.seed(1234)
         stored = {}
         for i in range(20):

@@ -158,13 +158,26 @@ class TestVectorUnit(object):
         source = self._finite_float16_array()
         assert Vector.of_float16(torch.from_numpy(source)).element_bytes() == source.tobytes()
 
-    def test_wire_format_header(self):
-        v = Vector.of_float32([0.1, 0.2, 0.3, 0.4])
-        # 6-byte header: version(1) + element_type(1) + dimensions(4)
-        assert bytes(v)[0] == Vector.VERSION
-        assert bytes(v)[1] == Vector.ElementType.FLOAT32
-        assert bytes(v)[2:6] == (4).to_bytes(4, "little")
-        assert len(bytes(v)) == 6 + 4 * 4  # header + 4 float32 elements
+    # Vector Phase 1 general test plan: AV-01
+    @pytest.mark.parametrize(
+        "factory, element_type, element_format",
+        [
+            ("of_float16", Vector.ElementType.FLOAT16, "e"),
+            ("of_float32", Vector.ElementType.FLOAT32, "f"),
+            ("of_int32", Vector.ElementType.INT32, "i"),
+            ("of_float64", Vector.ElementType.FLOAT64, "d"),
+        ],
+    )
+    def test_wire_format_header(self, factory: str, element_type: Vector.ElementType, element_format: str):
+        values = [1, -2, 3, 4]
+        # 6-byte header: version(1) + element_type(1) + dimensions(4), then little-endian elements
+        header = struct.pack("<BBI", Vector.VERSION, element_type, len(values))
+        elements = struct.pack(f"<{len(values)}{element_format}", *values)
+        assert bytes(getattr(Vector, factory)(values)) == header + elements
+
+    # Vector Phase 1 general test plan: AV-01
+    def test_768_float32_elements_serialize_to_3078_bytes(self):
+        assert len(Vector.of_float32([0.5] * 768)) == 3078
 
     def test_element_bytes_excludes_header(self):
         v = Vector.of_float32([0.1, 0.2, 0.3, 0.4])
