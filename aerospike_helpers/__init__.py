@@ -85,9 +85,9 @@ class Vector(bytes):
     :exc:`~aerospike.exception.ClientError` before anything is sent. A vector can't be
     a record key: a key tuple with one raises :exc:`~aerospike.exception.ParamError`.
 
-    An expression uses a vector value as an opaque blob, so a vector passed directly as an
-    expression value is sent as a blob. For example, an expression that appends it to a list
-    stores a blob in the list, not a vector.
+    Outside :class:`~aerospike_helpers.expressions.vector.VectorDistance`, the server refuses a
+    vector passed as an expression value. For example, an expression that appends it to a list
+    raises :exc:`~aerospike.exception.OpNotApplicable`, since a list or map can't hold a vector.
 
     .. note:: Requires server version >= 8.2.1
 

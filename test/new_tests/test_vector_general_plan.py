@@ -456,22 +456,38 @@ class TestGeneralPlanIntegration:
         assert self.as_connection.get(key)[2] == bins
 
     # Vector Phase 1 general test plan: AS-01
-    # An expression uses a vector value as an opaque blob (the Vector docs), so it's never stored as a vector
-    # in a list or map.
+    # A vector passed directly as an expression value keeps its type too. The product specification gives a
+    # parameter error (4) for a list or map, but 8.2.1.0-66 returns rc 26 for a list or map expression operation,
+    # and refuses a vector value anywhere else in an expression.
     @pytest.mark.parametrize(
-        "bin_name, expression, stored",
+        "bin_name, expression, error, detail",
         [
-            ("l", exp.ListAppend(None, None, Vector.of_float32([0.5]), exp.ListBin("l")), lambda bins: bins["l"][1]),
-            ("m", exp.MapPut(None, None, "b", Vector.of_float32([0.5]), exp.MapBin("m")), lambda bins: bins["m"]["b"]),
+            (
+                "l", exp.ListAppend(None, None, Vector.of_float32([0.5]), exp.ListBin("l")),
+                e.OpNotApplicable, "list_append: list/map cannot hold a vector",
+            ),
+            (
+                "m", exp.MapPut(None, None, "b", Vector.of_float32([0.5]), exp.MapBin("m")),
+                e.OpNotApplicable, "map_add: invalid value - list/map cannot hold a vector",
+            ),
+            (
+                "v", exp.Let(exp.Def("x", Vector.of_float32([0.5])), exp.Var("x")),
+                e.InvalidRequest, "invalid expression in operation request",
+            ),
         ],
-        ids=["list_append", "map_put"],
+        ids=["list_append", "map_put", "bin_write"],
     )
-    def test_vector_as_expression_value_is_sent_as_blob(self, bin_name: str, expression: Any, stored: Callable):
-        key = self._put("value", {"l": [1], "m": {"a": 1}})
-        self.as_connection.operate(key, [exp_ops.expression_write(bin_name, expression.compile())])
-        value = stored(self.as_connection.get(key)[2])
-        assert type(value) is bytes
-        assert value == bytes(Vector.of_float32([0.5]))
+    def test_vector_as_expression_value_is_refused(
+        self, bin_name: str, expression: Any, error: type[e.AerospikeError], detail: str
+    ):
+        bins = {"l": [1], "m": {"a": 1}}
+        key = self._put("value", bins)
+        with pytest.raises(error) as excinfo:
+            self.as_connection.operate(
+                key, [exp_ops.expression_write(bin_name, expression.compile())], policy=DETAIL_POLICY
+            )
+        assert_server_detail(excinfo.value, detail)
+        assert self.as_connection.get(key)[2] == bins
 
     # Vector Phase 1 general test plan: AS-02
     # Append, prepend and increment alone are in test_vector.py (PB-07).
