@@ -445,10 +445,16 @@ class TestGeneralPlanIntegration:
         "operation",
         [
             exp_ops.expression_write(
-                "l", exp.ListAppendItems(None, None, [Vector.of_float32([0.5])], exp.ListBin("l")).compile()
+                "l",
+                exp.ListAppendItems(
+                    ctx=None, policy=None, value=[Vector.of_float32([0.5])], bin=exp.ListBin("l")
+                ).compile(),
             ),
             exp_ops.expression_write(
-                "m", exp.MapPutItems(None, None, {"b": Vector.of_float32([0.5])}, exp.MapBin("m")).compile()
+                "m",
+                exp.MapPutItems(
+                    ctx=None, policy=None, map={"b": Vector.of_float32([0.5])}, bin=exp.MapBin("m")
+                ).compile(),
             ),
             exp_ops.expression_read("r", exp.Eq(exp.ListBin("l"), [Vector.of_float32([0.5])]).compile()),
         ],
@@ -470,11 +476,12 @@ class TestGeneralPlanIntegration:
         "bin_name, expression, error, detail",
         [
             (
-                "l", exp.ListAppend(None, None, Vector.of_float32([0.5]), exp.ListBin("l")),
+                "l", exp.ListAppend(ctx=None, policy=None, value=Vector.of_float32([0.5]), bin=exp.ListBin("l")),
                 e.OpNotApplicable, "list_append: list/map cannot hold a vector",
             ),
             (
-                "m", exp.MapPut(None, None, "b", Vector.of_float32([0.5]), exp.MapBin("m")),
+                "m",
+                exp.MapPut(ctx=None, policy=None, key="b", value=Vector.of_float32([0.5]), bin=exp.MapBin("m")),
                 e.OpNotApplicable, "map_add: invalid value - list/map cannot hold a vector",
             ),
             (
@@ -504,7 +511,7 @@ class TestGeneralPlanIntegration:
             (list_operations.list_size("embedding"), "list read requires list bin, got bin type vector"),
             (list_operations.list_append("embedding", 1), "list modify requires list bin, got bin type vector"),
             (map_operations.map_size("embedding"), "map read requires map bin, got bin type vector"),
-            (map_operations.map_put("embedding", "k", 1), "map modify requires map bin, got bin type vector"),
+            (map_operations.map_put("embedding", key="k", value=1), "map modify requires map bin, got bin type vector"),
             (operations.append("embedding", b"\x00"), APPEND_DETAIL),
             (operations.prepend("embedding", b"\x00"), APPEND_DETAIL),
             (operations.increment("embedding", 1), "cannot increment a vector bin"),
@@ -535,13 +542,13 @@ class TestGeneralPlanIntegration:
 
         with pytest.raises(e.InvalidRequest) as excinfo:
             self.as_connection.index_expr_create(
-                NAMESPACE, self.set_name, aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_BLOB,
-                exp.VectorBin("embedding").compile(), index_name,
+                NAMESPACE, self.set_name, index_type=aerospike.INDEX_TYPE_DEFAULT, index_datatype=aerospike.INDEX_BLOB,
+                expressions=exp.VectorBin("embedding").compile(), name=index_name,
             )
         assert "bad 'exp' - expression type 'vector' does not match expected type 'blob'" in excinfo.value.msg
 
         self.as_connection.index_single_value_create(
-            NAMESPACE, self.set_name, "embedding", aerospike.INDEX_BLOB, index_name
+            NAMESPACE, self.set_name, bin="embedding", index_datatype=aerospike.INDEX_BLOB, name=index_name
         )
         try:
             wait_for_index(self.as_connection, NAMESPACE, index_name)
@@ -911,7 +918,9 @@ class TestGeneralPlanIntegration:
                 bins["n"] = value
             keys.append(self._put(i, bins))
         hll_key = self._key("hll")
-        self.as_connection.operate(hll_key, [operations.write("m", m_values[-1]), hll_operations.hll_init("n", 4)])
+        self.as_connection.operate(
+            hll_key, [operations.write("m", m_values[-1]), hll_operations.hll_init("n", index_bit_count=4)]
+        )
         keys.append(hll_key)
         other_keys = keys[len(integers):]
 
@@ -1036,19 +1045,20 @@ class TestGeneralPlanIntegration:
         query = self._query()
         if index == "range":
             self.as_connection.index_single_value_create(
-                NAMESPACE, self.set_name, "group", aerospike.INDEX_NUMERIC, index_name
+                NAMESPACE, self.set_name, bin="group", index_datatype=aerospike.INDEX_NUMERIC, name=index_name
             )
             query.where(p.between("group", 1, 2))
         elif index == "expression":
             expression = exp.IntBin("group").compile()
             self.as_connection.index_expr_create(
-                NAMESPACE, self.set_name, aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_NUMERIC, expression, index_name
+                NAMESPACE, self.set_name, index_type=aerospike.INDEX_TYPE_DEFAULT,
+                index_datatype=aerospike.INDEX_NUMERIC, expressions=expression, name=index_name,
             )
             query.where_with_expr(expression, p.between(None, 1, 2))
         else:
             ctx = [cdt_ctx.cdt_ctx_map_key("g")]
             self.as_connection.index_single_value_create(
-                NAMESPACE, self.set_name, "m", aerospike.INDEX_NUMERIC, index_name, ctx=ctx
+                NAMESPACE, self.set_name, bin="m", index_datatype=aerospike.INDEX_NUMERIC, name=index_name, ctx=ctx
             )
             query.where(p.between("m", 1, 2), ctx)
         try:
@@ -1067,7 +1077,9 @@ class TestGeneralPlanIntegration:
             self._put(i, {"tags": [i % 3, i % 3 + 1, i % 3], "score": i})
         index_name = "gp_top_k_list"
         ensure_dropped_index(self.as_connection, NAMESPACE, index_name)
-        self.as_connection.index_list_create(NAMESPACE, self.set_name, "tags", aerospike.INDEX_NUMERIC, index_name)
+        self.as_connection.index_list_create(
+            NAMESPACE, self.set_name, bin="tags", index_datatype=aerospike.INDEX_NUMERIC, name=index_name
+        )
         try:
             wait_for_index(self.as_connection, NAMESPACE, index_name)
             query = self._query()
@@ -1198,7 +1210,7 @@ class TestGeneralPlanIntegration:
         original = {"embedding": Vector.of_float32([9.0, 8.0])}
         key = self._put("udf", original)
         with pytest.raises(e.InvalidRequest) as excinfo:
-            self.as_connection.apply(key, vector_udf, function, args, policy=DETAIL_POLICY)
+            self.as_connection.apply(key, module=vector_udf, function=function, args=args, policy=DETAIL_POLICY)
         assert_server_detail(excinfo.value, detail)
         assert self.as_connection.get(key)[2] == original
 
@@ -1207,7 +1219,10 @@ class TestGeneralPlanIntegration:
         valid = Vector.of_float32([1.0, 2.0])
         arguments = [valid, bytes.__new__(Vector, NAN_FLOAT32_VECTOR), Vector.of_int32([3])]
         keys = [self._key(i) for i in range(len(arguments))]
-        applies = [br.Apply(key, vector_udf, "write_bin", ["embedding", value]) for key, value in zip(keys, arguments)]
+        applies = [
+            br.Apply(key, module=vector_udf, function="write_bin", args=["embedding", value])
+            for key, value in zip(keys, arguments)
+        ]
         batch = self.as_connection.batch_write(br.BatchRecords(applies))
         assert [record.result for record in batch.batch_records] == [0, e.InvalidRequest.code, 0]
         assert self.as_connection.get(keys[0])[2] == {"embedding": valid}
@@ -1234,7 +1249,7 @@ class TestGeneralPlanIntegration:
     @pytest.mark.parametrize("bytes_type", [99, 200, 255])
     def test_unknown_bytes_type_is_returned_as_bytes(self, vector_udf: str, bytes_type: int):
         key = self._put("typed", {"a": 1})
-        result = self.as_connection.apply(key, vector_udf, "typed_bytes", [bytes_type])
+        result = self.as_connection.apply(key, module=vector_udf, function="typed_bytes", args=[bytes_type])
         assert type(result) is bytes
         assert result == b"\x07\x09"
 
