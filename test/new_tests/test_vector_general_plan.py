@@ -243,7 +243,7 @@ class TestGeneralPlanIntegration:
         ids=["float16", "float32", "float64", "int32"],
     )
     def test_edge_values_round_trip(self, vector: Vector):
-        key = self._put("edge", {"embedding": vector})
+        key = self._put(user_key="edge", bins={"embedding": vector})
         result = self.as_connection.get(key)[2]["embedding"]
         assert isinstance(result, Vector)
         assert bytes(result) == bytes(vector)
@@ -252,7 +252,7 @@ class TestGeneralPlanIntegration:
     def test_buffers_and_lists_are_not_stored_as_vectors(self):
         vector = Vector.of_float32([1.0, 2.0])
         bins = {"bytes": bytes(vector), "bytearray": bytearray(vector), "list": list(vector.value), "vector": vector}
-        key = self._put("types", bins)
+        key = self._put(user_key="types", bins=bins)
         ops = [exp_ops.expression_read(name, exp.BinType(name).compile()) for name in bins]
         _, _, types = self.as_connection.operate(key, ops)
         assert types == {
@@ -282,7 +282,7 @@ class TestGeneralPlanIntegration:
     @pytest.mark.parametrize("factory, max_dims", MAX_DIMENSIONS)
     def test_largest_vector_through_get_and_scan(self, factory: str, max_dims: int, compress: bool):
         vector = getattr(Vector, factory)([i % 100 for i in range(max_dims)])
-        key = self._put("largest", {"embedding": vector})
+        key = self._put(user_key="largest", bins={"embedding": vector})
         policy = {"compress": compress}
         if compress:
             _, _, bins = self.as_connection.get(key, policy=policy)
@@ -295,7 +295,7 @@ class TestGeneralPlanIntegration:
     # transaction read is in TestGeneralPlanStrongConsistency. A scan has no deserialize policy.
     def test_reads_without_deserialize_return_vector(self):
         vector = Vector.of_float32([1.0, -2.0])
-        key = self._put("raw", {"embedding": vector, "list": [1, 2]})
+        key = self._put(user_key="raw", bins={"embedding": vector, "list": [1, 2]})
         policy = {"deserialize": False}
         reads = [operations.read("embedding"), operations.read("list")]
         results = [
@@ -313,7 +313,7 @@ class TestGeneralPlanIntegration:
     # The other write paths are in test_vector.py (PB-04, PC-05).
     def test_expression_write_stores_vector(self):
         vector = Vector.of_int32([3, -4, 5])
-        key = self._put("expression-write", {"embedding": vector})
+        key = self._put(user_key="expression-write", bins={"embedding": vector})
         self.as_connection.operate(key, [exp_ops.expression_write("copy", exp.VectorBin("embedding").compile())])
         assert self._expression_read(key, exp.BinType("copy").compile()) == aerospike.AS_BYTES_VECTOR
         copy = self.as_connection.get(key)[2]["copy"]
@@ -329,7 +329,7 @@ class TestGeneralPlanIntegration:
             "f64": Vector.of_float64([1e-300, 2.5]),
             "n": 1,
         }
-        keys = [self._put(i, written) for i in range(3)]
+        keys = [self._put(user_key=i, bins=written) for i in range(3)]
 
         _, _, bins = self.as_connection.get(keys[0])
         self.as_connection.put(keys[0], bins)
@@ -357,7 +357,7 @@ class TestGeneralPlanIntegration:
     def test_projection_paging_and_metadata_only(self, command: str):
         vectors = {i: Vector.of_float32([i, -i]) for i in range(7)}
         for i, vector in vectors.items():
-            self._put(i, {"n": i, "embedding": vector, "other": "x"})
+            self._put(user_key=i, bins={"n": i, "embedding": vector, "other": "x"})
 
         def new_job() -> Any:
             return getattr(self.as_connection, command)(NAMESPACE, self.set_name)
@@ -392,10 +392,10 @@ class TestGeneralPlanIntegration:
 
     # Vector Phase 1 general test plan: AW-07
     def test_scan_with_last_update_time_filter(self):
-        older = self._put("older", {"embedding": Vector.of_float32([1.0])})
+        older = self._put(user_key="older", bins={"embedding": Vector.of_float32([1.0])})
         time.sleep(0.01)
         vector = Vector.of_float32([2.0, 3.0])
-        newer = self._put("newer", {"embedding": vector})
+        newer = self._put(user_key="newer", bins={"embedding": vector})
         threshold = self._expression_read(newer, exp.LastUpdateTime().compile())
         assert self._expression_read(older, exp.LastUpdateTime().compile()) < threshold
 
@@ -405,7 +405,7 @@ class TestGeneralPlanIntegration:
 
     # Vector Phase 1 general test plan: AW-08
     def test_vector_bin_replaced_cleared_and_deleted(self):
-        key = self._put("replace", {"embedding": Vector.of_float32([1.0, 2.0]), "n": 1})
+        key = self._put(user_key="replace", bins={"embedding": Vector.of_float32([1.0, 2.0]), "n": 1})
         replacements = [Vector.of_int32([1, 2, 3]), Vector.of_float16([0.5]), 7, None]
         for gen, value in enumerate(replacements, start=2):
             self.as_connection.put(key, {"embedding": value}, policy={"ttl": aerospike.TTL_NEVER_EXPIRE})
@@ -431,7 +431,7 @@ class TestGeneralPlanIntegration:
             "l": [1, 2],
             "m": {"k": 1.5},
         }
-        key = self._put("several", bins)
+        key = self._put(user_key="several", bins=bins)
         assert self.as_connection.get(key)[2] == bins
 
         replacement = Vector.of_float32([9.0])
@@ -462,7 +462,7 @@ class TestGeneralPlanIntegration:
     )
     def test_vector_in_expression_collection_literal_is_refused(self, operation: dict):
         bins = {"l": [1], "m": {"a": 1}}
-        key = self._put("literal", bins)
+        key = self._put(user_key="literal", bins=bins)
         with pytest.raises(e.InvalidRequest):
             self.as_connection.operate(key, [operation])
         assert self.as_connection.get(key)[2] == bins
@@ -495,7 +495,7 @@ class TestGeneralPlanIntegration:
         self, bin_name: str, expression: Any, error: type[e.AerospikeError], detail: str
     ):
         bins = {"l": [1], "m": {"a": 1}}
-        key = self._put("value", bins)
+        key = self._put(user_key="value", bins=bins)
         with pytest.raises(error) as excinfo:
             self.as_connection.operate(
                 key, [exp_ops.expression_write(bin_name, expression.compile())], policy=DETAIL_POLICY
@@ -520,7 +520,7 @@ class TestGeneralPlanIntegration:
     )
     def test_operation_on_vector_bin_with_another_write(self, operation: dict, detail: str):
         bins = {"embedding": Vector.of_float32([0.5, 1.5]), "n": 1}
-        key = self._put("modify", bins)
+        key = self._put(user_key="modify", bins=bins)
         with pytest.raises(e.BinIncompatibleType) as excinfo:
             self.as_connection.operate(key, [operations.write("n", 2), operation], policy=DETAIL_POLICY)
         assert_server_detail(excinfo.value, detail)
@@ -530,8 +530,8 @@ class TestGeneralPlanIntegration:
     # The client has no vector index type, so the vector-type index is sent as a raw info command.
     def test_no_index_holds_vector_values(self):
         vector = Vector.of_float32([0.5, 1.5])
-        self._put("vector", {"embedding": vector})
-        self._put("blob", {"embedding": bytes(vector)})
+        self._put(user_key="vector", bins={"embedding": vector})
+        self._put(user_key="blob", bins={"embedding": bytes(vector)})
         index_name = "gp_vector_blob_index"
         ensure_dropped_index(self.as_connection, NAMESPACE, index_name)
 
@@ -570,7 +570,7 @@ class TestGeneralPlanIntegration:
             query_values = [0] * dimensions
             query_values[-1] = -3
             query_vector = getattr(Vector, factory)(query_values)
-            key = self._put(dimensions, {"embedding": getattr(Vector, factory)(stored)})
+            key = self._put(user_key=dimensions, bins={"embedding": getattr(Vector, factory)(stored)})
             ops = [
                 exp_ops.expression_read(name, distance(metric, query_vector))
                 for name, metric in (("sq", EUCLIDEAN_SQUARED), ("dot", DOT_PRODUCT), ("cos", COSINE_SIMILARITY))
@@ -587,7 +587,7 @@ class TestGeneralPlanIntegration:
     def test_filter_at_distance_threshold(self, comparison: type, expected: list):
         # The squared distances to the zero vector are 1, 2 and 3.
         for i, values in {1: [1, 0, 0], 2: [1, 1, 0], 3: [1, 1, 1]}.items():
-            self._put(i, {"id": i, "embedding": Vector.of_float32(values)})
+            self._put(user_key=i, bins={"id": i, "embedding": Vector.of_float32(values)})
         dist = vector_exp.VectorDistance(EUCLIDEAN_SQUARED, Vector.of_float32([0, 0, 0]), "embedding")
         policy = {"expressions": comparison(dist, 2.0).compile()}
         records = self._query().results(policy)
@@ -596,7 +596,7 @@ class TestGeneralPlanIntegration:
     # Vector Phase 1 general test plan: AX-05
     def test_same_distance_on_every_path(self):
         random.seed(5)
-        key = self._put(0, {"embedding": Vector.of_float32([random.uniform(-1, 1) for _ in range(16)])})
+        key = self._put(user_key=0, bins={"embedding": Vector.of_float32([random.uniform(-1, 1) for _ in range(16)])})
         query_vector = Vector.of_float32([random.uniform(-1, 1) for _ in range(16)])
         dist = distance(COSINE_SIMILARITY, query_vector)
         read_dist = exp_ops.expression_read("dist", dist)
@@ -614,7 +614,7 @@ class TestGeneralPlanIntegration:
 
     # Vector Phase 1 general test plan: AX-06
     def test_distance_compared_with_integer_literal(self):
-        key = self._put(0, {"embedding": Vector.of_float32([1.0, 2.0])})
+        key = self._put(user_key=0, bins={"embedding": Vector.of_float32([1.0, 2.0])})
         dist = vector_exp.VectorDistance(EUCLIDEAN_SQUARED, Vector.of_float32([0.0, 0.0]), "embedding")
         filter_policy: dict = DETAIL_POLICY | {"expressions": exp.GT(dist, 5).compile()}
         with pytest.raises(e.InvalidRequest) as excinfo:
@@ -635,7 +635,7 @@ class TestGeneralPlanIntegration:
         ids=["empty", "short-header", "version-2"],
     )
     def test_malformed_query_vector(self, raw: bytes):
-        key = self._put(0, {"embedding": Vector.of_float32([1.0, 2.0])})
+        key = self._put(user_key=0, bins={"embedding": Vector.of_float32([1.0, 2.0])})
         dist = distance(EUCLIDEAN_SQUARED, bytes.__new__(Vector, raw))
         with pytest.raises(e.InvalidRequest) as excinfo:
             self.as_connection.operate(key, [exp_ops.expression_read("r", dist)], policy=DETAIL_POLICY)
@@ -646,8 +646,8 @@ class TestGeneralPlanIntegration:
     # overflows even so, and ranks as +Inf. FLOAT64 overflow is in test_expressions_vector.py (PE-05).
     def test_float32_distance_overflow(self):
         huge = Vector.of_float32([3e38, 3e38])
-        key = self._put("huge", {"id": "huge", "embedding": huge})
-        self._put("small", {"id": "small", "embedding": Vector.of_float32([1.0, 1.0])})
+        key = self._put(user_key="huge", bins={"id": "huge", "embedding": huge})
+        self._put(user_key="small", bins={"id": "small", "embedding": Vector.of_float32([1.0, 1.0])})
         element = list(huge.value)[0]
         assert self._expression_read(key, distance(DOT_PRODUCT, huge)) == pytest.approx(2 * element * element)
 
@@ -670,7 +670,7 @@ class TestGeneralPlanIntegration:
     PRECISION_IDS = ["float16", "int32", "float32", "float64"]
 
     def _dot_product_at_precision(self, factory: Callable, stored: list, query_values: list) -> float:
-        key = self._put("precision", {"embedding": factory(stored)})
+        key = self._put(user_key="precision", bins={"embedding": factory(stored)})
         return self._expression_read(key, distance(DOT_PRODUCT, factory(query_values)))
 
     # Vector Phase 1 general test plan: AX-08
@@ -731,7 +731,7 @@ class TestGeneralPlanIntegration:
         first = Vector.of_float16([(i % 7) - 3 for i in range(131072)])
         second = Vector.of_float16([(i % 5) - 2 for i in range(131072)])
         assert len(first) == 262150
-        key = self._put("literal", {"first": first, "second": second})
+        key = self._put(user_key="literal", bins={"first": first, "second": second})
         expected = dot_product(list(first.value), list(second.value))
         first_against_second = self._expression_read(key, distance(DOT_PRODUCT, first, bin_name="second"))
         second_against_first = self._expression_read(key, distance(DOT_PRODUCT, second, bin_name="first"))
@@ -741,7 +741,7 @@ class TestGeneralPlanIntegration:
     def test_vector_expressions_on_every_node(self):
         vectors = {i: Vector.of_float32([i, -i, 0.5]) for i in range(64)}
         for i, vector in vectors.items():
-            self._put(i, {"id": i, "embedding": vector})
+            self._put(user_key=i, bins={"id": i, "embedding": vector})
         query_vector = Vector.of_float32([1.0, 2.0, 3.0])
         dist = vector_exp.VectorDistance(EUCLIDEAN_SQUARED, query_vector, "embedding")
         query = self._query(
@@ -770,7 +770,7 @@ class TestGeneralPlanIntegration:
     )
     def test_other_bin_type_expression_on_vector_bin(self, bin_expression: Any, literal: Any):
         vector = Vector.of_float32([0.5, 1.5])
-        key = self._put(0, {"embedding": vector})
+        key = self._put(user_key=0, bins={"embedding": vector})
         with pytest.raises(e.OpNotApplicable):
             self._expression_read(key, bin_expression.compile())
         if literal is None:
@@ -781,8 +781,11 @@ class TestGeneralPlanIntegration:
     # Vector Phase 1 general test plan: AX-15
     def test_batch_and_query_with_vector_that_cannot_be_compared(self):
         vectors = {0: [0.0, 0.0], 1: [1.0, 1.0], 2: [2.0, 2.0]}
-        keys = [self._put(i, {"id": i, "embedding": Vector.of_float32(values)}) for i, values in vectors.items()]
-        keys.append(self._put(3, {"id": 3, "embedding": Vector.of_float32([1.0, 2.0, 3.0])}))
+        keys = [
+            self._put(user_key=i, bins={"id": i, "embedding": Vector.of_float32(values)})
+            for i, values in vectors.items()
+        ]
+        keys.append(self._put(user_key=3, bins={"id": 3, "embedding": Vector.of_float32([1.0, 2.0, 3.0])}))
         query_vector = Vector.of_float32([0.0, 0.0])
         dist = vector_exp.VectorDistance(EUCLIDEAN_SQUARED, query_vector, "embedding")
         written = Vector.of_float16([0.5])
@@ -828,7 +831,7 @@ class TestGeneralPlanIntegration:
     # (test_top_k_with_resumed_partition_filter in test_query_top_k.py).
     @pytest.mark.parametrize("count", [4096, 2048])
     def test_top_k_with_new_partition_filter(self, count: int):
-        keys = [self._put(i, {"n": i}) for i in range(40)]
+        keys = [self._put(user_key=i, bins={"n": i}) for i in range(40)]
         in_range = [key[2] for key in keys if partition_id(key) < count]
         expected = sorted(in_range, reverse=True)[:5]
         partition_filter = {"partition_filter": {"begin": 0, "count": count}}
@@ -849,7 +852,7 @@ class TestGeneralPlanIntegration:
     # As for any query, the selected bins are ignored with a deprecation warning.
     def test_top_k_with_selected_bins_and_operations(self):
         for i in range(5):
-            self._put(i, {"n": i, "other": "x"})
+            self._put(user_key=i, bins={"n": i, "other": "x"})
         query = self._query([operations.read("n")])
         with pytest.warns(DeprecationWarning, match=r"^Operations and bin names are mutually exclusive\."):
             query.select("other")
@@ -871,7 +874,7 @@ class TestGeneralPlanIntegration:
     def test_order_by_integer_extremes(self, direction: int):
         values = [2**63 - 1, -(2**63), 0, 1, -1, 2**62, -(2**62)]
         for i, value in enumerate(values):
-            self._put(i, {"n": value})
+            self._put(user_key=i, bins={"n": value})
         records = self._ranked("n", INTEGER, direction, len(values))
         assert [bins["n"] for _, _, bins in records] == sorted(values, reverse=direction == DESC)
 
@@ -891,7 +894,7 @@ class TestGeneralPlanIntegration:
             bins = {"i": i}
             if value is not None:
                 bins["n"] = value
-            self._put(i, bins)
+            self._put(user_key=i, bins=bins)
         records = self._ranked("n", DOUBLE, direction, len(values))
         returned = []
         for _, _, bins in records:
@@ -916,7 +919,7 @@ class TestGeneralPlanIntegration:
             bins = {"m": m_values[i]}
             if value is not None:
                 bins["n"] = value
-            keys.append(self._put(i, bins))
+            keys.append(self._put(user_key=i, bins=bins))
         hll_key = self._key("hll")
         self.as_connection.operate(
             hll_key, [operations.write("m", m_values[-1]), hll_operations.hll_init("n", index_bit_count=4)]
@@ -939,8 +942,8 @@ class TestGeneralPlanIntegration:
     # Vector Phase 1 general test plan: AO-05
     # A single run's digest tie-break is in test_query_top_k.py (PQ-02). This checks repeated runs agree.
     def test_ties_at_k_boundary_are_stable(self):
-        keys = [self._put(i, {"n": 1}) for i in range(10)]
-        self._put("top", {"n": 2})
+        keys = [self._put(user_key=i, bins={"n": 1}) for i in range(10)]
+        self._put(user_key="top", bins={"n": 2})
         expected = sorted(aerospike.calc_digest(*key) for key in keys)[:3]
         runs = [[key[3] for key, _, _ in self._ranked("n", INTEGER, DESC, 4)[1:]] for _ in range(5)]
         assert runs == [expected] * 5
@@ -948,7 +951,7 @@ class TestGeneralPlanIntegration:
     # Vector Phase 1 general test plan: AO-10
     def test_order_by_computed_value_then_stored_bin(self):
         for n in range(15):
-            self._put(n, {"n": n})
+            self._put(user_key=n, bins={"n": n})
         offset = exp.Abs(exp.Sub(exp.IntBin("n"), 7)).compile()
         query = self._query([operations.read("n"), exp_ops.expression_read("offset", offset)])
         query.order_by("offset", INTEGER, ASC)
@@ -971,7 +974,7 @@ class TestGeneralPlanIntegration:
                 bins["d"] = rng.choice([-1.5, 0.0, 0.25, 2.0, 1e10])
             if rng.random() < 0.9:
                 bins["b"] = bytes(rng.randrange(256) for _ in range(rng.randrange(3)))
-            records[self._put(i, bins)] = bins
+            records[self._put(user_key=i, bins=bins)] = bins
         key_types = {"i": INTEGER, "d": DOUBLE, "b": BYTES}
 
         def compare(first: tuple, second: tuple, order_keys: list) -> int:
@@ -1014,7 +1017,8 @@ class TestGeneralPlanIntegration:
     def test_distance_order_unaffected_by_projection(self):
         random.seed(12)
         for i in range(20):
-            self._put(i, {"id": i, "embedding": Vector.of_float32([random.uniform(-1, 1) for _ in range(4)])})
+            embedding = Vector.of_float32([random.uniform(-1, 1) for _ in range(4)])
+            self._put(user_key=i, bins={"id": i, "embedding": embedding})
         dist = exp_ops.expression_read("dist", distance(EUCLIDEAN_SQUARED, Vector.of_float32([0.5, -0.25, 0.75, 0.1])))
 
         def ranked(ops: list, bin_name: str, bin_type: int, direction: int) -> list:
@@ -1039,7 +1043,7 @@ class TestGeneralPlanIntegration:
     def test_top_k_with_secondary_index(self, index: str):
         records = {i: (i % 4, (i * 7) % 40) for i in range(40)}
         for i, (group, score) in records.items():
-            self._put(i, {"group": group, "m": {"g": group}, "score": score})
+            self._put(user_key=i, bins={"group": group, "m": {"g": group}, "score": score})
         index_name = f"gp_top_k_{index.replace('-', '_')}"
         ensure_dropped_index(self.as_connection, NAMESPACE, index_name)
         query = self._query()
@@ -1074,7 +1078,7 @@ class TestGeneralPlanIntegration:
     # Vector Phase 1 general test plan: AP-02
     def test_top_k_with_list_index_matching_several_values(self):
         for i in range(20):
-            self._put(i, {"tags": [i % 3, i % 3 + 1, i % 3], "score": i})
+            self._put(user_key=i, bins={"tags": [i % 3, i % 3 + 1, i % 3], "score": i})
         index_name = "gp_top_k_list"
         ensure_dropped_index(self.as_connection, NAMESPACE, index_name)
         self.as_connection.index_list_create(
@@ -1095,7 +1099,7 @@ class TestGeneralPlanIntegration:
     def test_top_k_over_namespace_empty_set_and_few_records(self):
         rank_bin = "gp_ns_rank"
         for i in range(5):
-            self._put(i, {rank_bin: i})
+            self._put(user_key=i, bins={rank_bin: i})
         query = self.as_connection.query(NAMESPACE, None)
         query.order_by(rank_bin, INTEGER, DESC)
         query.top_k = 1000
@@ -1124,7 +1128,7 @@ class TestGeneralPlanIntegration:
     # Vector Phase 1 general test plan: AP-07
     def test_streams_stopped_at_first_record(self):
         for i in range(50):
-            self._put(i, {"score": i})
+            self._put(user_key=i, bins={"score": i})
 
         def first_record() -> list:
             records = []
@@ -1157,7 +1161,7 @@ class TestGeneralPlanIntegration:
     )
     def test_top_k_with_replica_policy(self, replica: int):
         for i in range(30):
-            self._put(i, {"score": i})
+            self._put(user_key=i, bins={"score": i})
         query = self._query()
         query.order_by("score", INTEGER, DESC)
         query.top_k = 10
@@ -1178,7 +1182,7 @@ class TestGeneralPlanIntegration:
     def test_top_k_records_are_exact_and_not_padded(self, top_k: int):
         generations = {}
         for i in range(8):
-            key = self._put(i, {"score": i, "embedding": Vector.of_float32([i])})
+            key = self._put(user_key=i, bins={"score": i, "embedding": Vector.of_float32([i])})
             generations[bytes(aerospike.calc_digest(*key))] = (i, 1)
         for i in (6, 7):
             key = (NAMESPACE, self.set_name, i)
@@ -1208,7 +1212,7 @@ class TestGeneralPlanIntegration:
     )
     def test_udf_writing_invalid_vector(self, vector_udf: str, function: str, args: list, detail: str):
         original = {"embedding": Vector.of_float32([9.0, 8.0])}
-        key = self._put("udf", original)
+        key = self._put(user_key="udf", bins=original)
         with pytest.raises(e.InvalidRequest) as excinfo:
             self.as_connection.apply(key, module=vector_udf, function=function, args=args, policy=DETAIL_POLICY)
         assert_server_detail(excinfo.value, detail)
@@ -1234,7 +1238,7 @@ class TestGeneralPlanIntegration:
     # Adding an integer bin to a float bin can't be built.
     @pytest.mark.parametrize("top_k", [True, False], ids=["top-k", "plain"])
     def test_read_expression_the_server_cannot_build(self, top_k: bool):
-        self._put(0, {"score": 1, "a": 1, "b": 1.5})
+        self._put(user_key=0, bins={"score": 1, "a": 1, "b": 1.5})
         unbuildable = exp.Add(exp.IntBin("a"), exp.FloatBin("b")).compile()
         query = self._query([operations.read("score"), exp_ops.expression_read("bad", unbuildable)])
         if top_k:
@@ -1248,7 +1252,7 @@ class TestGeneralPlanIntegration:
     # The C client returns a blob for a bytes type it doesn't know, and Python returns it as plain bytes.
     @pytest.mark.parametrize("bytes_type", [99, 200, 255])
     def test_unknown_bytes_type_is_returned_as_bytes(self, vector_udf: str, bytes_type: int):
-        key = self._put("typed", {"a": 1})
+        key = self._put(user_key="typed", bins={"a": 1})
         result = self.as_connection.apply(key, module=vector_udf, function="typed_bytes", args=[bytes_type])
         assert type(result) is bytes
         assert result == b"\x07\x09"
