@@ -576,7 +576,7 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
         Py_DECREF(py_ustr);
     }
     else if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "Vector", false)) {
-        as_bytes *bytes;
+        as_bytes *bytes = NULL;
         GET_BYTES_POOL(bytes, static_pool, err);
         if (err->code == AEROSPIKE_OK) {
             uint8_t *buffer = (uint8_t *)PyBytes_AsString(py_obj);
