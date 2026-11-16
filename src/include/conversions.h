@@ -251,21 +251,24 @@ as_status as_string_policy_init_from_pyobject(as_error *err,
                                               PyObject *py_string_policy);
 
 // The C client holds the number of operations in a command in 16 bits, so
-// check the count before passing it to operations_init() or
+// check the count before passing it to as_operations_init_auto() or
 // as_operations_new().
 as_status validate_operations_count(as_error *err, Py_ssize_t ops_count);
 
 // Operation counts at or above this are kept on the heap. 65,535 operations
 // take about 4 MB, and python.exe's main thread stack on Windows is 2 MB.
-// Keep in sync with AS_STACK_BINS_MAX in the C client's as_command.h.
+// Keep in sync with AS_STACK_BINS_MAX in the C client's as_command.h, which
+// explains the threshold.
 #define MAX_STACK_OPERATIONS 1000
 
-#define operations_init(_ops, _count)                                          \
+// Like as_record_init_auto() and as_queue_init_auto() in the C client's
+// as_command.h. Release the operations with as_operations_destroy().
+#define as_operations_init_auto(_ops, _nops)                                   \
     do {                                                                       \
-        if ((_count) < MAX_STACK_OPERATIONS) {                                 \
-            as_operations_inita(_ops, _count);                                 \
+        if ((_nops) < MAX_STACK_OPERATIONS) {                                  \
+            as_operations_inita(_ops, _nops);                                  \
         }                                                                      \
         else {                                                                 \
-            as_operations_init(_ops, _count);                                  \
+            as_operations_init(_ops, _nops);                                   \
         }                                                                      \
     } while (0)

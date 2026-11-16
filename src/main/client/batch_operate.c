@@ -155,7 +155,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
     as_operations ops;
 
     Py_ssize_t ops_size = PyList_Size(py_ops);
-    operations_init(&ops, ops_size);
+    as_operations_init_auto(&ops, ops_size);
 
     PyObject *br_instance = NULL;
 
