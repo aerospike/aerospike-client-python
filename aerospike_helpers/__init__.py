@@ -85,6 +85,10 @@ class Vector(bytes):
     :exc:`~aerospike.exception.ClientError` before anything is sent. A vector can't be
     a record key: a key tuple with one raises :exc:`~aerospike.exception.ParamError`.
 
+    An expression uses a vector value as an opaque blob, so a vector passed directly as an
+    expression value is sent as a blob. For example, an expression that appends it to a list
+    stores a blob in the list, not a vector.
+
     .. note:: Requires server version >= 8.2.1
 
     Construct with one of the ``Vector.of_*()`` factories. ``Vector(raw)`` only decodes
@@ -379,7 +383,8 @@ class Vector(bytes):
     def from_bytes(cls, raw: bytes) -> "Vector":
         """
         Reverse of the wire encode. Validates header size, version, element-type
-        code, and dimensions before trusting the payload.
+        code, and dimensions before trusting the payload, and that the payload holds
+        exactly the declared dimensions.
         """
         if len(raw) < cls._HEADER_SIZE:
             raise ValueError("Vector buffer too short: missing 6-byte header")
@@ -404,7 +409,12 @@ class Vector(bytes):
                 f"Vector buffer too short for declared dimensions: need "
                 f"{expected_len}, got {len(raw)}"
             )
-        self = bytes.__new__(cls, raw[:expected_len])
+        if len(raw) > expected_len:
+            raise ValueError(
+                f"Vector buffer has bytes after the declared dimensions: need "
+                f"{expected_len}, got {len(raw)}"
+            )
+        self = bytes.__new__(cls, raw)
         self._element_type = cls.ElementType(element_type)
         self._dimensions = dimensions
         return self
