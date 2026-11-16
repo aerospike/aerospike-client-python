@@ -457,8 +457,9 @@ class TestGeneralPlanIntegration:
 
     # Vector Phase 1 general test plan: AS-01
     # A vector passed directly as an expression value keeps its type too. The product specification gives a
-    # parameter error (4) for a list or map, but 8.2.1.0-66 returns rc 26 for a list or map expression operation,
-    # and refuses a vector value anywhere else in an expression.
+    # parameter error (4) for a list or map, but 8.2.1.0-66 returns rc 26 for a list or map expression operation.
+    # Expressions have no vector literal, so it refuses a vector value anywhere else in an expression. Writing a
+    # vector bin from another vector bin is test_expression_write_stores_vector (AW-04).
     @pytest.mark.parametrize(
         "bin_name, expression, error, detail",
         [
