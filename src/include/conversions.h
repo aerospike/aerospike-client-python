@@ -28,7 +28,6 @@
 #include <aerospike/aerospike_batch.h>
 #include <aerospike/as_exp.h>
 #include <aerospike/as_partition_filter.h>
-#include <aerospike/as_query.h>
 #include <aerospike/aerospike_stats.h>
 
 #include "types.h"
@@ -176,18 +175,14 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
                                    as_exp **exp_list, as_error *err,
                                    bool allow_base64_encoded_exprs);
 
+// only_from_partition_status: make *ps only when py_partition_filter has partition_status.
+// The C client refuses a Top-K query with partition status, since that resumes an earlier query.
 as_status convert_partition_filter(AerospikeClient *self,
                                    PyObject *py_partition_filter,
                                    as_partition_filter *partition_filter,
-                                   as_partitions_status **ps, as_error *err);
-
-// The C client refuses a Top-K query with partition status, since that resumes an
-// earlier query. convert_partition_filter() makes new status for every partition
-// filter, so unless the caller passed partition_status, this releases it for a
-// Top-K query and sets *pss to NULL.
-void as_partitions_status_release_new_for_top_k(const as_query *query,
-                                                PyObject *py_partition_filter,
-                                                as_partitions_status **pss);
+                                   as_partitions_status **ps,
+                                   bool only_from_partition_status,
+                                   as_error *err);
 
 as_status get_int_from_py_int(as_error *err, PyObject *py_long,
                               int *int_pointer, const char *py_object_name);

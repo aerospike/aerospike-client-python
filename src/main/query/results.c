@@ -21,6 +21,7 @@
 #include <aerospike/aerospike_query.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_query.h>
+#include <aerospike/as_query_topk.h>
 #include <aerospike/as_arraylist.h>
 
 #include "client.h"
@@ -134,16 +135,15 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
         PyObject *py_partition_filter =
             PyDict_GetItemString(py_policy, "partition_filter");
         if (py_partition_filter) {
+            bool is_top_k = as_query_has_topk_settings(&self->query);
             if (convert_partition_filter(self->client, py_partition_filter,
-                                         &partition_filter, &ps,
+                                         &partition_filter, &ps, is_top_k,
                                          &err) == AEROSPIKE_OK) {
                 partition_filter_p = &partition_filter;
             }
             else {
                 goto CLEANUP;
             }
-            as_partitions_status_release_new_for_top_k(
-                &self->query, py_partition_filter, &ps);
         }
     }
     as_error_reset(&err);

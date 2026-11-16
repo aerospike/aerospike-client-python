@@ -21,7 +21,6 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_exp.h>
 #include <aerospike/as_log_macros.h>
-#include <aerospike/as_query_topk.h>
 
 #include "client.h"
 #include "conversions.h"
@@ -66,7 +65,9 @@ as_partitions_status *parts_setup(uint16_t part_begin, uint16_t part_count,
 as_status convert_partition_filter(AerospikeClient *self,
                                    PyObject *py_partition_filter,
                                    as_partition_filter *filter,
-                                   as_partitions_status **pss, as_error *err)
+                                   as_partitions_status **pss,
+                                   bool only_from_partition_status,
+                                   as_error *err)
 {
     as_partitions_status *parts_all = NULL;
     as_partition_status *ps = NULL;
@@ -175,6 +176,10 @@ as_status convert_partition_filter(AerospikeClient *self,
             strncpy((char *)filter->digest.value,
                     (char *)PyUnicode_AsUTF8(value), AS_DIGEST_VALUE_SIZE);
         }
+    }
+
+    if (only_from_partition_status && !parts_stat) {
+        return err->code;
     }
 
     parts_all =
@@ -306,22 +311,4 @@ ERROR_CLEANUP:
     }
 
     return err->code;
-}
-
-void as_partitions_status_release_new_for_top_k(const as_query *query,
-                                                PyObject *py_partition_filter,
-                                                as_partitions_status **pss)
-{
-    if (!*pss || !as_query_has_topk_settings(query)) {
-        return;
-    }
-
-    PyObject *py_parts_stat =
-        PyDict_GetItemString(py_partition_filter, "partition_status");
-    if (py_parts_stat) {
-        return;
-    }
-
-    as_partitions_status_release(*pss);
-    *pss = NULL;
 }
