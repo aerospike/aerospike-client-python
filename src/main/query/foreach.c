@@ -205,8 +205,8 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
             else {
                 goto CLEANUP;
             }
-            release_new_partitions_status_for_top_k(&self->query,
-                                                    py_partition_filter, &ps);
+            as_partitions_status_release_new_for_top_k(
+                &self->query, py_partition_filter, &ps);
         }
     }
 

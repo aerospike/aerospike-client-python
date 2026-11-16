@@ -185,9 +185,9 @@ as_status convert_partition_filter(AerospikeClient *self,
 // earlier query. convert_partition_filter() makes new status for every partition
 // filter, so unless the caller passed partition_status, this releases it for a
 // Top-K query and sets *pss to NULL.
-void release_new_partitions_status_for_top_k(const as_query *query,
-                                             PyObject *py_partition_filter,
-                                             as_partitions_status **pss);
+void as_partitions_status_release_new_for_top_k(const as_query *query,
+                                                PyObject *py_partition_filter,
+                                                as_partitions_status **pss);
 
 as_status get_int_from_py_int(as_error *err, PyObject *py_long,
                               int *int_pointer, const char *py_object_name);

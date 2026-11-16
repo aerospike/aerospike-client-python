@@ -308,9 +308,9 @@ ERROR_CLEANUP:
     return err->code;
 }
 
-void release_new_partitions_status_for_top_k(const as_query *query,
-                                             PyObject *py_partition_filter,
-                                             as_partitions_status **pss)
+void as_partitions_status_release_new_for_top_k(const as_query *query,
+                                                PyObject *py_partition_filter,
+                                                as_partitions_status **pss)
 {
     if (!*pss || !as_query_has_topk_settings(query)) {
         return;
