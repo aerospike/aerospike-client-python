@@ -1038,7 +1038,7 @@ error:
 
 AS_EXTERN extern char *aerospike_client_language;
 
-bool is_python_client_version_set_for_user_agent = false;
+static bool is_python_client_version_set_for_user_agent = false;
 
 void aerospike_free(void *self)
 {
@@ -1339,10 +1339,14 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     // Never freed, since tend and metrics threads of clients that were not
     // closed before interpreter shutdown can still read it after m_free runs.
-    // The original value of aerospike_client_version is not heap allocated.
+    // The original value of aerospike_client_version is not heap allocated,
+    // and is kept if the copy fails.
     if (!is_python_client_version_set_for_user_agent) {
-        aerospike_client_version = cf_strdup(aerospike_module_version);
-        is_python_client_version_set_for_user_agent = true;
+        char *version_copy = cf_strdup(aerospike_module_version);
+        if (version_copy != NULL) {
+            aerospike_client_version = version_copy;
+            is_python_client_version_set_for_user_agent = true;
+        }
     }
     Py_DECREF(py_aerospike_module_version_str);
 
