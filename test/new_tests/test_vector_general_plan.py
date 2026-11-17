@@ -1415,8 +1415,10 @@ class TestGeneralPlanStrongConsistency:
             assert isinstance(read, Vector)
             assert bytes(read) == bytes(vector)
             assert bytes(self.as_connection.get(self.keys[0])[2]["embedding"]) == bytes(original)
-        finally:
-            assert self.as_connection.commit(transaction=txn) == aerospike.COMMIT_OK
+        except Exception:
+            self.as_connection.abort(transaction=txn)
+            raise
+        assert self.as_connection.commit(transaction=txn) == aerospike.COMMIT_OK
         assert bytes(self.as_connection.get(self.keys[0])[2]["embedding"]) == bytes(vector)
 
     # Vector Phase 1 general test plan: AW-13
@@ -1434,7 +1436,6 @@ class TestGeneralPlanStrongConsistency:
         for key, values in zip(self.keys, stored.values()):
             self.as_connection.put(key, {"id": key[2], "embedding": Vector.of_float32(values)})
         txn = aerospike.Transaction()
-        self.as_connection.put(self.keys[0], {"embedding": Vector.of_float32([0.0, 0.0])}, policy={"txn": txn})
 
         def nearest(policy: Optional[dict] = None) -> int:
             query = self.as_connection.query(NAMESPACE, self.SET_NAME)
@@ -1445,8 +1446,11 @@ class TestGeneralPlanStrongConsistency:
             return query.results(policy)[0][2]["id"]
 
         try:
+            self.as_connection.put(self.keys[0], {"embedding": Vector.of_float32([0.0, 0.0])}, policy={"txn": txn})
             assert nearest() == 1
             assert nearest({"txn": txn}) == 1
-        finally:
-            assert self.as_connection.commit(transaction=txn) == aerospike.COMMIT_OK
+        except Exception:
+            self.as_connection.abort(transaction=txn)
+            raise
+        assert self.as_connection.commit(transaction=txn) == aerospike.COMMIT_OK
         assert nearest() == 0
