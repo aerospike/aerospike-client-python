@@ -1,5 +1,5 @@
 """L2 discovery tests of the port-map translator and the seed providers against the default,
-reachable and port-map-range profiles of the discovery-l2-topology action.
+reachable and port-map-range profiles of the l2-proxy harness.
 
 Every node advertises its private address in the standard list, which the client has no route to,
 and is reached through its own Toxiproxy listener. The port-map translator maps each advertised
