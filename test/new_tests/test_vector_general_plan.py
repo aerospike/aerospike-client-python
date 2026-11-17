@@ -895,8 +895,8 @@ class TestGeneralPlanIntegration:
     @pytest.mark.parametrize(
         "direction, expected",
         [
-            (ASC, [-sys.float_info.max, 0.5, sys.float_info.max, "nan", None]),
-            (DESC, ["nan", sys.float_info.max, 0.5, -sys.float_info.max, None]),
+            (ASC, [-sys.float_info.max, 0.5, sys.float_info.max, math.nan, None]),
+            (DESC, [math.nan, sys.float_info.max, 0.5, -sys.float_info.max, None]),
         ],
     )
     def test_order_by_double_extremes_and_missing_bin(self, direction: int, expected: list):
@@ -907,13 +907,8 @@ class TestGeneralPlanIntegration:
                 bins["n"] = value
             self._put(user_key=i, bins=bins)
         records = self._ranked("n", DOUBLE, direction, len(values))
-        returned = []
-        for _, _, bins in records:
-            value = bins.get("n")
-            if value is not None and math.isnan(value):
-                value = "nan"
-            returned.append(value)
-        assert returned == expected
+        returned = [bins.get("n") for _, _, bins in records]
+        assert returned == pytest.approx(expected, nan_ok=True, rel=0, abs=0)
 
     # Vector Phase 1 general test plan: AO-04
     # Records whose n isn't an integer rank last and count toward k. With one key their ties are broken by
