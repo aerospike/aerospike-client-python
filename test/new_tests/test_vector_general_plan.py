@@ -1124,22 +1124,27 @@ class TestGeneralPlanIntegration:
         assert returned == list(range(19, 9, -1))
 
     # Vector Phase 1 general test plan: AP-03
-    def test_top_k_over_namespace_empty_set_and_few_records(self):
+    def test_top_k_over_whole_namespace(self):
         rank_bin = "gp_ns_rank"
         for i in range(5):
             self._put(user_key=i, bins={rank_bin: i})
         query = self.as_connection.query(NAMESPACE, None)
-        query.order_by(rank_bin, INTEGER, DESC)
-        query.top_k = 1000
+        order_top_k(query, bin_name=rank_bin, bin_type=INTEGER, direction=DESC, top_k=1000)
         records = query.results({"expressions": exp.BinExists(rank_bin).compile()})
         assert [bins[rank_bin] for _, _, bins in records] == [4, 3, 2, 1, 0]
 
-        empty = self.as_connection.query(NAMESPACE, "gp_empty_set")
-        empty.order_by(rank_bin, INTEGER, DESC)
-        empty.top_k = 10
-        assert empty.results() == []
+    # Vector Phase 1 general test plan: AP-03
+    def test_top_k_over_empty_set(self):
+        query = self.as_connection.query(NAMESPACE, "gp_empty_set")
+        order_top_k(query, bin_name="score", bin_type=INTEGER, direction=DESC, top_k=10)
+        assert query.results() == []
 
-        assert len(self._ranked(rank_bin, INTEGER, DESC, 1000)) == 5
+    # Vector Phase 1 general test plan: AP-03
+    def test_top_k_above_record_count(self):
+        for i in range(5):
+            self._put(user_key=i, bins={"score": i})
+        records = self._ranked("score", INTEGER, DESC, 1000)
+        assert [bins["score"] for _, _, bins in records] == [4, 3, 2, 1, 0]
 
     # Vector Phase 1 general test plan: AP-04
     @pytest.mark.parametrize("top_k", [1, 1000])
