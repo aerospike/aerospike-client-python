@@ -1038,19 +1038,10 @@ error:
 
 AS_EXTERN extern char *aerospike_client_language;
 
-bool is_python_client_version_set_for_user_agent = false;
+static bool is_python_client_version_set_for_user_agent = false;
 
 void aerospike_free(void *self)
 {
-    // The aerospike module may be created, but initializing the module may fail.
-    // In that case, our module will be cleaned up by the garbage collector and this m_free callback will be called.
-    // We don't want to deallocate aerospike_client_version pointing to a string in data section of memory
-    // That is the default value for the C client
-    if (is_python_client_version_set_for_user_agent) {
-        cf_free(aerospike_client_version);
-        is_python_client_version_set_for_user_agent = false;
-    }
-
     for (unsigned long i = 0; i < sizeof(py_set_name_to_str_lists) /
                                       sizeof(py_set_name_to_str_lists[0]);
          i++) {
@@ -1346,9 +1337,19 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
 
-    // Here we assume that the original value of aerospike_client_version was not heap allocated
-    aerospike_client_version = cf_strdup(aerospike_module_version);
-    is_python_client_version_set_for_user_agent = true;
+    // Never freed, since tend and metrics threads of clients that were not
+    // closed before interpreter shutdown can still read it after m_free runs.
+    // The original value of aerospike_client_version is not heap allocated.
+    if (!is_python_client_version_set_for_user_agent) {
+        char *version_copy = cf_strdup(aerospike_module_version);
+        if (version_copy == NULL) {
+            Py_DECREF(py_aerospike_module_version_str);
+            PyErr_NoMemory();
+            goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
+        }
+        aerospike_client_version = version_copy;
+        is_python_client_version_set_for_user_agent = true;
+    }
     Py_DECREF(py_aerospike_module_version_str);
 
     return py_aerospike_module;
