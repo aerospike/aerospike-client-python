@@ -29,7 +29,7 @@ class DriverProcess:
 
     def __init__(self, seed: str) -> None:
         command = [sys.executable, str(DRIVER), "--seed", seed, "--shape", "pass-through", "--tend-interval", "250",
-                   "--timeout", "1000", "--namespace", "test", "--set", "l5-driver"]
+                   "--timeout", "1000", "--namespace", "test", "--set", "l5-driver", "--client-log", "debug"]
         self.process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
         self.lines = queue.Queue()
         self.messages = []

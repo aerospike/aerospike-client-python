@@ -2,6 +2,8 @@
 
 Builds a client from the flags, runs a retrying load, and writes what the client sees to stdout as JSON
 lines while it answers the commands it reads from stdin. It measures and reports; the harness asserts.
+With --client-log info or debug, the client's messages below warning level go to stderr as
+"client-log t=T LEVEL message" lines, so stdout keeps the contract's warning and error log lines only.
 
 The client exposes neither its partition map nor a node's active flag, so snapshots leave out
 unowned, owners and longestUnownedMs, a node is usable once the client holds it, and every node the
@@ -32,7 +34,13 @@ PROBE_CONNECT_MS = 50
 WATCH_BOUND_MS = 60000
 QUIT_MS = 30000
 KEY_SEARCH_LIMIT = 1000000
-LOG_LEVELS = {aerospike.LOG_LEVEL_ERROR: "ERROR", aerospike.LOG_LEVEL_WARN: "WARN"}
+LOG_LEVELS = {
+    aerospike.LOG_LEVEL_ERROR: "ERROR",
+    aerospike.LOG_LEVEL_WARN: "WARN",
+    aerospike.LOG_LEVEL_INFO: "INFO",
+    aerospike.LOG_LEVEL_DEBUG: "DEBUG",
+}
+CLIENT_LOG = {"warn": aerospike.LOG_LEVEL_WARN, "info": aerospike.LOG_LEVEL_INFO, "debug": aerospike.LOG_LEVEL_DEBUG}
 ON_MISS = {"strict": "strict", "pass-through": "pass_through"}
 
 START_NS = time.monotonic_ns()
@@ -137,6 +145,7 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--set", required=True)
     parser.add_argument("--workers", type=positive, default=4)
     parser.add_argument("--keys", type=positive, default=1000)
+    parser.add_argument("--client-log", choices=CLIENT_LOG, default="warn")
     options = parser.parse_args(argv)
 
     if options.shape == "port-map" and options.port_map is None:
@@ -606,11 +615,16 @@ def main(argv: list[str]) -> int:
     sys.stdout = sys.stderr
 
     def log(level: int, function: str, path: str, line: int, message: str) -> None:
-        level_name = LOG_LEVELS.get(level, str(level))
+        level_name = LOG_LEVELS.get(level, "TRACE")
+        if level > aerospike.LOG_LEVEL_WARN:
+            # One stderr line per message: the harness copies stderr line by line.
+            single_line = message.replace("\r", " ").replace("\n", " ")
+            print(f"client-log t={now()} {level_name} {single_line}", file=sys.stderr, flush=True)
+            return
         out.write({"type": "log", "t": now(), "level": level_name, "message": message})
 
     aerospike.set_log_handler(log)
-    aerospike.set_log_level(aerospike.LOG_LEVEL_WARN)
+    aerospike.set_log_level(CLIENT_LOG[options.client_log])
 
     config = client_config(options)
     try:

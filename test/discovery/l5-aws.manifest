@@ -3,4 +3,7 @@
 # The harness clones the repository without its submodules, so L5_BUILD checks out the C client.
 L5_SETUP='sudo dnf install -y -q gcc make autoconf automake libtool git openssl-devel libyaml-devel zlib-devel python3.12 python3.12-devel python3.12-pip'
 L5_BUILD='git submodule update --init --recursive && python3.12 -m venv .l5-venv && .l5-venv/bin/pip install -q build && .l5-venv/bin/python -m build --wheel && .l5-venv/bin/pip install -q dist/aerospike-*.whl'
-L5_DRIVER='.l5-venv/bin/python test/discovery/l5_driver.py'
+# The harness appends its flags. Client messages up to debug level (node add, remove and address
+# changes, peer and partition-map updates) reach the row log as DRIVER-STDERR client-log lines, in
+# every harness that runs this manifest (L2, L3 and L5).
+L5_DRIVER='.l5-venv/bin/python test/discovery/l5_driver.py --client-log debug'
