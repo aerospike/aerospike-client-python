@@ -1849,8 +1849,8 @@ Metrics
 
         This does not depend on the export timer and works when periodic export is off.
         Gauges are current. Counters stay at their last values. ``nodes_departed`` includes
-        nodes that left and have not yet been cleared by a successful periodic export, unless
-        they rejoined. The caller may keep the snapshot.
+        nodes that left and that some exporter has not yet exported, unless they rejoined; see
+        :attr:`~aerospike_helpers.metrics.MetricsSnapshot.nodes_departed`. The caller may keep the snapshot.
 
         :return: an instance of :py:class:`~aerospike_helpers.metrics.MetricsSnapshot`
         :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.

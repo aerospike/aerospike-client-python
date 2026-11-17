@@ -320,20 +320,25 @@ class MetricsSnapshot:
             are enabled.
         nodes (list[:class:`NodeSnapshot`]): Nodes still in the cluster.
         nodes_departed (list[:class:`NodeSnapshot`]): Final samples for nodes that left, one
-            entry per node name. Included in on-demand snapshots and kept when no exporter is installed.
-            Cleared only after a successful periodic export. A node that rejoins before that export leaves
-            this list, and its entry in ``nodes`` continues the counters and histograms from before it left.
+            entry per node name. Each exporter receives an entry until one of its exports succeeds, so an
+            exporter that fails or is suspended still gets the final sample later. An entry is removed after
+            every exporter has exported it. On-demand snapshots include every entry that is kept and do not
+            remove any. Entries are kept when no exporter is installed. A node that rejoins before that export
+            leaves this list, and its entry in ``nodes`` continues the counters and histograms from before it
+            left.
         nodes_departed_possibly_truncated (bool): True when ``nodes_departed`` has reached its
-            cap of 256 entries. Nodes that departed after that, before the next successful periodic
-            export, may be missing from the list.
+            cap of 256 entries. Nodes that departed after that, before every exporter exported the earlier
+            entries, may be missing from the list.
         latency_columns (int): Number of elapsed time range buckets in each latency histogram.
         latency_shift (int): Power of 2 multiple between latency histogram buckets, starting at bucket 3.
         latency_unit (int): Bucket unit for the latency histograms in this snapshot.
             :data:`~aerospike_helpers.metrics.LATENCY_MILLISECONDS` or
             :data:`~aerospike_helpers.metrics.LATENCY_MICROSECONDS`.
         command_latencies (dict[str, :class:`LatencySnapshot`]): Command latency histograms keyed
-            by ``conn``, ``write``, ``read``, ``batch``, and ``query``. One sample per sampled command
-            for total elapsed time, including retries. A retry can move the command to another node, so
+            by ``conn``, ``write``, ``read``, ``batch``, and ``query``. One sample per successful sampled
+            user call for total elapsed time, including retries. A batch, scan, or query records one sample
+            that covers all of its nodes. A failed call records no sample. A retry can move the command to
+            another node, so
             this series is cluster-wide. Recorded while operational metrics are enabled. An on-demand
             snapshot after :meth:`~aerospike.Client.disable_metrics` still returns the last values.
             The learn-metrics file does not write this series. The ``conn`` entry is
