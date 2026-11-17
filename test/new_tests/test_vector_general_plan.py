@@ -879,9 +879,15 @@ class TestGeneralPlanIntegration:
         assert [bins for _, _, bins in records] == [{"n": 4}, {"n": 3}, {"n": 2}]
 
     def _ranked(
-        self, bin_name: str, bin_type: int, direction: int, top_k: int, then_order_by: Optional[tuple] = None
+        self,
+        bin_name: str,
+        bin_type: int,
+        direction: int,
+        top_k: int,
+        then_order_by: Optional[tuple] = None,
+        ops: Optional[list] = None,
     ) -> list:
-        query = self._query()
+        query = self._query(ops)
         order_top_k(query, bin_name, bin_type, direction, top_k, then_order_by=then_order_by)
         return query.results()
 
@@ -1045,18 +1051,16 @@ class TestGeneralPlanIntegration:
             self._put(user_key=i, bins={"id": i, "embedding": embedding})
         dist = exp_ops.expression_read("dist", distance(EUCLIDEAN_SQUARED, Vector.of_float32([0.5, -0.25, 0.75, 0.1])))
 
-        def ranked(ops: list, bin_name: str, bin_type: int, direction: int) -> list:
-            query = self._query(ops)
-            query.order_by(bin_name, bin_type, direction)
-            query.top_k = 5
-            return [(bins["id"], bins["dist"]) for _, _, bins in query.results()]
-
-        without_vector = ranked([operations.read("id"), dist], "dist", DOUBLE, ASC)
-        with_vector = ranked([operations.read("id"), operations.read("embedding"), dist], "dist", DOUBLE, ASC)
+        records = self._ranked("dist", DOUBLE, ASC, top_k=5, ops=[operations.read("id"), dist])
+        without_vector = [(bins["id"], bins["dist"]) for _, _, bins in records]
+        ops = [operations.read("id"), operations.read("embedding"), dist]
+        records = self._ranked("dist", DOUBLE, ASC, top_k=5, ops=ops)
+        with_vector = [(bins["id"], bins["dist"]) for _, _, bins in records]
         assert with_vector == without_vector
         assert [d for _, d in without_vector] == sorted(d for _, d in without_vector)
 
-        by_id = ranked([operations.read("id"), dist], "id", INTEGER, DESC)
+        records = self._ranked("id", INTEGER, DESC, top_k=5, ops=[operations.read("id"), dist])
+        by_id = [(bins["id"], bins["dist"]) for _, _, bins in records]
         assert [i for i, _ in by_id] == [19, 18, 17, 16, 15]
         assert all(d >= 0 for _, d in by_id)
 
