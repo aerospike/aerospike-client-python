@@ -64,7 +64,7 @@ int AerospikeClientConnect(AerospikeClient *self)
                 // Other clients may share its aerospike* pointer
                 // So it is not safe to destroy it
                 if (!self->has_connected) {
-                    destroy_ip_map(&self->as->config);
+                    destroy_ip_map(&self->ip_map, &self->ip_map_size);
                     aerospike_destroy(self->as);
                 }
                 self->as = as;

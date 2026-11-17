@@ -598,6 +598,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     self->as = NULL;
     self->send_bool_as = SEND_BOOL_AS_AS_BOOL;
     self->validate_keys = false;
+    self->ip_map = NULL;
+    self->ip_map_size = 0;
 
     as_config config;
     as_config_init(&config);
@@ -1396,6 +1398,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         as_config_set_user(&config, username, password);
     }
 
+    self->ip_map = config.ip_map;
+    self->ip_map_size = config.ip_map_size;
     self->as = aerospike_new(&config);
 
     if (AerospikeClientConnect(self) == -1) {
@@ -1503,7 +1507,7 @@ CONSTRUCTOR_ERROR:
 RAISE_EXCEPTION_WITH_AS_ERROR:
     raise_exception(&constructor_err);
 RAISE_EXCEPTION_WITHOUT_AS_ERROR:
-    destroy_ip_map(&config);
+    destroy_ip_map(&config.ip_map, &config.ip_map_size);
     as_config_destroy(&config);
     return -1;
 }
@@ -1615,7 +1619,7 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
     // It is safe to destroy the aerospike structure
     if (client->as) {
         if (!client->has_connected) {
-            destroy_ip_map(&client->as->config);
+            destroy_ip_map(&client->ip_map, &client->ip_map_size);
             aerospike_destroy(client->as);
         }
         else {
@@ -1647,7 +1651,7 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
                     aerospike_close(client->as, &err);
                     Py_END_ALLOW_THREADS
                 }
-                destroy_ip_map(&client->as->config);
+                destroy_ip_map(&client->ip_map, &client->ip_map_size);
                 aerospike_destroy(client->as);
             }
         }

@@ -79,6 +79,10 @@ typedef struct {
     bool use_shared_connection;
     uint8_t send_bool_as;
     bool validate_keys;
+    // The ip_map the constructor allocated. A config file can point as->config.ip_map at a
+    // copy that aerospike_destroy() frees, so only this one is freed by the client.
+    as_addr_map *ip_map;
+    uint32_t ip_map_size;
 } AerospikeClient;
 
 typedef struct {

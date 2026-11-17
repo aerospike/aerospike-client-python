@@ -358,3 +358,23 @@ def test_hosts_needed_without_provider() -> None:
 def test_invalid_config(config: dict[str, Any], message: str) -> None:
     actual = client_raises(e.ParamError, {**OFFLINE, "validate_keys": True, **config})
     assert message in actual
+
+
+# The C client owns an ip_map read from the config file, so the client must free only its own. A
+# subprocess keeps a double free from crashing the test run.
+def test_config_file_ip_map_replaces_ip_map(tmp_path: Any) -> None:
+    config_file = tmp_path / "config.yml"
+    config_file.write_text('version: 1.2.0\nstatic:\n  client:\n    ip_map:\n      "10.0.0.2": "203.0.113.2"\n')
+    script = f"""
+import aerospike
+for fail_if_not_connected in (False, True):
+    for ip_map in ({{}}, {LEGACY_IP_MAP!r}):
+        config = {{**{OFFLINE!r}, "fail_if_not_connected": fail_if_not_connected, "ip_map": ip_map}}
+        try:
+            aerospike.client(config).close()
+        except aerospike.exception.AerospikeError:
+            pass
+"""
+    env = {**os.environ, "AEROSPIKE_CLIENT_CONFIG_URL": f"file://{config_file}"}
+    result = subprocess.run([sys.executable, "-c", script], env=env, capture_output=True, text=True, timeout=60)
+    assert result.returncode == 0, result.stderr
