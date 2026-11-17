@@ -469,7 +469,7 @@ class TestNewListOperations(object):
 
     def test_remove_by_rank_range(self):
         """
-        Remove the 3rd smallest item, a 7 at index 0
+        Remove the 3 smallest items, 5, 6 and 7, in no guaranteed order
         """
         operation = {
             "op": aerospike.OP_LIST_REMOVE_BY_RANK_RANGE,
@@ -480,7 +480,7 @@ class TestNewListOperations(object):
         }
         result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
 
-        assert result == [7, 6, 5]
+        assert sorted(result) == [5, 6, 7]
         _, _, bins = self.as_connection.get(self.test_key)
         assert bins[self.test_bin] == self.test_list[3:]
 

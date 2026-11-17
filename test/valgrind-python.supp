@@ -514,3 +514,10 @@
    fun:AerospikeClient_Type_Init
    fun:AerospikeClient_New
 }
+
+{
+   Valgrind before 3.19 does not replace the dynamic loader's optimized strncmp, which reads past the end of short strings
+   Memcheck:Addr8
+   fun:strncmp
+   fun:is_dst
+}

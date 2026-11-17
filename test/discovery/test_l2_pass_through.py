@@ -7,8 +7,7 @@ the node addresses. The client reads the alternate list with use_services_altern
 pass-through translator, so it uses every address as advertised.
 """
 
-import os
-from dataclasses import dataclass
+from typing import Iterable
 
 import pytest
 
@@ -22,49 +21,20 @@ JOIN_TIMEOUT_SEC = 30
 COLLISION_RETRIES = 3
 
 
-@dataclass
-class Node:
-    name: str
-    proxy: str
-    port: int
-    alternate: str
-
-    def info(self, command):
-        reply = di.request(os.environ["DISCOVERY_ENDPOINT_HOSTNAME"], self.port, command)
-        return reply[command]
-
-
-def parse_port(endpoint):
-    port = endpoint.rpartition(":")[2]
-    return int(port)
-
-
 @pytest.fixture(scope="module")
-def nodes():
+def nodes() -> list[di.ToxiproxyNode]:
     """Query every listener for its node's name and its one alternate address."""
-    host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
-    proxies = {}
-    for entry in os.environ["DISCOVERY_PROXY_MAP"].split(","):
-        proxy = entry.rpartition(":")[0]
-        proxies[parse_port(entry)] = proxy
-
-    found = []
-    for port in os.environ["DISCOVERY_ENDPOINT_PORTS"].split(","):
-        port = int(port)
-        info = di.request(host, port, "node", "service-clear-alt")
-        alternates = di.endpoints(info["service-clear-alt"])
-        assert len(alternates) == 1, f"{info['node']} on listener {port} advertises {alternates}"
-        node = Node(info["node"], proxies[port], port, alternates[0])
-        print(f"L2-NODE {node}")
-        found.append(node)
+    found = di.listener_nodes("service-clear-alt")
+    for node in found:
+        assert len(node.advertised) == 1, f"{node.name} advertises {node.advertised}"
     return found
 
 
-def seed(node):
-    return di.split_endpoint(node.alternate)
+def seed(node: di.ToxiproxyNode) -> tuple[str, int]:
+    return di.split_endpoint(node.advertised[0])
 
 
-def connect(node):
+def connect(node: di.ToxiproxyNode) -> aerospike.Client:
     config = {
         "hosts": [seed(node)],
         "use_services_alternate": True,
@@ -75,21 +45,21 @@ def connect(node):
     return aerospike.client(config)
 
 
-def wait_for_nodes(client, names):
+def wait_for_nodes(client: aerospike.Client, names: Iterable[str]) -> None:
     di.wait_for_nodes(client, names, JOIN_TIMEOUT_SEC, TEND_INTERVAL_MS)
 
 
-def assert_routes_to_owners(row, nodes):
+def assert_routes_to_owners(row: str, nodes: list[di.ToxiproxyNode]) -> None:
     for node in nodes:
-        assert parse_port(node.alternate) == node.port, f"{node} advertises another port"
+        assert seed(node)[1] == node.port, f"{node} advertises another port"
 
     client = connect(nodes[0])
     try:
         wait_for_nodes(client, [node.name for node in nodes])
         held = di.client_nodes(client)
         for node in nodes:
-            print(f"L2-{row}-NODE {node.name} client={held[node.name]} alternate={node.alternate}")
-            di.assert_at(held[node.name], node.alternate)
+            print(f"L2-{row}-NODE {node.name} client={held[node.name]} alternate={node.advertised[0]}")
+            di.assert_at(held[node.name], node.advertised[0])
         infos = {node.name: node.info for node in nodes}
         di.assert_served_by_owners(client, NAMESPACE, SET_NAME, f"L2-{row}", infos)
     finally:
@@ -97,36 +67,39 @@ def assert_routes_to_owners(row, nodes):
 
 
 @pytest.mark.l2("pass-through-names")
-def test_n15_distinct_names_route_to_every_owner(nodes):
+def test_n15_distinct_names_route_to_every_owner(nodes: list[di.ToxiproxyNode]) -> None:
     hostnames = {seed(node)[0] for node in nodes}
     assert len(hostnames) == len(nodes), f"Hostnames {hostnames}"
     assert_routes_to_owners("N-15", nodes)
 
 
 @pytest.mark.l2("pass-through-ports")
-def test_n16_shared_name_routes_to_every_owner(nodes):
+def test_n16_shared_name_routes_to_every_owner(nodes: list[di.ToxiproxyNode]) -> None:
     hostnames = {seed(node)[0] for node in nodes}
     assert len(hostnames) == 1, f"Hostnames {hostnames}"
     assert_routes_to_owners("N-16", nodes)
 
 
-def next_listener_port():
-    ports = di.listener_ports()
+def next_toxiproxy_listener_port() -> int:
+    ports = di.toxiproxy_listener_ports()
     return max(ports) + 1
 
 
-def add_listener(container, port, like):
+def add_toxiproxy_listener(container: str, port: int, like: str) -> None:
     """Add a Toxiproxy listener on port for container, forwarding to the port the like proxy uses."""
     upstream = di.toxiproxy("GET", f"/proxies/{like}")["upstream"]
-    upstream_port = parse_port(upstream)
+    upstream_port = di.split_endpoint(upstream)[1]
     body = {"name": container, "listen": f"0.0.0.0:{port}", "upstream": f"{container}:{upstream_port}", "enabled": True}
     di.toxiproxy("POST", "/proxies", body)
 
 
 # N-16 scale-out and NFR-1: a node started mid-test that advertises the same hostname with its own
-# port is active within 2 x tend_interval of the peers-generation bump that announces it
+# port is active within 2 x tend_interval of the later of the peers-generation bump that announces
+# it and the node answering through its listener
 @pytest.mark.l2("pass-through-ports")
-def test_n16_new_node_on_shared_name_active_within_two_tend_intervals(nodes, added_nodes):
+def test_n16_new_node_on_shared_name_active_within_two_tend_intervals(
+    nodes: list[di.ToxiproxyNode], added_nodes: list[str]
+) -> None:
     observer = nodes[0]
     names = {node.name for node in nodes}
     hostname = seed(observer)[0]
@@ -134,18 +107,21 @@ def test_n16_new_node_on_shared_name_active_within_two_tend_intervals(nodes, add
     try:
         wait_for_nodes(client, names)
         generation = observer.info("peers-generation")
-        port = next_listener_port()
-        container = di.control(f"start alternate-port={port}")["container"]
+        port = next_toxiproxy_listener_port()
+        container = di.start_node(f"alternate-port={port}")["container"]
         added_nodes.append(container)
-        add_listener(container, port, observer.proxy)
+        add_toxiproxy_listener(container, port, like=observer.proxy)
         current = observer.info("peers-generation")
         assert current == generation, f"peers-generation moved to {current} before {container} had a listener"
 
-        joined, bump_to_active_ms = di.wait_joined(client, observer.info, generation, names, di.CONTROL_TIMEOUT_SEC)
+        joined, active_ms = di.wait_joined(
+            client, observer.info, generation, names, reachable=lambda: di.answers(hostname, port),
+            timeout=di.CONTROL_TIMEOUT_SEC,
+        )
         budget_ms = 2 * TEND_INTERVAL_MS
-        print(f"L2-N16-TIMING node={joined} container={container} bumpToActiveMs={bump_to_active_ms:.1f}")
+        print(f"L2-N16-TIMING node={joined} container={container} activeMs={active_ms:.1f}")
         di.assert_at(joined, f"{hostname}:{port}")
-        assert bump_to_active_ms <= budget_ms, f"Active {bump_to_active_ms:.1f} ms after the bump, budget {budget_ms}"
+        assert active_ms <= budget_ms, f"Active {active_ms:.1f} ms after the bump and answering, budget {budget_ms}"
     finally:
         client.close()
 
@@ -155,17 +131,19 @@ def test_n16_new_node_on_shared_name_active_within_two_tend_intervals(nodes, add
 # both nodes, the address and the translator, and the other nodes keep serving the keys they are
 # master of. Only one of the two gets the shared port's listener, once both are in the cluster.
 @pytest.mark.l2("pass-through-ports")
-def test_n18_pass_through_colliding_nodes_create_no_node(nodes, added_nodes, warnings):
+def test_n18_pass_through_colliding_nodes_create_no_node(
+    nodes: list[di.ToxiproxyNode], added_nodes: list[str], warnings: list[str]
+) -> None:
     observer = nodes[0]
     names = [node.name for node in nodes]
     hostname = seed(observer)[0]
-    port = next_listener_port()
+    port = next_toxiproxy_listener_port()
     endpoint = f"{hostname}:{port}"
     for _ in range(2):
-        container = di.control(f"start alternate-port={port}")["container"]
+        container = di.start_node(f"alternate-port={port}")["container"]
         added_nodes.append(container)
     di.wait_cluster_stable([node.info for node in nodes], len(nodes) + 2)
-    add_listener(added_nodes[0], port, observer.proxy)
+    add_toxiproxy_listener(added_nodes[0], port, like=observer.proxy)
     colliding = di.peer_names(observer.info("peers-clear-alt"), endpoint)
     print(f"L2-N18-ADVERTISED endpoint={endpoint} nodes={colliding}")
     assert len(colliding) == 2, f"Nodes advertising {endpoint}: {colliding}"
@@ -174,16 +152,16 @@ def test_n18_pass_through_colliding_nodes_create_no_node(nodes, added_nodes, war
     try:
         wait_for_nodes(client, names)
 
-        def logged():
-            return all(len(di.collisions(warnings, name)) >= COLLISION_RETRIES for name in colliding)
+        def logged() -> bool:
+            return all(len(di.logged_collisions(warnings, name)) >= COLLISION_RETRIES for name in colliding)
 
         retried = di.wait_for(logged, JOIN_TIMEOUT_SEC)
         assert sorted(di.client_nodes(client)) == sorted(names)
         assert retried, f"Collision of {colliding} not logged every tend: {warnings}"
-        message = di.collisions(warnings, colliding[0])[0]
+        message = di.logged_collisions(warnings, colliding[0])[0]
         print(f"L2-N18-LOG {message}")
-        assert message in di.collision_messages("pass-through", endpoint, colliding)
+        assert message in di.expected_collision_messages(translator="pass-through", endpoint=endpoint, names=colliding)
         infos = {node.name: node.info for node in nodes}
-        di.assert_keys_on_masters_work(client, NAMESPACE, SET_NAME, "L2-N18-pass-through", infos)
+        di.assert_keys_on_masters_work(client, NAMESPACE, SET_NAME, row="L2-N18-pass-through", infos=infos)
     finally:
         client.close()

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017-2021 Aerospike, Inc.
+ * Copyright 2017-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
+#include "policy_config.h"
+
 #include <stdint.h>
 
-#include "policy_config.h"
 #include "types.h"
 #include "policy.h"
 #include "conversions.h"

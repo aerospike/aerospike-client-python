@@ -66,8 +66,9 @@ https://github.com/aerospike/aerospike-server/blob/master/as/include/base/datamo
         ("t" * 1000, "07ac412d4c33b8628ab147b8db244ce44ae527f8"),
         ("-" * 10000, "b42e64afbfccb05912a609179228d9249ea1c1a0"),
         ("+" * 100000, "0a3e888c20bb8958537ddd4ba835e4070bd51740"),
+        ("a\x00b", "320289bf5bb91f6c74ae1586203dcc629466a8c1"),
     ),
-    ids=["empty", "s", "10 a's", "100 m's", "1000 t's", "10000 -'s", "100000 +'s"]
+    ids=["empty", "s", "10 a's", "100 m's", "1000 t's", "10000 -'s", "100000 +'s", "zero byte"]
 )
 def test_validate_digest_str(pk, expected):
     digest = aerospike.calc_digest(NAMESPACE, SET, pk)

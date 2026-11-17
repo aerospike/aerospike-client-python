@@ -943,7 +943,7 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
 
     as_operations ops;
     Py_ssize_t size = PyList_Size(py_list);
-    as_operations_inita(&ops, size);
+    as_operations_init_auto(&ops, size);
 
     if (py_policy) {
         if (pyobject_to_policy_operate(self, err, py_policy, &operate_policy,
@@ -1059,15 +1059,18 @@ PyObject *AerospikeClient_Operate(AerospikeClient *self, PyObject *args,
         goto CLEANUP;
     }
 
+    // AerospikeClient_Operate_Invoke() destroys the key
     if (py_list && PyList_Check(py_list)) {
         Py_ssize_t ops_count = PyList_Size(py_list);
         if (validate_operations_count(&err, ops_count) != AEROSPIKE_OK) {
+            as_key_destroy(&key);
             goto CLEANUP;
         }
         py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
                                                    py_meta, py_policy);
     }
     else {
+        as_key_destroy(&key);
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Operations should be of type list");
     }
@@ -1112,7 +1115,7 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
 
     as_operations ops;
     Py_ssize_t ops_list_size = PyList_Size(py_list);
-    as_operations_inita(&ops, ops_list_size);
+    as_operations_init_auto(&ops, ops_list_size);
 
     // For expressions conversion.
     as_exp *exp_list_p = NULL;
@@ -1286,15 +1289,18 @@ PyObject *AerospikeClient_OperateOrdered(AerospikeClient *self, PyObject *args,
         goto CLEANUP;
     }
 
+    // AerospikeClient_OperateOrdered_Invoke() destroys the key
     if (py_list && PyList_Check(py_list)) {
         Py_ssize_t ops_count = PyList_Size(py_list);
         if (validate_operations_count(&err, ops_count) != AEROSPIKE_OK) {
+            as_key_destroy(&key);
             goto CLEANUP;
         }
         py_result = AerospikeClient_OperateOrdered_Invoke(
             self, &err, &key, py_list, py_meta, py_policy);
     }
     else {
+        as_key_destroy(&key);
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Operations should be of type list");
         goto CLEANUP;

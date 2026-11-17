@@ -25,20 +25,20 @@ TLS_PROXY_SUFFIX = "-tls"
 
 
 @dataclass
-class Node:
+class ToxiproxyTlsNode:
     name: str
     port: int
     tls_port: int
     tls_advertised: list
     tls_name: str
 
-    def info(self, command):
+    def info(self, command: str) -> str:
         reply = di.request(os.environ["DISCOVERY_ENDPOINT_HOSTNAME"], self.port, command)
         return reply[command]
 
 
 @pytest.fixture(scope="module")
-def nodes():
+def nodes() -> list[ToxiproxyTlsNode]:
     """Query every clear listener for its node's name, the TLS endpoints it advertises and, from its
     peers, every node's tls-name."""
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
@@ -62,13 +62,14 @@ def nodes():
         tls_advertised = di.endpoints(reply["service-tls-std"])
         assert tls_advertised, f"{name} advertises no TLS address"
         assert tls_names.get(name), f"No peer lists a tls-name for {name}: {tls_names}"
-        node = Node(name, ports[proxy], ports[proxy + TLS_PROXY_SUFFIX], tls_advertised, tls_names[name])
+        node = ToxiproxyTlsNode(name, port=ports[proxy], tls_port=ports[proxy + TLS_PROXY_SUFFIX],
+                                tls_advertised=tls_advertised, tls_name=tls_names[name])
         print(f"L2-NODE {node}")
         found.append(node)
     return found
 
 
-def connect(nodes, seed, tls_name):
+def connect(nodes: list[ToxiproxyTlsNode], seed: ToxiproxyTlsNode, tls_name: str) -> aerospike.Client:
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
     port_map = {advertised: f"{host}:{node.tls_port}" for node in nodes for advertised in node.tls_advertised}
     config = {
@@ -81,21 +82,17 @@ def connect(nodes, seed, tls_name):
     return aerospike.client(config)
 
 
-def legacy_matches(messages):
-    return [message for message in messages if "only through the legacy name check" in message]
-
-
 # N-6: TLS through the proxy. Seeded through the first node's TLS listener with its tls-name, every
 # node joins at its TLS listener and serves the keys it is master of. The handshake validates the
 # certificate against the node's tls-name, not the endpoint hostname, through its SAN, with no
 # legacy CN match, and a seed whose tls-name is the endpoint hostname fails the handshake.
 @pytest.mark.l2("default", subset="ee")
-def test_n6_tls_validates_against_node_tls_name(nodes, warnings):
+def test_n6_tls_validates_against_node_tls_name(nodes: list[ToxiproxyTlsNode], warnings: list[str]) -> None:
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
     first = nodes[0]
     assert first.tls_name != host, f"tls-name {first.tls_name} is the endpoint hostname"
 
-    client = connect(nodes, first, first.tls_name)
+    client = connect(nodes, seed=first, tls_name=first.tls_name)
     try:
         di.wait_for_nodes(client, [node.name for node in nodes], JOIN_TIMEOUT_SEC, TEND_INTERVAL_MS)
         held = di.client_nodes(client)
@@ -103,13 +100,13 @@ def test_n6_tls_validates_against_node_tls_name(nodes, warnings):
             print(f"L2-N6-NODE {node.name} client={held[node.name]} tlsName={node.tls_name}")
             di.assert_at(held[node.name], f"{host}:{node.tls_port}")
         infos = {node.name: node.info for node in nodes}
-        di.assert_served_by_owners(client, NAMESPACE, SET_NAME, "L2-N6", infos)
+        di.assert_served_by_owners(client, NAMESPACE, SET_NAME, row="L2-N6", infos=infos)
     finally:
         client.close()
-    assert legacy_matches(warnings) == []
+    assert di.logged_legacy_matches(warnings) == []
 
     with pytest.raises(aerospike.exception.AerospikeError) as raised:
-        connect(nodes, first, host)
+        connect(nodes, seed=first, tls_name=host)
     print(f"L2-N6-ERROR {raised.value}")
     assert f"TLS name '{host}' mismatch" in warnings
 
@@ -122,14 +119,18 @@ def test_n6_tls_validates_against_node_tls_name(nodes, warnings):
 @pytest.mark.xfail(
     strict=True,
     raises=pytest.fail.Exception,
-    reason="The C client accepts a CN-only certificate through its deprecated legacy name check until the next major release",
+    reason=(
+        "The C client accepts a CN-only certificate through its deprecated legacy name check until the next "
+        "major release"
+    ),
 )
-def test_n17_cn_only_certificate_is_rejected(nodes, warnings):
+def test_n17_cn_only_certificate_is_rejected(nodes: list[ToxiproxyTlsNode], warnings: list[str]) -> None:
     first = nodes[0]
     with pytest.raises(aerospike.exception.AerospikeError) as raised:
-        client = connect(nodes, first, first.tls_name)
-        print(f"L2-N17-ACCEPTED nodes={sorted(di.client_nodes(client))} legacy={legacy_matches(warnings)}")
+        client = connect(nodes, seed=first, tls_name=first.tls_name)
+        print(f"L2-N17-ACCEPTED nodes={sorted(di.client_nodes(client))} legacy={di.logged_legacy_matches(warnings)}")
         client.close()
-        assert legacy_matches(warnings), "Accepted a CN-only certificate without the legacy name check warning"
+        legacy = di.logged_legacy_matches(warnings)
+        assert legacy, "Accepted a CN-only certificate without the legacy name check warning"
     print(f"L2-N17-ERROR {raised.value}")
     assert f"TLS name '{first.tls_name}' mismatch" in warnings

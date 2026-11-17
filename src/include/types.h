@@ -91,6 +91,10 @@ typedef struct {
      * released after metrics are disabled. Not used for the config policy.
      */
     PyMetricsExporterList *active_metrics_exporters;
+    // The ip_map the constructor allocated. A config file can point as->config.ip_map at a
+    // copy that aerospike_destroy() frees, so only this one is freed by the client.
+    as_addr_map *ip_map;
+    uint32_t ip_map_size;
 } AerospikeClient;
 
 typedef struct {
@@ -181,3 +185,22 @@ extern PyObject *py_record_metadata_valid_keys;
 extern int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
                                            PyObject *py_set_of_valid_keys,
                                            const char *adjective);
+
+struct int_enum_member {
+    const char *name;
+    long value;
+};
+
+struct int_enum_def {
+    const char *name;
+    // Ends with a {NULL} member.
+    const struct int_enum_member *members;
+};
+
+// Defined in aerospike.c. Creates an enum.IntEnum class for each definition and
+// adds it to py_dict under its name. enum_defs ends with a {NULL} definition.
+// owner_name is the name of the class whose dict py_dict is, or NULL for the
+// module's dict; it is needed to pickle the enum members. Returns -1 with a
+// Python exception set on failure.
+int add_int_enums(PyObject *py_dict, const char *owner_name,
+                  const struct int_enum_def *enum_defs);

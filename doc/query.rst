@@ -280,19 +280,28 @@ Assume this boilerplate code is run before all examples below:
         :class:`~aerospike_helpers.expressions.vector.VectorDistance`, then order by that projected
         distance to retrieve the *k* nearest (or farthest, depending on the metric) records.
 
+        A record whose order-by bin is missing, or holds a value of a different type than
+        ``type``, still matches the filter and sorts as ``NIL``. In both ``ASC`` and ``DESC``
+        those records sort after every type-matching record. With a second key
+        from :meth:`Query.then_order_by`, this applies to each key on its own: records that are
+        ``NIL`` on the first key rank after every record that isn't, and among themselves by the
+        second key. Records that tie on every key rank by digest, ascending. For a ``DOUBLE``
+        key, NaN ranks above every other value, and -0.0 equals 0.0. Over a large set, raise
+        ``socket_timeout`` (or set it to 0); ``total_timeout`` still bounds the query.
+
         :param str bin: the name of the bin to order by, 1-15 UTF-8 bytes. This can be a stored bin, \
             or the name of a result bin produced by \
             :meth:`~aerospike_helpers.operations.expression_operations.expression_read` \
             in :meth:`Query.add_ops`, such as a projected \
             :class:`~aerospike_helpers.expressions.vector.VectorDistance`. \
             If a projection is set, the bin must be one of the projected names.
-        :param type: :attr:`aerospike.QueryOrderByType.INTEGER`, :attr:`aerospike.QueryOrderByType.DOUBLE`, \
-            or :attr:`aerospike.QueryOrderByType.BYTES`, for example \
-            :attr:`aerospike.QueryOrderByType.DOUBLE` for a distance expression's float result. \
-            :attr:`~aerospike.QueryOrderByType.STRING` is not supported yet.
-        :param direction: :attr:`aerospike.QueryOrder.ASCENDING` or :attr:`aerospike.QueryOrder.DESCENDING`.
+        :param type: :attr:`aerospike.Query.BinDataType.INTEGER`, :attr:`aerospike.Query.BinDataType.DOUBLE`, \
+            or :attr:`aerospike.Query.BinDataType.BYTES`, for example \
+            :attr:`aerospike.Query.BinDataType.DOUBLE` for a distance expression's float result. \
+            :attr:`~aerospike.Query.BinDataType.STRING` is not supported yet.
+        :param direction: :attr:`aerospike.Query.Order.ASC` or :attr:`aerospike.Query.Order.DESC`.
         :param flags: an :class:`~aerospike.QueryOrderByFlags` value. Valid only with \
-            :attr:`aerospike.QueryOrderByType.STRING`, which is not supported yet. Defaults to \
+            :attr:`aerospike.Query.BinDataType.STRING`, which is not supported yet. Defaults to \
             :attr:`aerospike.QueryOrderByFlags.DEFAULT`.
         :return: ``self``, so calls can be chained.
         :raises aerospike.exception.ParamError: ``type`` or ``direction`` is missing, or the bin \
@@ -300,71 +309,63 @@ Assume this boilerplate code is run before all examples below:
             that is not valid raises this error when the query executes.
 
         .. note::
-            A record whose order-by bin is missing, or holds a value of a different type than
-            ``type``, still matches the filter and sorts as ``NIL``. In both ``ASC`` and ``DESC``
-            those records sort after every type-matching record. With a second key
-            from :meth:`Query.then_order_by`, this applies to each key on its own: records that are
-            ``NIL`` on the first key rank after every record that isn't, and among themselves by the
-            second key. Over a large set, raise ``socket_timeout`` (or set it to 0);
-            ``total_timeout`` still bounds the query.
+            If an operation from :meth:`Query.add_ops` fails on a record, for example a list operation on a
+            bin that isn't a list, the server leaves the record out and the query still succeeds, so a record
+            that would rank first can be missing from the results. A Top-K query with 32,769 to 65,535
+            operations returns no records and no error, since the server leaves out every record. More
+            than 65,535 operations raises :exc:`~aerospike.exception.ParamError` when the query executes.
 
         .. note::
             Requires server version >= 8.2.1 on every node. ``top_k`` of ``0`` or above ``1000``,
             ``max_records``, ``nobins``, :meth:`Query.paginate`, an aggregate UDF, a background
             query, or a partition filter with a ``digest`` or ``partition_status`` raises
             :exc:`~aerospike.exception.ParamError` before the query is sent. See
-            :attr:`~aerospike.Query.top_k` for a query without ``top_k``.
+            :attr:`~aerospike.Query.top_k` for a query without ``top_k``. A cluster with an older
+            node, or an order key that isn't projected or that more than one operation produces,
+            also raises :exc:`~aerospike.exception.ParamError` before the query is sent. A node
+            that is at its Top-K memory limit refuses a new Top-K query with
+            :exc:`~aerospike.exception.ForbiddenError`; retry it later.
 
-        Example: vector similarity search - find the 2 records whose "embedding" :class:`~aerospike_helpers.Vector` \
-        bin is closest (by squared Euclidean distance) to a query vector:
+        Example: hybrid vector similarity search - among the records whose "category" bin is "shoes", find
+        the 2 whose "embedding" :class:`~aerospike_helpers.Vector` bin is closest (by squared Euclidean
+        distance) to a query vector:
 
         .. code-block:: python
 
             import aerospike
             from aerospike_helpers import Vector
-            from aerospike_helpers.expressions import VectorBin
+            from aerospike_helpers import expressions as exp
             from aerospike_helpers.expressions.vector import VectorDistance, VectorDistanceMetric
             from aerospike_helpers.operations import expression_operations as exp_ops
             from aerospike_helpers.operations import operations as ops
 
             client = aerospike.client({"hosts": [("127.0.0.1", 3000)]})
 
-            # Insert some records, each with an "embedding" Vector bin.
-            vectors = [
-                [0.10, 0.20, 0.30, 0.40],
-                [0.90, 0.80, 0.70, 0.60],
-                [0.15, 0.22, 0.31, 0.42],
-            ]
-            for i, values in enumerate(vectors):
-                client.put(("test", "demo", i), {"embedding": Vector.of_float32(values)})
+            # Insert some records, each with an "embedding" Vector bin and a "category" bin.
+            vectors = [[0.10, 0.20, 0.30, 0.40], [0.90, 0.80, 0.70, 0.60], [0.15, 0.22, 0.31, 0.42]]
+            categories = ["shoes", "shoes", "hats"]
+            for i, (values, category) in enumerate(zip(vectors, categories)):
+                client.put(("test", "demo", i), {"embedding": Vector.of_float32(values), "category": category})
 
-            # The vector we want to find the nearest neighbors of.
+            # Project the distance between "embedding" and the query vector into a "dist" result bin.
             query_vector = Vector.of_float32([0.10, 0.20, 0.30, 0.40])
-
-            # Project the distance between "embedding" and query_vector into a "dist" result bin.
             dist_expr = VectorDistance(
-                VectorDistanceMetric.EUCLIDEAN_SQUARED, query_vector, VectorBin("embedding")
+                VectorDistanceMetric.EUCLIDEAN_SQUARED, query_vector, exp.VectorBin("embedding")
             ).compile()
-
             query = client.query("test", "demo")
-            query.add_ops([
-                ops.read("embedding"),
-                exp_ops.expression_read("dist", dist_expr),
-            ])
+            query.add_ops([ops.read("embedding"), exp_ops.expression_read("dist", dist_expr)])
 
             # EUCLIDEAN_SQUARED sorts ascending: smallest distance is the closest match.
-            query.order_by(
-                "dist",
-                aerospike.QueryOrderByType.DOUBLE,
-                aerospike.QueryOrder.ASCENDING,
-            )
+            query.order_by("dist", aerospike.Query.BinDataType.DOUBLE, aerospike.Query.Order.ASC)
             query.top_k = 2
 
-            records = query.results()
+            # Rank only the records that pass the filter. The "hats" record is closer but is left out.
+            only_shoes = exp.Eq(exp.StrBin("category"), "shoes").compile()
+            records = query.results({"expressions": only_shoes})
             for _, _, bins in records:
                 print(round(bins["dist"], 4), list(bins["embedding"].value))
             # 0.0 [0.10000000149011612, 0.20000000298023224, 0.30000001192092896, 0.4000000059604645]
-            # 0.0034 [0.15000000596046448, 0.2199999988079071, 0.3100000023841858, 0.41999998688697815]
+            # 1.2 [0.8999999761581421, 0.800000011920929, 0.699999988079071, 0.6000000238418579]
 
             # Cleanup and close the connection to the Aerospike cluster.
             for i in range(len(vectors)):
@@ -385,11 +386,11 @@ Assume this boilerplate code is run before all examples below:
         Call :meth:`Query.order_by` first. :meth:`Query.order_by` replaces both keys.
 
         :param str bin: the name of the bin to break ties on. See :meth:`Query.order_by`.
-        :param type: :attr:`aerospike.QueryOrderByType.INTEGER`, :attr:`aerospike.QueryOrderByType.DOUBLE`, \
-            or :attr:`aerospike.QueryOrderByType.BYTES`. See :meth:`Query.order_by`.
-        :param direction: :attr:`aerospike.QueryOrder.ASCENDING` or :attr:`aerospike.QueryOrder.DESCENDING`.
+        :param type: :attr:`aerospike.Query.BinDataType.INTEGER`, :attr:`aerospike.Query.BinDataType.DOUBLE`, \
+            or :attr:`aerospike.Query.BinDataType.BYTES`. See :meth:`Query.order_by`.
+        :param direction: :attr:`aerospike.Query.Order.ASC` or :attr:`aerospike.Query.Order.DESC`.
         :param flags: an :class:`~aerospike.QueryOrderByFlags` value. Valid only with \
-            :attr:`aerospike.QueryOrderByType.STRING`, which is not supported yet. Defaults to \
+            :attr:`aerospike.Query.BinDataType.STRING`, which is not supported yet. Defaults to \
             :attr:`aerospike.QueryOrderByFlags.DEFAULT`.
         :return: ``self``, so calls can be chained.
         :raises aerospike.exception.ParamError: the same cases as :meth:`Query.order_by`. Calling \
@@ -399,9 +400,9 @@ Assume this boilerplate code is run before all examples below:
         .. code-block:: python
 
             query = client.query("test", "demo")
-            query.order_by("score", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+            query.order_by("score", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
             # Among records with the same score, return the earliest first.
-            query.then_order_by("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+            query.then_order_by("ts", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
             query.top_k = 10
             records = query.results()
 

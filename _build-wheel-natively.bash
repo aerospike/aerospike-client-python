@@ -33,6 +33,11 @@ if [[ $os =~ Darwin* ]]; then
         brew install "$library"
     done
 
+    # Compile against the headers of the openssl that delocate bundles, not Homebrew's unversioned openssl
+    # Otherwise the wheel can reference symbols that the bundled libcrypto doesn't have
+    export SSL_INCLUDE_PATH
+    SSL_INCLUDE_PATH="$(brew --prefix openssl@3)/include"
+
     # Set minimum macos version required to install wheel
     #
     # By default, clang will try to build the wheel to be compatible with macOS 11.0 / 10.13

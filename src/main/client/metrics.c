@@ -14,16 +14,17 @@
  * limitations under the License.
  ******************************************************************************/
 
+#include "metrics.h"
+
+#include <aerospike/aerospike_stats.h>
 #include <aerospike/as_cluster.h>
+#include <aerospike/as_latency.h>
 #include <aerospike/as_log_macros.h>
 #include <aerospike/as_metrics.h>
-#include <aerospike/aerospike_stats.h>
-#include <aerospike/as_latency.h>
 
 #include <stdlib.h>
 #include <string.h>
 
-#include "metrics.h"
 #include "conversions.h"
 #include "exceptions.h"
 #include "policy.h"

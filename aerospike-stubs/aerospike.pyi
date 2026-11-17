@@ -297,16 +297,6 @@ QUERY_DURATION_LONG: Literal[0]
 QUERY_DURATION_SHORT: Literal[1]
 QUERY_DURATION_LONG_RELAX_AP: Literal[2]
 
-class QueryOrderByType(IntEnum):
-    INTEGER = 1
-    DOUBLE = 2
-    STRING = 3
-    BYTES = 4
-
-class QueryOrder(IntEnum):
-    ASCENDING = 0
-    DESCENDING = 1
-
 class QueryOrderByFlags(IntEnum):
     DEFAULT = 0
     CASE_INSENSITIVE = 1
@@ -528,6 +518,16 @@ class KeyOrderedDict(dict):
     def __init__(self, *args, **kwargs) -> None: ...
 
 class Query:
+    class BinDataType(IntEnum):
+        INTEGER = 1
+        DOUBLE = 2
+        STRING = 3
+        BYTES = 4
+
+    class Order(IntEnum):
+        ASC = 0
+        DESC = 1
+
     max_records: int
     records_per_second: int
     ttl: int
@@ -542,8 +542,8 @@ class Query:
     def order_by(
         self,
         bin: str,
-        type: QueryOrderByType,
-        direction: QueryOrder,
+        type: Query.BinDataType,
+        direction: Query.Order,
         flags: QueryOrderByFlags = ...,
     ) -> Query: ...
     def paginate(self) -> None: ...
@@ -553,8 +553,8 @@ class Query:
     def then_order_by(
         self,
         bin: str,
-        type: QueryOrderByType,
-        direction: QueryOrder,
+        type: Query.BinDataType,
+        direction: Query.Order,
         flags: QueryOrderByFlags = ...,
     ) -> Query: ...
     def where(self, predicate: tuple, ctx: list = ...) -> None: ...
