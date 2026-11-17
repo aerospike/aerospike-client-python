@@ -56,6 +56,20 @@ def distance(metric: vector_exp.VectorDistanceMetric, query_vector: Vector, bin_
     return vector_exp.VectorDistance(metric, query_vector, exp.VectorBin(bin_name)).compile()
 
 
+def order_top_k(
+    query: aerospike.Query,
+    bin_name: str,
+    bin_type: int,
+    direction: int,
+    top_k: int,
+    then_order_by: Optional[tuple] = None,
+) -> None:
+    query.order_by(bin_name, bin_type, direction)
+    if then_order_by:
+        query.then_order_by(*then_order_by)
+    query.top_k = top_k
+
+
 def assert_server_detail(error: e.AerospikeError, detail: str) -> None:
     # The C client prefixes the server's detail with the node address.
     assert error.msg.endswith(f" {detail}")
@@ -859,12 +873,11 @@ class TestGeneralPlanIntegration:
         records = query.results()
         assert [bins for _, _, bins in records] == [{"n": 4}, {"n": 3}, {"n": 2}]
 
-    def _ranked(self, bin_name: str, bin_type: int, direction: int, top_k: int, second: Optional[tuple] = None) -> list:
+    def _ranked(
+        self, bin_name: str, bin_type: int, direction: int, top_k: int, then_order_by: Optional[tuple] = None
+    ) -> list:
         query = self._query()
-        query.order_by(bin_name, bin_type, direction)
-        if second:
-            query.then_order_by(*second)
-        query.top_k = top_k
+        order_top_k(query, bin_name, bin_type, direction, top_k, then_order_by=then_order_by)
         return query.results()
 
     # Vector Phase 1 general test plan: AO-01
@@ -932,7 +945,7 @@ class TestGeneralPlanIntegration:
         lowest_digests = sorted(aerospike.calc_digest(*key) for key in other_keys)[:2]
         assert [key[3] for key, _, _ in records[len(integers):]] == lowest_digests
 
-        records = self._ranked("n", INTEGER, direction, len(keys), second=("m", INTEGER, ASC))
+        records = self._ranked("n", INTEGER, direction, len(keys), then_order_by=("m", INTEGER, ASC))
         other_m = [bins["m"] for _, _, bins in records[len(integers):]]
         assert other_m == sorted(other_m)
         assert len(other_m) == len(other_keys)
@@ -1283,8 +1296,7 @@ class TestGeneralPlanServerSettings:
 
     def _top_k_query(self) -> aerospike.Query:
         query = self.as_connection.query(NAMESPACE, self.SET_NAME)
-        query.order_by("score", INTEGER, DESC)
-        query.top_k = 10
+        order_top_k(query, bin_name="score", bin_type=INTEGER, direction=DESC, top_k=10)
         return query
 
     EXPECTED = list(range(RECORD_COUNT - 1, RECORD_COUNT - 11, -1))
