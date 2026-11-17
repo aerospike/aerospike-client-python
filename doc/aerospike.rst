@@ -1052,7 +1052,7 @@ The **discovery** dict of the client config controls where the client gets its s
 
     * ``"merge"``: **hosts** first, then the discovered hosts.
     * ``"replace"``: like ``"merge"`` when the client connects. After that, each successful refresh
-      replaces the seeds, and an empty result keeps the previous seeds.
+      replaces the seeds, an empty result included.
     * ``"discovery_only"``: only the discovered hosts. **hosts** is used only when discovery returns
       no host.
 
@@ -1097,7 +1097,10 @@ The **discovery** dict of the client config controls where the client gets its s
     * **servers** (:class:`list` [:class:`str`]): the DNS servers, as ``"ip"`` or ``"ip:port"``
       (``"[ipv6]:port"`` for IPv6). Default: the system's DNS servers.
 
-If a refresh fails, the client keeps its previous seeds. If connecting finds no seed host,
+If a refresh fails, the client keeps its previous seeds. A successful refresh is used even when it leaves no
+seed host. While the client then has no node, it cannot reconnect until a later refresh returns a host, at most
+**refresh_interval_ms** after the provider returns hosts again. To keep a fallback while discovery returns
+nothing, use ``"merge"`` or ``"discovery_only"`` with **hosts**. If connecting finds no seed host,
 :exc:`~aerospike.exception.SeedDiscoveryFailed` is raised.
 
 A :class:`~aerospike_helpers.discovery.SeedCandidateProvider` is called on the client's background thread,
