@@ -56,11 +56,6 @@ def distance(metric: vector_exp.VectorDistanceMetric, query_vector: Vector, bin_
     return vector_exp.VectorDistance(metric, query_vector, exp.VectorBin(bin_name)).compile()
 
 
-def partition_id(key: tuple) -> int:
-    digest = aerospike.calc_digest(*key[:3])
-    return int.from_bytes(digest[0:2], "little") & 0xFFF
-
-
 def assert_server_detail(error: e.AerospikeError, detail: str) -> None:
     # The C client prefixes the server's detail with the node address.
     assert error.msg.endswith(f" {detail}")
@@ -831,8 +826,11 @@ class TestGeneralPlanIntegration:
     # (test_top_k_with_resumed_partition_filter in test_query_top_k.py).
     @pytest.mark.parametrize("count", [4096, 2048])
     def test_top_k_with_new_partition_filter(self, count: int):
-        keys = [self._put(user_key=i, bins={"n": i}) for i in range(40)]
-        in_range = [key[2] for key in keys if partition_id(key) < count]
+        partition_ids = {}
+        for i in range(40):
+            self._put(user_key=i, bins={"n": i})
+            partition_ids[i] = self.as_connection.get_key_partition_id(ns=NAMESPACE, set=self.set_name, key=i)
+        in_range = [i for i, part_id in partition_ids.items() if part_id < count]
         expected = sorted(in_range, reverse=True)[:5]
         partition_filter = {"partition_filter": {"begin": 0, "count": count}}
         query = self._query()
@@ -843,7 +841,7 @@ class TestGeneralPlanIntegration:
         streamed = []
         query.foreach(lambda part_id, record: streamed.append((part_id, record)), partition_filter)
         assert [record[2]["n"] for _, record in streamed] == expected
-        assert all(part_id == partition_id((NAMESPACE, self.set_name, record[2]["n"])) for part_id, record in streamed)
+        assert all(part_id == partition_ids[record[2]["n"]] for part_id, record in streamed)
         # A Top-K query can't be resumed, so it doesn't keep the partition status.
         assert query.get_partitions_status() == {}
         assert [bins["n"] for _, _, bins in query.results(partition_filter)] == expected
