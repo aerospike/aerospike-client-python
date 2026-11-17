@@ -727,7 +727,10 @@ class TestGeneralPlanIntegration:
             with ThreadPoolExecutor(max_workers=1) as pool:
                 flipper = pool.submit(flip)
                 try:
-                    runs = [{bins["dist"] for _, _, bins in query.results()} for _ in range(10)]
+                    runs = []
+                    for _ in range(10):
+                        records = query.results()
+                        runs.append({bins["dist"] for _, _, bins in records})
                 finally:
                     done = True
                 flipper.result()
@@ -851,14 +854,16 @@ class TestGeneralPlanIntegration:
         query.order_by("n", INTEGER, DESC)
         query.top_k = 5
 
-        assert [bins["n"] for _, _, bins in query.results(partition_filter)] == expected
+        records = query.results(partition_filter)
+        assert [bins["n"] for _, _, bins in records] == expected
         streamed = []
         query.foreach(lambda part_id, record: streamed.append((part_id, record)), partition_filter)
         assert [record[2]["n"] for _, record in streamed] == expected
         assert all(part_id == partition_ids[record[2]["n"]] for part_id, record in streamed)
         # A Top-K query can't be resumed, so it doesn't keep the partition status.
         assert query.get_partitions_status() == {}
-        assert [bins["n"] for _, _, bins in query.results(partition_filter)] == expected
+        records = query.results(partition_filter)
+        assert [bins["n"] for _, _, bins in records] == expected
 
     # Vector Phase 1 general test plan: AT-11
     # As for any query, the selected bins are ignored with a deprecation warning.
@@ -950,8 +955,13 @@ class TestGeneralPlanIntegration:
     def test_ties_at_k_boundary_are_stable(self):
         keys = [self._put(user_key=i, bins={"n": 1}) for i in range(10)]
         self._put(user_key="top", bins={"n": 2})
-        expected = sorted(aerospike.calc_digest(*key) for key in keys)[:3]
-        runs = [[key[3] for key, _, _ in self._ranked("n", INTEGER, DESC, 4)[1:]] for _ in range(5)]
+        digests = [aerospike.calc_digest(*key) for key in keys]
+        expected = sorted(digests)[:3]
+        runs = []
+        for _ in range(5):
+            records = self._ranked("n", INTEGER, DESC, 4)
+            ties = records[1:]
+            runs.append([key[3] for key, _, _ in ties])
         assert runs == [expected] * 5
 
     # Vector Phase 1 general test plan: AO-10
@@ -1150,9 +1160,11 @@ class TestGeneralPlanIntegration:
             return records
 
         with ThreadPoolExecutor(max_workers=20) as pool:
-            outcomes = [future.result(timeout=60) for future in [pool.submit(first_record) for _ in range(20)]]
+            futures = [pool.submit(first_record) for _ in range(20)]
+            outcomes = [future.result(timeout=60) for future in futures]
         assert [len(records) for records in outcomes] == [1] * 20
-        assert [bins["score"] for _, _, bins in self._ranked("score", INTEGER, DESC, 20)] == list(range(49, 29, -1))
+        records = self._ranked("score", INTEGER, DESC, 20)
+        assert [bins["score"] for _, _, bins in records] == list(range(49, 29, -1))
 
     # Vector Phase 1 general test plan: AP-08
     @pytest.mark.parametrize(
@@ -1171,7 +1183,8 @@ class TestGeneralPlanIntegration:
         query = self._query()
         query.order_by("score", INTEGER, DESC)
         query.top_k = 10
-        assert [bins["score"] for _, _, bins in query.results({"replica": replica})] == list(range(29, 19, -1))
+        records = query.results({"replica": replica})
+        assert [bins["score"] for _, _, bins in records] == list(range(29, 19, -1))
 
     # Vector Phase 1 general test plan: AP-08
     # The C client doesn't support the RANDOM replica policy on a query.
@@ -1333,19 +1346,22 @@ class TestGeneralPlanServerSettings:
     def test_top_k_jobs_over_the_limit(self):
         def run() -> Any:
             try:
-                return [bins["score"] for _, _, bins in self._top_k_query().results({"max_retries": 0})]
+                records = self._top_k_query().results({"max_retries": 0})
+                return [bins["score"] for _, _, bins in records]
             except e.ForbiddenError as error:
                 return error
 
         with set_server_dynamic_config(self.as_connection, context=SERVICE_CONTEXT, name="top-k-max-jobs", value="1"):
             with ThreadPoolExecutor(max_workers=16) as pool:
-                outcomes = [future.result(timeout=120) for future in [pool.submit(run) for _ in range(16)]]
+                futures = [pool.submit(run) for _ in range(16)]
+                outcomes = [future.result(timeout=120) for future in futures]
         for outcome in outcomes:
             if isinstance(outcome, e.ForbiddenError):
                 assert outcome.code == e.ForbiddenError.code
             else:
                 assert outcome == self.EXPECTED
-        assert [bins["score"] for _, _, bins in self._top_k_query().results()] == self.EXPECTED
+        records = self._top_k_query().results()
+        assert [bins["score"] for _, _, bins in records] == self.EXPECTED
 
 
 # ---------------------------------------------------------------------------

@@ -12,7 +12,8 @@ TEST_NAMESPACE_CONTEXT = "context=namespace;id=test"
 def get_server_config(client: aerospike.Client, context: str, name: str) -> str:
     response = client.info_random_node(f"get-config:{context}")
     prefix = f"{name}="
-    settings = [item[len(prefix):] for item in response.strip().split(";") if item.startswith(prefix)]
+    items = response.strip().split(";")
+    settings = [item[len(prefix):] for item in items if item.startswith(prefix)]
     if not settings:
         pytest.fail(f"{name} not in get-config:{context}")
     return settings[0]
