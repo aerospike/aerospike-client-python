@@ -1339,14 +1339,16 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     // Never freed, since tend and metrics threads of clients that were not
     // closed before interpreter shutdown can still read it after m_free runs.
-    // The original value of aerospike_client_version is not heap allocated,
-    // and is kept if the copy fails.
+    // The original value of aerospike_client_version is not heap allocated.
     if (!is_python_client_version_set_for_user_agent) {
         char *version_copy = cf_strdup(aerospike_module_version);
-        if (version_copy != NULL) {
-            aerospike_client_version = version_copy;
-            is_python_client_version_set_for_user_agent = true;
+        if (version_copy == NULL) {
+            Py_DECREF(py_aerospike_module_version_str);
+            PyErr_NoMemory();
+            goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
         }
+        aerospike_client_version = version_copy;
+        is_python_client_version_set_for_user_agent = true;
     }
     Py_DECREF(py_aerospike_module_version_str);
 
