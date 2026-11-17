@@ -977,7 +977,15 @@ class TestGeneralPlanIntegration:
         assert ranked == [(0, 7), (1, 8), (1, 6), (2, 9), (2, 5)]
 
     # Vector Phase 1 general test plan: AO-11
-    # Set TOP_K_RANDOM_SEED to replay a failing seed.
+    # Checks random Top-K queries against a ranking computed in Python:
+    # 1. Write 60 records with a group bin of 0-2, and an integer i, double d and bytes b bin that are each
+    #    missing 10% of the time. The values are drawn from small ranges so that records tie.
+    # 2. Run 20 queries, each with one or two of i, d and b as order keys in a random direction, a random
+    #    top_k from 1 to 69 (above 60 returns every record), and an optional filter on one group.
+    # 3. compare() ranks records the way the server should: by each order key in turn, with a missing bin
+    #    last in either direction, then by digest, ascending. Each query must return the top_k of the
+    #    filtered records in that order.
+    # A failure reports the seed. Set TOP_K_RANDOM_SEED to it to replay the same records and queries.
     def test_random_order_key_combinations(self):
         seed = int(os.environ.get("TOP_K_RANDOM_SEED", random.randrange(2**32)))
         rng = random.Random(seed)
