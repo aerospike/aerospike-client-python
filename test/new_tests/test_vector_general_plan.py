@@ -891,7 +891,7 @@ class TestGeneralPlanIntegration:
 
     # Vector Phase 1 general test plan: AO-01, AO-02
     # The order of NaN, infinities and zeros is in test_query_top_k.py (PQ-02). This adds the largest
-    # doubles, and a record without the bin, which ranks after NaN in either direction.
+    # doubles, and a record without the bin, which ranks last in either direction, even after NaN in ASC.
     @pytest.mark.parametrize(
         "direction, expected",
         [
