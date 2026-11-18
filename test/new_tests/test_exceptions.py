@@ -190,10 +190,6 @@ class RecordNotFoundWithUnsettableMsg(e.RecordError, metaclass=MetaclassThatReje
 
 
 class TestRaiseExceptionBase:
-    @pytest.mark.skipif(
-        not hasattr(sys, "getallocatedblocks"),
-        reason="Leaks are detected using sys.getallocatedblocks(), which this Python implementation doesn't have"
-    )
     def test_error_tuple_is_released_if_setting_exception_class_attribute_fails(self, as_connection, monkeypatch):
         # The client creates a tuple of the error's details and sets them as attributes of the exception class.
         # The tuple must be released even if one of those attributes cannot be set.
