@@ -208,7 +208,12 @@ class TestRaiseExceptionBase:
             except InjectedFailure:
                 pass
 
-        # Allocations from the first several hundred calls level off, so they shouldn't count as a leak
+        # A single leaked tuple is only a few allocated blocks, and the leak can only be observed through the total
+        # number of allocated blocks. That is too small to tell apart from allocations that have nothing to do with
+        # the leak, so call get() many times to make a leak add up to far more than that noise.
+        #
+        # The first several hundred calls also allocate memory that isn't a leak (the allocations level off
+        # afterwards, with or without the injected failure), so don't count those calls.
         warmup_call_count = 1000
         for _ in range(warmup_call_count):
             get_and_ignore_injected_failure()
