@@ -71,20 +71,21 @@ def every(interval_ms: int, stop: threading.Event, step: Callable[[], None]) -> 
 
 
 class Output:
-    """Stdout, one JSON object per line, each flushed. Lines written before ready are held and follow it."""
+    """Stdout, one JSON object per line, each flushed, ready first. Lines written before ready go to
+    stderr, since t never goes back on stdout."""
 
     def __init__(self, stream: TextIO) -> None:
         self.stream = stream
         self.lock = threading.Lock()
-        self.held = []
+        self.ready = False
 
     def write(self, message: dict[str, Any]) -> None:
         line = json.dumps(message, separators=(",", ":"))
         with self.lock:
-            if self.held is None:
+            if self.ready:
                 self.print(line)
             else:
-                self.held.append(line)
+                print(f"before ready: {line}", file=sys.stderr, flush=True)
 
     def write_now(self, message: dict[str, Any]) -> None:
         line = json.dumps(message, separators=(",", ":"))
@@ -95,9 +96,7 @@ class Output:
         line = json.dumps(ready, separators=(",", ":"))
         with self.lock:
             self.print(line)
-            for held in self.held:
-                self.print(held)
-            self.held = None
+            self.ready = True
 
     def print(self, line: str) -> None:
         self.stream.write(line + "\n")
