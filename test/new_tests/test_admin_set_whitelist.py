@@ -194,8 +194,12 @@ class TestSetWhitelist(TestBaseClass):
         try:
             assert_eventually_equal(self.client, lambda: user_exists(self.client, "test_whitelist_user"), True)
             config = TestBaseClass.get_connection_config()
+            # The constructor connects with config["user"] and config["password"], and connect() does nothing for a
+            # connected client, so the credentials must be in the config.
+            config["user"] = "test_whitelist_user"
+            config["password"] = "123"
             with pytest.raises(e.NotWhitelisted) as excinfo:
-                aerospike.client(config).connect("test_whitelist_user", "123")
+                aerospike.client(config)
             assert excinfo.value.code == 82
             assert excinfo.value.msg == "Failed to connect"
         finally:
