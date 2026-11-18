@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -472,36 +472,42 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
 
     Py_ssize_t tuple_size = PyTuple_Size(py_err_tuple);
     if (tuple_size == -1) {
-        goto CHAIN_PREV_EXC_AND_RETURN;
+        goto ERR_TUPLE_CLEANUP;
     }
 
     for (Py_ssize_t i = 0; i < tuple_size; i++) {
         // Here, we are assuming the number of attrs is the same as the number of tuple members
         PyObject *py_arg = PyTuple_GetItem(py_err_tuple, i);
         if (py_arg == NULL) {
-            goto CHAIN_PREV_EXC_AND_RETURN;
+            goto ERR_TUPLE_CLEANUP;
         }
         int retval = PyObject_SetAttrString(py_exc_class,
                                             aerospike_err_attrs[i], py_arg);
         if (retval == -1) {
-            goto CHAIN_PREV_EXC_AND_RETURN;
+            goto ERR_TUPLE_CLEANUP;
         }
     }
 
     PyObject *py_subcode = PyLong_FromUInt32(err->subcode);
     if (!py_subcode) {
-        goto CHAIN_PREV_EXC_AND_RETURN;
+        goto ERR_TUPLE_CLEANUP;
     }
 
     // Subcode is not included as last element in tuple
     int retval = PyObject_SetAttrString(
         py_exc_class, aerospike_err_attrs[tuple_size], py_subcode);
+    // PyObject_SetAttrString() does not steal a reference to the attribute value
+    Py_DECREF(py_subcode);
     if (retval == -1) {
-        goto CHAIN_PREV_EXC_AND_RETURN;
+        goto ERR_TUPLE_CLEANUP;
     }
 
     // Raise exception
     PyErr_SetObject(py_exc_class, py_err_tuple);
+
+ERR_TUPLE_CLEANUP:
+    // PyErr_SetObject() takes its own reference to the tuple, so we always release ours,
+    // including when an error occurred above after the tuple was created
     Py_DECREF(py_err_tuple);
 
 CHAIN_PREV_EXC_AND_RETURN:

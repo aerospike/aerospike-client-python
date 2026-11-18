@@ -1,7 +1,10 @@
+import gc
 import pytest
+import sys
 # Explicitly test that we can import submodule this way
 import aerospike.exception  # noqa: F401
 from aerospike import exception as e
+from .conftest import TEST_NS, TEST_SET
 from .as_errors import (
     AEROSPIKE_ERR_ASYNC_CONNECTION,
     AEROSPIKE_ERR_BATCH_DISABLED,
@@ -166,3 +169,62 @@ def test_aerospike_exceptions(
         if issubclass(excinfo.type, base_class):
             for attr in base_class_to_attrs[base_class]:
                 assert hasattr(excinfo.value, attr)
+
+
+INJECTED_FAILURE_MESSAGE = "injected failure while setting an attribute on the exception class"
+
+
+class MetaclassThatRejectsSettingMsg(type):
+    @property
+    def msg(cls) -> None:
+        return None
+
+    @msg.setter
+    def msg(cls, value: object) -> None:
+        raise RuntimeError(INJECTED_FAILURE_MESSAGE)
+
+
+# Has the same error code as RecordNotFound, so the client picks it as the exception to raise
+class RecordNotFoundWithUnsettableMsg(e.RecordError, metaclass=MetaclassThatRejectsSettingMsg):
+    code = e.RecordNotFound.code
+
+
+class TestRaiseExceptionBase:
+    @pytest.mark.skipif(
+        not hasattr(sys, "getallocatedblocks"),
+        reason="Leaks are detected using sys.getallocatedblocks(), which this Python implementation doesn't have"
+    )
+    def test_error_tuple_is_released_if_setting_exception_class_attribute_fails(self, as_connection, monkeypatch):
+        # The client creates a tuple of the error's details and sets them as attributes of the exception class.
+        # The tuple must be released even if one of those attributes cannot be set.
+        monkeypatch.setattr(e, "RecordNotFound", RecordNotFoundWithUnsettableMsg)
+        missing_key = (TEST_NS, TEST_SET, "key_that_does_not_exist_in_test_exceptions")
+
+        # Make sure the failure we injected is the one that happens, not the RecordNotFound that get() would raise
+        with pytest.raises(RuntimeError, match=INJECTED_FAILURE_MESSAGE):
+            self.as_connection.get(missing_key)
+
+        def get_and_ignore_injected_failure() -> None:
+            try:
+                self.as_connection.get(missing_key)
+            except RuntimeError:
+                pass
+
+        # Allocations from the first several hundred calls level off, so they shouldn't count as a leak
+        warmup_call_count = 1000
+        for _ in range(warmup_call_count):
+            get_and_ignore_injected_failure()
+
+        gc.collect()
+        block_count_before = sys.getallocatedblocks()
+
+        measured_call_count = 500
+        for _ in range(measured_call_count):
+            get_and_ignore_injected_failure()
+
+        gc.collect()
+        block_count_after = sys.getallocatedblocks()
+
+        # A leaked error tuple also leaks the objects it holds, which adds up to several blocks per call.
+        # Allow for less than one block per call to leave room for noise.
+        assert block_count_after - block_count_before < measured_call_count
