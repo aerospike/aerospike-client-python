@@ -51,6 +51,7 @@ DOUBLE = aerospike.Query.BinDataType.DOUBLE
 BYTES = aerospike.Query.BinDataType.BYTES
 APPEND_DETAIL = "cannot append/prepend to a vector bin - write the whole vector"
 
+
 def distance(metric: vector_exp.VectorDistanceMetric, query_vector: Vector, bin_name: str = "embedding") -> list:
     return vector_exp.VectorDistance(metric, query_vector, exp.VectorBin(bin_name)).compile()
 
