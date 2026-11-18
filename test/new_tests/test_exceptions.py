@@ -171,7 +171,8 @@ def test_aerospike_exceptions(
                 assert hasattr(excinfo.value, attr)
 
 
-INJECTED_FAILURE_MESSAGE = "injected failure while setting an attribute on the exception class"
+class InjectedFailure(Exception):
+    pass
 
 
 class MetaclassThatRejectsSettingMsg(type):
@@ -181,7 +182,7 @@ class MetaclassThatRejectsSettingMsg(type):
 
     @msg.setter
     def msg(cls, value: object) -> None:
-        raise RuntimeError(INJECTED_FAILURE_MESSAGE)
+        raise InjectedFailure
 
 
 # Has the same error code as RecordNotFound, so the client picks it as the exception to raise
@@ -196,14 +197,15 @@ class TestRaiseExceptionBase:
         monkeypatch.setattr(e, "RecordNotFound", RecordNotFoundWithUnsettableMsg)
         missing_key = (TEST_NS, TEST_SET, "key_that_does_not_exist_in_test_exceptions")
 
-        # Make sure the failure we injected is the one that happens, not the RecordNotFound that get() would raise
-        with pytest.raises(RuntimeError, match=INJECTED_FAILURE_MESSAGE):
+        # The client doesn't get to raise RecordNotFoundWithUnsettableMsg because setting its attributes fails first.
+        # Make sure that the failure we injected is the one that happens
+        with pytest.raises(InjectedFailure):
             self.as_connection.get(missing_key)
 
         def get_and_ignore_injected_failure() -> None:
             try:
                 self.as_connection.get(missing_key)
-            except RuntimeError:
+            except InjectedFailure:
                 pass
 
         # Allocations from the first several hundred calls level off, so they shouldn't count as a leak
