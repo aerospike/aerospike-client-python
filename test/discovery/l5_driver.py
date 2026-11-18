@@ -71,8 +71,9 @@ def every(interval_ms: int, stop: threading.Event, step: Callable[[], None]) -> 
 
 
 class Output:
-    """Stdout, one JSON object per line, each flushed, ready first. Lines written before ready go to
-    stderr, since t never goes back on stdout."""
+    """Stdout, one JSON object per line, each flushed, with ready first. Each line's t field (milliseconds
+    since the driver started) is set under the lock, so it never decreases on stdout. Lines written before
+    ready go to stderr."""
 
     def __init__(self, stream: TextIO) -> None:
         self.stream = stream
@@ -80,23 +81,28 @@ class Output:
         self.ready = False
 
     def write(self, message: dict[str, Any]) -> None:
-        line = json.dumps(message, separators=(",", ":"))
         with self.lock:
+            line = self.stamp(message)
             if self.ready:
                 self.print(line)
             else:
                 print(f"before ready: {line}", file=sys.stderr, flush=True)
 
     def write_now(self, message: dict[str, Any]) -> None:
-        line = json.dumps(message, separators=(",", ":"))
         with self.lock:
+            line = self.stamp(message)
             self.print(line)
 
     def open(self, ready: dict[str, Any]) -> None:
-        line = json.dumps(ready, separators=(",", ":"))
         with self.lock:
+            line = self.stamp({**ready, "epochMs": time.time_ns() // 1000000})
             self.print(line)
             self.ready = True
+
+    @staticmethod
+    def stamp(message: dict[str, Any]) -> str:
+        stamped = {"type": message["type"], "t": now(), **message}
+        return json.dumps(stamped, separators=(",", ":"))
 
     def print(self, line: str) -> None:
         self.stream.write(line + "\n")
@@ -340,7 +346,6 @@ class Watch:
             usable_ms = usable_at - self.serving_at
         self.driver.out.write({
             "type": "watch",
-            "t": now(),
             "address": self.address,
             "node": self.node,
             "servingAt": self.serving_at,
@@ -385,9 +390,7 @@ class Driver:
     def ready(self) -> None:
         self.out.open({
             "type": "ready",
-            "t": now(),
             "contract": CONTRACT,
-            "epochMs": time.time_ns() // 1000000,
             "client": "python",
             "clientVersion": importlib.metadata.version("aerospike"),
             "shape": self.options.shape,
@@ -405,7 +408,7 @@ class Driver:
             self.serve(words[1])
         elif name == "reset" and len(words) == 1:
             self.load.reset()
-            self.out.write({"type": "reset", "t": now()})
+            self.out.write({"type": "reset"})
         elif name == "watch" and len(words) == 3:
             self.start_watch(words[1], words[2])
         elif name == "quit" and len(words) == 1:
@@ -417,7 +420,7 @@ class Driver:
         return True
 
     def error(self, message: str) -> None:
-        self.out.write({"type": "error", "t": now(), "message": message})
+        self.out.write({"type": "error", "message": message})
 
     def quit(self) -> None:
         """Stop the load within QUIT_MS, then close the client once nothing else uses it."""
@@ -480,16 +483,16 @@ class Driver:
             if self.last_signature is None:
                 self.next_heartbeat = t
             elif nodes != self.last_signature:
-                self.snapshot("change", t, nodes)
+                self.snapshot("change", nodes)
             self.last_signature = nodes
 
             if t >= self.next_heartbeat:
-                self.snapshot("heartbeat", t, nodes)
+                self.snapshot("heartbeat", nodes)
                 self.next_heartbeat = max(self.next_heartbeat + HEARTBEAT_MS, t + 1)
         except Exception as error:
             print(f"routing poll: {error_message(error)}", file=sys.stderr)
 
-    def snapshot(self, reason: str, t: int, nodes: list[tuple[str, str, int]]) -> None:
+    def snapshot(self, reason: str, nodes: list[tuple[str, str, int]]) -> None:
         with self.lock:
             reachable = dict(self.reachable)
         listed = []
@@ -502,7 +505,7 @@ class Driver:
                 "active": True,
                 "reachable": reachable.get((name, address, port)),
             })
-        snapshot = {"type": "snapshot", "t": t, "reason": reason, "nodes": listed}
+        snapshot = {"type": "snapshot", "reason": reason, "nodes": listed}
         snapshot.update(self.client_counts(nodes))
         snapshot.update(self.load.counters())
         self.out.write(snapshot)
@@ -596,7 +599,6 @@ class Driver:
         elapsed_ms = (time.monotonic_ns() - start_ns) // 1000000
         self.out.write({
             "type": "served",
-            "t": now(),
             "step": step,
             "partitions": PARTITIONS,
             "written": written,
@@ -620,7 +622,7 @@ def main(argv: list[str]) -> int:
             single_line = message.replace("\r", " ").replace("\n", " ")
             print(f"client-log t={now()} {level_name} {single_line}", file=sys.stderr, flush=True)
             return
-        out.write({"type": "log", "t": now(), "level": level_name, "message": message})
+        out.write({"type": "log", "level": level_name, "message": message})
 
     aerospike.set_log_handler(log)
     aerospike.set_log_level(CLIENT_LOG[options.client_log])
@@ -637,7 +639,7 @@ def main(argv: list[str]) -> int:
 
 
 def client_not_created(out: Output, message: str) -> int:
-    out.write_now({"type": "error", "t": now(), "message": f"client not created: {message}"})
+    out.write_now({"type": "error", "message": f"client not created: {message}"})
     print(f"ERROR: client not created: {message}", file=sys.stderr)
     return 3
 
