@@ -20,9 +20,7 @@ class TestCreateUser(object):
         if not TestBaseClass.auth_in_use():
             pytest.skip("No user specified, may be not secured cluster.")
 
-        self.client = aerospike.client(config).connect(
-            config["user"], config["password"]
-        )
+        self.client = aerospike.client(config).connect(config["user"], config["password"])
 
         self.delete_users = []
 
@@ -355,9 +353,7 @@ class TestCreateUser(object):
         roles = ["read-write"]
         admin_policy = {}
         with context:
-            self.client.admin_create_pki_user(
-                user=self.user, roles=roles, policy=admin_policy
-            )
+            self.client.admin_create_pki_user(user=self.user, roles=roles, policy=admin_policy)
 
         if type(context) == nullcontext:
             poll_until_user_exists(self.user, self.client, roles)

@@ -7,6 +7,7 @@ from aerospike import exception as e
 import aerospike
 from .conftest import admin_drop_role_and_poll, admin_create_role_and_poll
 
+
 class TestGetRoles(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(

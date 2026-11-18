@@ -13,8 +13,7 @@ import aerospike
 class TestDropRole(object):
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(),
-        reason="No user specified, may be not secured cluster.",
+        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
     )
 
     def setup_method(self, method):
@@ -22,9 +21,7 @@ class TestDropRole(object):
         Setup method
         """
         config = TestBaseClass.get_connection_config()
-        self.client = aerospike.client(config).connect(
-            config["user"], config["password"]
-        )
+        self.client = aerospike.client(config).connect(config["user"], config["password"])
 
         self.delete_users = []
 
@@ -83,9 +80,8 @@ class TestDropRole(object):
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
-        admin_create_role_and_poll(self.client,
-            "usr-sys-admin-test",
-            [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}],
+        admin_create_role_and_poll(
+            self.client, "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}]
         )
 
         status = admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
@@ -107,17 +103,13 @@ class TestDropRole(object):
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
-        admin_create_role_and_poll(self.client,
-            "usr-sys-admin-test",
-            [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}],
+        admin_create_role_and_poll(
+            self.client, "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
         assert_eventually_equal(
             self.client,
             lambda: self.client.admin_query_role("usr-sys-admin-test"),
-            [
-                {"code": 0, "ns": "", "set": ""},
-                {"code": 1, "ns": "", "set": ""},
-            ],
+            [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}],
         )
 
         admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
@@ -147,9 +139,7 @@ class TestDropRole(object):
         """
         Drop role with incorrect policy
         """
-        status = admin_create_role_and_poll(self.client,
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}]
-        )
+        status = admin_create_role_and_poll(self.client, "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}])
         assert status == 0
 
         with pytest.raises(e.ParamError) as excinfo:

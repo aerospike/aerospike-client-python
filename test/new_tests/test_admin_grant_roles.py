@@ -75,9 +75,7 @@ class TestGrantRoles(TestBaseClass):
         status = self.client.admin_grant_roles(user, roles)
         assert status == 0
         assert_eventually_equal(
-            self.client,
-            lambda: self.client.admin_query_user_info(user)["roles"],
-            ["read", "read-write", "sys-admin"],
+            self.client, lambda: self.client.admin_query_user_info(user)["roles"], ["read", "read-write", "sys-admin"]
         )
 
     def test_grant_roles_with_invalid_timeout_policy_value(self):
@@ -101,9 +99,7 @@ class TestGrantRoles(TestBaseClass):
         assert status == 0
 
         assert_eventually_equal(
-            self.client,
-            lambda: self.client.admin_query_user_info(user)["roles"],
-            ["read-write", "sys-admin"],
+            self.client, lambda: self.client.admin_query_user_info(user)["roles"], ["read-write", "sys-admin"]
         )
 
     def test_grant_roles_with_none_username(self):
@@ -143,9 +139,7 @@ class TestGrantRoles(TestBaseClass):
         assert status == 0
 
         assert_eventually_equal(
-            self.client,
-            lambda: set(self.client.admin_query_user_info(user)["roles"]),
-            set(["read", "read-write"]),
+            self.client, lambda: set(self.client.admin_query_user_info(user)["roles"]), set(["read", "read-write"])
         )
 
         admin_drop_user_and_poll(self.client, user)

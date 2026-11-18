@@ -14,8 +14,7 @@ class TestSetWhitelist(TestBaseClass):
     config = TestBaseClass.get_connection_config()
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(),
-        reason="No user specified, may be not secured cluster.",
+        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
     )
 
     def setup_method(self, method):
@@ -23,21 +22,14 @@ class TestSetWhitelist(TestBaseClass):
         Setup method
         """
         config = self.config
-        self.client = aerospike.client(config).connect(
-            config["user"], config["password"]
-        )
-        usr_sys_admin_privs = [
-            {"code": aerospike.PRIV_USER_ADMIN},
-            {"code": aerospike.PRIV_SYS_ADMIN},
-        ]
+        self.client = aerospike.client(config).connect(config["user"], config["password"])
+        usr_sys_admin_privs = [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         whitelist = ["127.0.0.1"]
         try:
             admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except Exception:
             pass
-        admin_create_role_and_poll(self.client,
-            "usr-sys-admin-test", usr_sys_admin_privs, whitelist=whitelist
-        )
+        admin_create_role_and_poll(self.client, "usr-sys-admin-test", usr_sys_admin_privs, whitelist=whitelist)
 
         self.delete_users = []
 
@@ -64,10 +56,7 @@ class TestSetWhitelist(TestBaseClass):
         """
         self.client.admin_set_whitelist(role="usr-sys-admin-test", whitelist=[])
         assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
-            "privileges": [
-                {"ns": "", "set": "", "code": 0},
-                {"ns": "", "set": "", "code": 1},
-            ],
+            "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": [],
             "read_quota": 0,
             "write_quota": 0,
@@ -79,10 +68,7 @@ class TestSetWhitelist(TestBaseClass):
         """
         self.client.admin_set_whitelist(role="usr-sys-admin-test", whitelist=None)
         assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
-            "privileges": [
-                {"ns": "", "set": "", "code": 0},
-                {"ns": "", "set": "", "code": 1},
-            ],
+            "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": [],
             "read_quota": 0,
             "write_quota": 0,
@@ -92,15 +78,9 @@ class TestSetWhitelist(TestBaseClass):
         """
         Set whitelist with whitelist.
         """
-        self.client.admin_set_whitelist(
-            role="usr-sys-admin-test",
-            whitelist=["10.0.2.0/24", "127.0.0.1", "127.0.0.2"],
-        )
+        self.client.admin_set_whitelist(role="usr-sys-admin-test", whitelist=["10.0.2.0/24", "127.0.0.1", "127.0.0.2"])
         assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
-            "privileges": [
-                {"ns": "", "set": "", "code": 0},
-                {"ns": "", "set": "", "code": 1},
-            ],
+            "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": ["10.0.2.0/24", "127.0.0.1", "127.0.0.2"],
             "read_quota": 0,
             "write_quota": 0,
@@ -112,10 +92,7 @@ class TestSetWhitelist(TestBaseClass):
         """
         self.client.admin_set_whitelist(role="usr-sys-admin-test", whitelist=[])
         assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
-            "privileges": [
-                {"ns": "", "set": "", "code": 0},
-                {"ns": "", "set": "", "code": 1},
-            ],
+            "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": [],
             "read_quota": 0,
             "write_quota": 0,
@@ -126,15 +103,10 @@ class TestSetWhitelist(TestBaseClass):
         Set whitelist positive policy
         """
         self.client.admin_set_whitelist(
-            role="usr-sys-admin-test",
-            whitelist=["10.0.2.0/24", "127.0.0.1"],
-            policy={"timeout": 180000},
+            role="usr-sys-admin-test", whitelist=["10.0.2.0/24", "127.0.0.1"], policy={"timeout": 180000}
         )
         assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
-            "privileges": [
-                {"ns": "", "set": "", "code": 0},
-                {"ns": "", "set": "", "code": 1},
-            ],
+            "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": ["10.0.2.0/24", "127.0.0.1"],
             "read_quota": 0,
             "write_quota": 0,
@@ -180,17 +152,12 @@ class TestSetWhitelist(TestBaseClass):
         """
         Forbiden host
         """
-        self.client.admin_set_whitelist(
-            role="usr-sys-admin-test", whitelist=["123.4.5.6"]
-        )
+        self.client.admin_set_whitelist(role="usr-sys-admin-test", whitelist=["123.4.5.6"])
         assert_eventually_equal(
-            self.client,
-            lambda: self.client.admin_get_role("usr-sys-admin-test")["whitelist"], ["123.4.5.6"]
+            self.client, lambda: self.client.admin_get_role("usr-sys-admin-test")["whitelist"], ["123.4.5.6"]
         )
 
-        self.client.admin_create_user(
-            "test_whitelist_user", "123", ["usr-sys-admin-test"]
-        )
+        self.client.admin_create_user("test_whitelist_user", "123", ["usr-sys-admin-test"])
         try:
             assert_eventually_equal(self.client, lambda: user_exists(self.client, "test_whitelist_user"), True)
             config = TestBaseClass.get_connection_config()

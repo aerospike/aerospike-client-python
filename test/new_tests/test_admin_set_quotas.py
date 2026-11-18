@@ -29,7 +29,6 @@ class TestSetQuotas(TestBaseClass):
         except e.QuotasNotEnabled:
             pytest.skip(reason="Got QuotasNotEnabled, skipping quota test.")
 
-
     def teardown_method(self, method):
         """
         Teardown method

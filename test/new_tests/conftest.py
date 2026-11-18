@@ -4,6 +4,7 @@ import os
 import sys
 
 import pytest
+
 from . import invalid_data
 from .test_base_class import TestBaseClass
 from .admin_helpers import assert_eventually_equal, role_exists, user_exists

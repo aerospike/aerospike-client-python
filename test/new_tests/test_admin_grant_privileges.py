@@ -28,17 +28,14 @@ class TestGrantPrivileges(object):
         Setup method
         """
         config = self.config
-        self.client = aerospike.client(config).connect(
-            config["user"], config["password"]
-        )
+        self.client = aerospike.client(config).connect(config["user"], config["password"])
 
         try:
             admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except e.InvalidRole:
             pass
-        admin_create_role_and_poll(self.client,
-            "usr-sys-admin-test",
-            [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}],
+        admin_create_role_and_poll(
+            self.client, "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
         self.delete_users = []
 
@@ -65,9 +62,7 @@ class TestGrantPrivileges(object):
         """
         Grant privileges positive
         """
-        status = self.client.admin_grant_privileges(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ}]
-        )
+        status = self.client.admin_grant_privileges("usr-sys-admin-test", [{"code": aerospike.PRIV_READ}])
 
         assert status == 0
         assert_eventually_equal(self.client, lambda: self.client.admin_query_role("usr-sys-admin-test"), [
@@ -76,9 +71,7 @@ class TestGrantPrivileges(object):
             {"code": 10, "ns": "", "set": ""},
         ])
 
-        status = self.client.admin_revoke_privileges(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ}]
-        )
+        status = self.client.admin_revoke_privileges("usr-sys-admin-test", [{"code": aerospike.PRIV_READ}])
 
         assert status == 0
 
@@ -105,11 +98,7 @@ class TestGrantPrivileges(object):
         assert_eventually_equal(
             self.client,
             lambda: self.client.admin_query_role("usr-sys-admin-test"),
-            [
-                {"code": 0, "ns": "", "set": ""},
-                {"code": 1, "ns": "", "set": ""},
-                *privs,
-            ],
+            [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}, *privs],
         )
 
         status = self.client.admin_revoke_privileges("usr-sys-admin-test", privs)
@@ -120,9 +109,7 @@ class TestGrantPrivileges(object):
         """
         Grant write privileges positive
         """
-        status = self.client.admin_grant_privileges(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE}]
-        )
+        status = self.client.admin_grant_privileges("usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE}])
 
         assert status == 0
         assert_eventually_equal(self.client, lambda: self.client.admin_query_role("usr-sys-admin-test"), [
@@ -131,9 +118,7 @@ class TestGrantPrivileges(object):
             {"code": 13, "ns": "", "set": ""},
         ])
 
-        status = self.client.admin_revoke_privileges(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE}]
-        )
+        status = self.client.admin_revoke_privileges("usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE}])
 
         assert status == 0
 
@@ -152,9 +137,7 @@ class TestGrantPrivileges(object):
             {"code": 10, "ns": "", "set": ""},
         ])
 
-        status = self.client.admin_revoke_privileges(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ}]
-        )
+        status = self.client.admin_revoke_privileges("usr-sys-admin-test", [{"code": aerospike.PRIV_READ}])
 
         assert status == 0
 
@@ -163,8 +146,7 @@ class TestGrantPrivileges(object):
         Grant privileges positive with ns and set
         """
         status = self.client.admin_grant_privileges(
-            "usr-sys-admin-test",
-            [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}],
+            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}]
         )
 
         assert status == 0
@@ -175,8 +157,7 @@ class TestGrantPrivileges(object):
         ])
 
         status = self.client.admin_revoke_privileges(
-            "usr-sys-admin-test",
-            [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}],
+            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}]
         )
 
         assert status == 0
