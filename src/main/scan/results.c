@@ -136,7 +136,7 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
             PyDict_GetItemString(py_policy, "partition_filter");
         if (py_partition_filter) {
             if (convert_partition_filter(self->client, py_partition_filter,
-                                         &partition_filter, &ps,
+                                         &partition_filter, &ps, false,
                                          &err) == AEROSPIKE_OK) {
                 partition_filter_p = &partition_filter;
             }

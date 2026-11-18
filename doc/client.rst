@@ -2166,6 +2166,9 @@ Base Policies
 
             Transaction command identifier.
 
+            A query or scan doesn't run inside a transaction, so its policy ignores this field:
+            it reads the committed records, not a transaction's uncommitted writes.
+
             Default: :py:obj:`None`
 
         * **error_detail_verbosity** (:class:`int`)
