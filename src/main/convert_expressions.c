@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2020 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -574,6 +574,18 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
         as_exp_entry tmp_entry = as_exp_str(temp_expr->val.val_string_p);
         *new_entry = tmp_entry;
         Py_DECREF(py_ustr);
+    }
+    else if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "Vector", false)) {
+        as_bytes *bytes = NULL;
+        GET_BYTES_POOL(bytes, static_pool, err);
+        if (err->code == AEROSPIKE_OK) {
+            uint8_t *buffer = (uint8_t *)PyBytes_AsString(py_obj);
+            uint32_t size = (uint32_t)PyBytes_Size(py_obj);
+            as_bytes_init_wrap(bytes, buffer, size, false);
+            bytes->type = AS_BYTES_VECTOR;
+            as_exp_entry tmp_entry = as_exp_val((as_val *)bytes);
+            *new_entry = tmp_entry;
+        }
     }
     else if (PyBytes_Check(py_obj)) {
         uint8_t *b = (uint8_t *)PyBytes_AsString(py_obj);

@@ -68,3 +68,17 @@ end
 function truncated_vectors(stream)
   return stream : map(truncated_vector)
 end
+
+-- Writes the bytes from truncated_vector() to a bin.
+function write_truncated_vector(rec, bin)
+  write_bin(rec, bin, truncated_vector(rec))
+end
+
+-- Returns the bytes 7 and 9 tagged with the given bytes type.
+function typed_bytes(rec, bytes_type)
+  local b = bytes(2)
+  bytes.set_byte(b, 1, 7)
+  bytes.set_byte(b, 2, 9)
+  bytes.set_type(b, bytes_type)
+  return b
+end

@@ -85,6 +85,13 @@ class Vector(bytes):
     :exc:`~aerospike.exception.ClientError` before anything is sent. A vector can't be
     a record key: a key tuple with one raises :exc:`~aerospike.exception.ParamError`.
 
+    An expression can write a vector bin from another vector bin, for example
+    ``expression_write("copy", VectorBin("embedding").compile())``. But expressions have no vector
+    literal, so outside :class:`~aerospike_helpers.expressions.vector.VectorDistance` the server
+    refuses a vector passed as an expression value. An expression that writes one to a bin raises
+    :exc:`~aerospike.exception.InvalidRequest`, and one that appends it to a list raises
+    :exc:`~aerospike.exception.OpNotApplicable`, since a list or map can't hold a vector.
+
     .. note:: Requires server version >= 8.2.1
 
     Construct with one of the ``Vector.of_*()`` factories. ``Vector(raw)`` only decodes
@@ -379,7 +386,8 @@ class Vector(bytes):
     def from_bytes(cls, raw: bytes) -> "Vector":
         """
         Reverse of the wire encode. Validates header size, version, element-type
-        code, and dimensions before trusting the payload.
+        code, and dimensions before trusting the payload, and that the payload holds
+        exactly the declared dimensions.
         """
         if len(raw) < cls._HEADER_SIZE:
             raise ValueError("Vector buffer too short: missing 6-byte header")
@@ -404,7 +412,12 @@ class Vector(bytes):
                 f"Vector buffer too short for declared dimensions: need "
                 f"{expected_len}, got {len(raw)}"
             )
-        self = bytes.__new__(cls, raw[:expected_len])
+        if len(raw) > expected_len:
+            raise ValueError(
+                f"Vector buffer has bytes after the declared dimensions: need "
+                f"{expected_len}, got {len(raw)}"
+            )
+        self = bytes.__new__(cls, raw)
         self._element_type = cls.ElementType(element_type)
         self._dimensions = dimensions
         return self

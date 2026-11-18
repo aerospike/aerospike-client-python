@@ -386,7 +386,7 @@ expect_server_version_earlier_than_8_2_0_to_fail = pytest.mark.parametrize(
 )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="class")
 def skip_if_server_older_than_8_2_1(as_connection):
     server_version = (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver)
     if server_version < (8, 2, 1):
