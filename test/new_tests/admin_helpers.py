@@ -58,6 +58,10 @@ def assert_eventually_equal(client: aerospike.Client, fetch: Callable[[], Any], 
             result = fetch()
         except (e.InvalidUser, e.InvalidRole) as error:
             result = error
+        # fetch() has to match before is_security_settled() is checked. Right after the admin command returns, every
+        # node can still hold the old security metadata with nothing in flight, so is_security_settled() alone could
+        # return True before the change has reached any node. A match shows that at least one node has the change, and
+        # is_security_settled() then stays False until the other nodes have it too.
         if result == expected and is_security_settled(client):
             return
         if time.monotonic() >= deadline:
