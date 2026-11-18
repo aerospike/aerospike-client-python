@@ -12,7 +12,11 @@ INTERVAL_SECS = 0.1
 
 def parse_fields(section: str) -> Dict[str, str]:
     """Parse a comma-separated list of key=value pairs from an info response."""
-    return dict(field.split("=", 1) for field in section.split(","))
+    fields: Dict[str, str] = {}
+    for field in section.split(","):
+        key, value = field.split("=", 1)
+        fields[key] = value
+    return fields
 
 
 def is_security_settled(client: aerospike.Client) -> bool:
@@ -28,7 +32,12 @@ def is_security_settled(client: aerospike.Client) -> bool:
     for error, response in responses.values():
         if error is not None:
             return False
-        sections = dict(section.split(":", 1) for section in response.strip().split(";") if section)
+        sections: Dict[str, str] = {}
+        for section in response.strip().split(";"):
+            if not section:
+                continue
+            name, fields = section.split(":", 1)
+            sections[name] = fields
         smd = parse_fields(sections["smd"])
         if smd["n_pending_sets"] != "0" or smd["n_events"] != "0":
             return False
