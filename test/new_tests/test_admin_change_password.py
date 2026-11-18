@@ -23,7 +23,7 @@ class TestChangePassword:
         try:
             admin_create_user_and_poll(self.client, "testchangepassworduser", "aerospike", ["read"])
         except aerospike.exception.UserExistsError:
-            pass  # we are good, no such role exists
+            pass  # The user already exists, so use it as is
         self.delete_users = []
 
     def teardown_method(self, method):
