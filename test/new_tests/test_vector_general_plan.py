@@ -50,8 +50,6 @@ INTEGER = aerospike.Query.BinDataType.INTEGER
 DOUBLE = aerospike.Query.BinDataType.DOUBLE
 BYTES = aerospike.Query.BinDataType.BYTES
 APPEND_DETAIL = "cannot append/prepend to a vector bin - write the whole vector"
-BATCH_SIZE = 5000
-
 
 def distance(metric: vector_exp.VectorDistanceMetric, query_vector: Vector, bin_name: str = "embedding") -> list:
     return vector_exp.VectorDistance(metric, query_vector, exp.VectorBin(bin_name)).compile()
@@ -69,12 +67,6 @@ def order_top_k(
     if then_order_by:
         query.then_order_by(*then_order_by)
     query.top_k = top_k
-
-
-def remove_in_batches(client: aerospike.Client, keys: list) -> None:
-    for start in range(0, len(keys), BATCH_SIZE):
-        chunk = keys[start:start + BATCH_SIZE]
-        client.batch_remove(chunk)
 
 
 def assert_server_detail(error: e.AerospikeError, detail: str) -> None:
@@ -213,7 +205,7 @@ class TestGeneralPlanIntegration:
         self.set_name = f"gp_{request.node.originalname[5:40]}"
         self.keys = []
         yield
-        remove_in_batches(as_connection, self.keys)
+        as_connection.batch_remove(self.keys)
 
     def _key(self, user_key: Any, set_name: Optional[str] = None) -> tuple:
         key = (NAMESPACE, set_name or self.set_name, user_key)
@@ -1309,13 +1301,10 @@ class TestGeneralPlanServerSettings:
     @pytest.fixture(autouse=True, scope="class")
     def records(self, as_connection: aerospike.Client, skip_if_server_older_than_8_2_1) -> Iterator[None]:
         keys = [(NAMESPACE, self.SET_NAME, i) for i in range(self.RECORD_COUNT)]
-        for start in range(0, len(keys), BATCH_SIZE):
-            chunk = keys[start:start + BATCH_SIZE]
-            as_connection.batch_write(
-                br.BatchRecords([br.Write(key, [operations.write("score", key[2])]) for key in chunk])
-            )
+        writes = [br.Write(key, [operations.write("score", key[2])]) for key in keys]
+        as_connection.batch_write(br.BatchRecords(writes))
         yield
-        remove_in_batches(as_connection, keys)
+        as_connection.batch_remove(keys)
 
     def _top_k_query(self) -> aerospike.Query:
         query = self.as_connection.query(NAMESPACE, self.SET_NAME)
@@ -1393,7 +1382,7 @@ class TestGeneralPlanStrongConsistency:
             pytest.skip("Needs a strong consistency namespace")
         self.keys = [(NAMESPACE, self.SET_NAME, i) for i in range(3)]
         yield
-        remove_in_batches(as_connection, self.keys)
+        as_connection.batch_remove(self.keys)
 
     # Vector Phase 1 general test plan: AW-03
     # The other read paths are listed at TestGeneralPlanIntegration::test_reads_without_deserialize_return_vector.
