@@ -590,7 +590,7 @@ static as_status call_py_metrics_exporter(as_metrics_exporter *exporter,
             if (err->code != AEROSPIKE_OK) {
                 snprintf(context, sizeof(context), "%s", err->message);
             }
-            error_from_raised_exception(err, AEROSPIKE_ERR, context);
+            as_error_update_from_raised_exc(err, AEROSPIKE_ERR, context);
         }
         else if (err->code == AEROSPIKE_OK) {
             as_error_set_message(err, AEROSPIKE_ERR,
@@ -604,7 +604,7 @@ static as_status call_py_metrics_exporter(as_metrics_exporter *exporter,
                                               "export", "O", py_snapshot);
     Py_DECREF(py_snapshot);
     if (!py_result) {
-        status = error_from_raised_exception(
+        status = as_error_update_from_raised_exc(
             err, AEROSPIKE_ERR, "Metrics exporter's export() raised");
         goto done;
     }
