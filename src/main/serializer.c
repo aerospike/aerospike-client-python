@@ -501,8 +501,8 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
                 char prefix[64];
                 snprintf(prefix, sizeof(prefix),
                          "Unable to deserialize bytes as %s", class_name);
-                error_from_raised_exception(error_p, AEROSPIKE_ERR_CLIENT,
-                                            prefix);
+                as_error_update_from_raised_exc(error_p, AEROSPIKE_ERR_CLIENT,
+                                                prefix);
             }
             goto CLEANUP;
         }
