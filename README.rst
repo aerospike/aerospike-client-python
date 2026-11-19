@@ -8,6 +8,47 @@ Aerospike Python Client
 .. |Downloads| image:: https://img.shields.io/pypi/dm/aerospike.svg
 .. |License| image:: https://img.shields.io/pypi/l/aerospike.svg
 
+AI coding agent entry point
+---------------------------
+
+PyPI package ``aerospike``, version in the root ``VERSION`` file. Python 3.10-3.14.
+Requires Aerospike server 4.9+. Ops in ``aerospike_helpers`` are functions, not client methods.
+
+What to read, by task (task → read first → authoritative for):
+
+* First put/get — ``examples/client/put.py``, ``get.py``, ``kvs.py`` — one call
+* Client setup — ``doc/aerospike.rst`` (config), ``doc/client.rst`` (policies) — parameter semantics
+* Signatures, types — ``aerospike-stubs/*.pyi`` — machine-readable signatures
+* List / map / bit / HLL ops — ``aerospike_helpers/operations/`` — the operation set
+* Expressions, path expressions — ``aerospike_helpers/expressions/``, ``doc/aerospike_helpers.expressions.rst`` — expression set
+* Batch — ``doc/client.rst`` ``batch_*`` methods, then ``aerospike_helpers/batch/`` — behavior
+* Queries, secondary indexes — ``examples/client/query*.py``, ``doc/query.rst`` — behavior
+* Transactions — ``doc/transaction.rst`` to start a transaction, then ``doc/client.rst`` ``abort`` and ``commit`` methods  — semantics
+* Errors — ``doc/exception.rst``, ``aerospike-stubs/exception.pyi`` — exception hierarchy
+
+Repository map::
+
+    doc/                  API reference; see doc/README.md, doc/for-ai-agents.rst
+    aerospike-stubs/      type stubs (.pyi)
+    aerospike_helpers/    data structures to be passed to client API methods: batch, expressions, operations, metrics, cdt_ctx
+    examples/             client/ (incl. admin/), string_ops/, run_all_examples.py
+    test/new_tests/       actual behavior; see test/README.md
+    src/                  CPython extension that wraps around the C client; aerospike-client-c/ is not the Python API
+    VERSION, BUILD.md, AGENTS.md, test/standalone/README.md, benchmarks/README.rst
+
+Canonical reference application: no Python SubMilliPost in this repo yet; ``examples/client/`` is single-call only.
+Precedence when sources disagree: ``doc/for-ai-agents.rst``.
+
+Known traps:
+* Ops are helpers in ``aerospike_helpers.operations``, passed to ``client.operate()`` — no ``client.list_append()``.
+* Set ``{"key": aerospike.POLICY_KEY_SEND}`` when the user key matters (default is digest-only).
+* Do not loop ``get``/``exists``/``operate``/``remove``; use ``batch_read``/``batch_operate``/``batch_write``/``batch_remove``.
+* Do not hand-roll batch fan-out; a node sub-batch of size 1 already degrades to the single-record path.
+* Nested CDT removal is ``modify_by_path`` with ``RemoveResult().compile()``, not a separate method.
+
+Verifying generated code: ``doc/for-ai-agents.rst``.
+Aerospike agent skills: https://github.com/aerospike/agent-skills (data modeling; this repo is the Python API).
+
 Compatibility
 -------------
 
