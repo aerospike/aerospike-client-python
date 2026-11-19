@@ -586,7 +586,8 @@ static as_status call_py_metrics_exporter(as_metrics_exporter *exporter,
         if (PyErr_Occurred()) {
             // The exception cannot be chained here, so move it into err's
             // message (see "Snapshot helpers" above). If err has a message,
-            // keep it as the prefix.
+            // use it as the prefix instead of the default one. It is copied
+            // first because the update below overwrites err's message.
             char context[AS_ERROR_MESSAGE_MAX_SIZE] =
                 "Unable to build the metrics snapshot";
             if (err->code != AEROSPIKE_OK) {
