@@ -105,12 +105,21 @@ static PyObject *as_metrics_latency_buckets_to_pyobject(
     for (uint8_t i = 0; i < count; i++) {
         PyObject *py_bucket =
             PyLong_FromUnsignedLongLong(latency_snapshot->buckets[i]);
-        if (!py_bucket || PyList_SetItem(py_list, i, py_bucket) == -1) {
-            Py_XDECREF(py_bucket);
+        if (!py_bucket) {
             Py_DECREF(py_list);
             PyErr_Clear();
             as_error_update(err, AEROSPIKE_ERR,
-                            "Failed to append latency bucket at index %u", i);
+                            "Failed to create latency bucket at index %u", i);
+            return NULL;
+        }
+        // PyList_SetItem steals the reference to py_bucket, even on failure.
+        int result = PyList_SetItem(py_list, i, py_bucket);
+        if (result == -1) {
+            Py_DECREF(py_list);
+            PyErr_Clear();
+            as_error_update(err, AEROSPIKE_ERR,
+                            "Failed to set latency bucket at index %u in list",
+                            i);
             return NULL;
         }
     }
