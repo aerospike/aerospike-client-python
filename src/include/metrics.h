@@ -30,13 +30,25 @@ PyObject *AerospikeClient_GetStats(AerospikeClient *self);
 
 /*
  * Convert MetricsPolicy.exporters into C exporters appended to metrics_policy.
- * Returns the NULL-terminated array of wrappers, which the caller owns. Returns
- * NULL if no exporters were set, or if err was populated, in which case nothing
- * is left allocated.
+ * metrics_policy->exporters must be empty. If err was populated, nothing is
+ * left allocated.
+ */
+as_status as_metrics_policy_add_exporters_from_pyobject(
+    as_error *err, PyObject *py_metrics_policy,
+    as_metrics_policy *metrics_policy);
+
+/*
+ * as_metrics_policy_destroy() frees metrics_policy->exporters but not the
+ * exporters in it, and the cluster keeps using them after that. So whoever
+ * sets a policy with as_metrics_policy_add_exporters_from_pyobject() calls this
+ * before the policy is destroyed, to keep track of the exporters.
+ * Returns them as a NULL-terminated array, which the caller owns. Returns NULL
+ * if there are none, or if err was populated, in which case the exporters were
+ * freed.
  */
 PyMetricsExporter **
-py_metrics_exporters_from_pyobject(as_error *err, PyObject *py_metrics_policy,
-                                   as_metrics_policy *metrics_policy);
+create_py_metrics_exporters_from_policy(as_error *err,
+                                        as_metrics_policy *metrics_policy);
 
 // exporters is a NULL-terminated array, or NULL
 void py_metrics_exporters_destroy(PyMetricsExporter **exporters);

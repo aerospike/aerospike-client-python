@@ -1113,14 +1113,18 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             goto RAISE_EXCEPTION_WITH_AS_ERROR;
         }
         else {
-            PyMetricsExporter **config_exporters = NULL;
             int retval = as_metrics_policy_set_using_pyobject(
                 &constructor_err, py_obj_metrics_policy,
-                &(config.policies.metrics), &config_exporters);
+                &(config.policies.metrics));
             if (retval != AEROSPIKE_OK) {
                 goto RAISE_EXCEPTION_WITH_AS_ERROR;
             }
-            self->config_metrics_exporters = config_exporters;
+            self->config_metrics_exporters =
+                create_py_metrics_exporters_from_policy(
+                    &constructor_err, &(config.policies.metrics));
+            if (constructor_err.code != AEROSPIKE_OK) {
+                goto RAISE_EXCEPTION_WITH_AS_ERROR;
+            }
         }
 
         PyObject *py_login_timeout =

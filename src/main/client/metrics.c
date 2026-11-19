@@ -21,6 +21,7 @@
 #include <aerospike/as_latency.h>
 #include <aerospike/as_log_macros.h>
 #include <aerospike/as_metrics.h>
+#include <aerospike/as_vector.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -645,33 +646,46 @@ void aerospike_client_release_all_metrics_exporters(AerospikeClient *self)
     self->active_metrics_exporters = NULL;
 }
 
-PyMetricsExporter **
-py_metrics_exporters_from_pyobject(as_error *err, PyObject *py_metrics_policy,
-                                   as_metrics_policy *metrics_policy)
+// Frees the exporters in metrics_policy->exporters and the vector holding them
+static void
+py_metrics_policy_destroy_exporters(as_metrics_policy *metrics_policy)
+{
+    as_vector *exporters = metrics_policy->exporters;
+    if (!exporters) {
+        return;
+    }
+
+    for (uint32_t i = 0; i < exporters->size; i++) {
+        PyMetricsExporter *wrapper = as_vector_get_ptr(exporters, i);
+        Py_XDECREF(wrapper->py_exporter);
+        free(wrapper);
+    }
+    as_vector_destroy(exporters);
+    metrics_policy->exporters = NULL;
+}
+
+as_status
+as_metrics_policy_add_exporters_from_pyobject(as_error *err,
+                                              PyObject *py_metrics_policy,
+                                              as_metrics_policy *metrics_policy)
 {
     PyObject *py_exporters =
         PyObject_GetAttrString(py_metrics_policy, "exporters");
     if (!py_exporters) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "Unable to fetch exporters attribute");
-        return NULL;
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "Unable to fetch exporters attribute");
     }
     if (py_exporters == Py_None) {
         Py_DECREF(py_exporters);
-        return NULL;
+        return AEROSPIKE_OK;
     }
     if (!PyList_Check(py_exporters)) {
         Py_DECREF(py_exporters);
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "MetricsPolicy.exporters must be a list type");
-        return NULL;
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "MetricsPolicy.exporters must be a list type");
     }
 
     Py_ssize_t count = PyList_GET_SIZE(py_exporters);
-    if (count == 0) {
-        Py_DECREF(py_exporters);
-        return NULL;
-    }
 
     // Check every exporter before allocating anything for them
     for (Py_ssize_t i = 0; i < count; i++) {
@@ -679,50 +693,61 @@ py_metrics_exporters_from_pyobject(as_error *err, PyObject *py_metrics_policy,
         PyObject *py_export = PyObject_GetAttrString(py_exporter, "export");
         if (!py_export) {
             Py_DECREF(py_exporters);
-            as_error_update(
+            return as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
                 "MetricsPolicy.exporters[%zd] must have an export method", i);
-            return NULL;
         }
         int is_callable = PyCallable_Check(py_export);
         Py_DECREF(py_export);
         if (!is_callable) {
             Py_DECREF(py_exporters);
-            as_error_update(
+            return as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
                 "MetricsPolicy.exporters[%zd].export must be callable", i);
-            return NULL;
         }
-    }
-
-    // calloc() sets the NULL terminator
-    PyMetricsExporter **exporters =
-        calloc((size_t)count + 1, sizeof(PyMetricsExporter *));
-    if (!exporters) {
-        Py_DECREF(py_exporters);
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to allocate metrics exporters");
-        return NULL;
     }
 
     for (Py_ssize_t i = 0; i < count; i++) {
         PyObject *py_exporter = PyList_GET_ITEM(py_exporters, i);
         PyMetricsExporter *wrapper = calloc(1, sizeof(PyMetricsExporter));
         if (!wrapper) {
-            py_metrics_exporters_destroy(exporters);
+            py_metrics_policy_destroy_exporters(metrics_policy);
             Py_DECREF(py_exporters);
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to allocate metrics exporter");
-            return NULL;
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                   "Failed to allocate metrics exporter");
         }
         wrapper->base.export_fn = call_py_metrics_exporter;
         wrapper->py_exporter = py_exporter;
         Py_INCREF(py_exporter);
-        exporters[i] = wrapper;
         as_metrics_policy_add_exporter(metrics_policy, &wrapper->base);
     }
 
     Py_DECREF(py_exporters);
+    return AEROSPIKE_OK;
+}
+
+PyMetricsExporter **
+create_py_metrics_exporters_from_policy(as_error *err,
+                                        as_metrics_policy *metrics_policy)
+{
+    as_vector *policy_exporters = metrics_policy->exporters;
+    if (!policy_exporters || policy_exporters->size == 0) {
+        return NULL;
+    }
+
+    // calloc() sets the NULL terminator
+    PyMetricsExporter **exporters =
+        calloc((size_t)policy_exporters->size + 1, sizeof(PyMetricsExporter *));
+    if (!exporters) {
+        py_metrics_policy_destroy_exporters(metrics_policy);
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to allocate metrics exporters");
+        return NULL;
+    }
+
+    for (uint32_t i = 0; i < policy_exporters->size; i++) {
+        exporters[i] = as_vector_get_ptr(policy_exporters, i);
+    }
     return exporters;
 }
 
@@ -761,7 +786,7 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
         as_metrics_policy_init(&metrics_policy);
         metrics_policy_ref = &metrics_policy;
         int retval = as_metrics_policy_set_using_pyobject(
-            &err, py_metrics_policy, &metrics_policy, &new_exporters);
+            &err, py_metrics_policy, &metrics_policy);
         if (retval != 0) {
             goto CLEANUP_ON_ERROR;
         }
@@ -772,6 +797,15 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
     // 2. Otherwise, udata is NULL.
     free_udata_as_py_listener_data =
         metrics_policy_ref && metrics_policy.metrics_listeners.udata != NULL;
+
+    if (metrics_policy_ref) {
+        // The policy is destroyed below, but the exporters must stay alive
+        new_exporters =
+            create_py_metrics_exporters_from_policy(&err, &metrics_policy);
+        if (err.code != AEROSPIKE_OK) {
+            goto CLEANUP_ON_ERROR;
+        }
+    }
 
     Py_BEGIN_ALLOW_THREADS
     aerospike_enable_metrics(self->as, &err, metrics_policy_ref);
