@@ -63,7 +63,10 @@ static bool client_metrics_enabled(AerospikeClient *self)
 
 // Describes in err that an attribute of a snapshot object could not be created.
 // The exception raised by the failed C-API call stays raised, as described
-// above.
+// above. The C-API docs only say that these calls raise an exception, so its
+// message is unspecified: it can differ between Python versions, can be empty
+// (MemoryError), and does not always say which snapshot type or attribute was
+// being created. err's message adds that context to the exception's message.
 static int set_new_attr_error(as_error *err, PyObject *py_obj,
                               const char *action, const char *name)
 {
