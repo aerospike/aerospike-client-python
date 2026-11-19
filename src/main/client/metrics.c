@@ -70,18 +70,17 @@ static int set_new_attr(as_error *err, PyObject *py_obj, const char *name,
     return 0;
 }
 
-static PyObject *
-as_metrics_conn_snapshot_to_pyobject(as_error *err,
-                                     const as_metrics_conn_snapshot *snapshot)
+static PyObject *as_metrics_conn_snapshot_to_pyobject(
+    as_error *err, const as_metrics_conn_snapshot *conn_snapshot)
 {
     // The snapshot has the same counters as as_conn_stats, so both share one
     // conversion and its field names.
-    as_conn_stats stats = {.in_use = snapshot->in_use,
-                           .in_pool = snapshot->in_pool,
-                           .opened = snapshot->opened,
-                           .closed = snapshot->closed,
-                           .recovered = snapshot->recovered,
-                           .aborted = snapshot->aborted};
+    as_conn_stats stats = {.in_use = conn_snapshot->in_use,
+                           .in_pool = conn_snapshot->in_pool,
+                           .opened = conn_snapshot->opened,
+                           .closed = conn_snapshot->closed,
+                           .recovered = conn_snapshot->recovered,
+                           .aborted = conn_snapshot->aborted};
     PyObject *py_conn_stats =
         create_py_conn_stats_from_as_conn_stats(err, &stats);
     if (!py_conn_stats) {
@@ -92,9 +91,10 @@ as_metrics_conn_snapshot_to_pyobject(as_error *err,
 }
 
 static PyObject *as_metrics_latency_buckets_to_pyobject(
-    as_error *err, const as_metrics_latency_snapshot *latency)
+    as_error *err, const as_metrics_latency_snapshot *latency_snapshot)
 {
-    uint8_t count = latency->buckets ? latency->bucket_count : 0;
+    uint8_t count =
+        latency_snapshot->buckets ? latency_snapshot->bucket_count : 0;
     PyObject *py_list = PyList_New(count);
     if (!py_list) {
         as_error_update(err, AEROSPIKE_ERR,
@@ -103,7 +103,8 @@ static PyObject *as_metrics_latency_buckets_to_pyobject(
     }
 
     for (uint8_t i = 0; i < count; i++) {
-        PyObject *py_bucket = PyLong_FromUnsignedLongLong(latency->buckets[i]);
+        PyObject *py_bucket =
+            PyLong_FromUnsignedLongLong(latency_snapshot->buckets[i]);
         if (!py_bucket || PyList_SetItem(py_list, i, py_bucket) == -1) {
             Py_XDECREF(py_bucket);
             Py_DECREF(py_list);
@@ -117,113 +118,121 @@ static PyObject *as_metrics_latency_buckets_to_pyobject(
 }
 
 static PyObject *as_metrics_latency_snapshot_to_pyobject(
-    as_error *err, const as_metrics_latency_snapshot *latency)
+    as_error *err, const as_metrics_latency_snapshot *latency_snapshot)
 {
-    PyObject *py_latency = create_class_instance_from_module(
+    PyObject *py_latency_snapshot = create_class_instance_from_module(
         err, "aerospike_helpers.metrics", "LatencySnapshot", NULL);
-    if (!py_latency) {
+    if (!py_latency_snapshot) {
         return NULL;
     }
 
-    PyObject *py_buckets = as_metrics_latency_buckets_to_pyobject(err, latency);
-    if (set_new_attr(err, py_latency, "buckets", py_buckets) != 0) {
-        Py_DECREF(py_latency);
+    PyObject *py_buckets =
+        as_metrics_latency_buckets_to_pyobject(err, latency_snapshot);
+    if (set_new_attr(err, py_latency_snapshot, "buckets", py_buckets) != 0) {
+        Py_DECREF(py_latency_snapshot);
         return NULL;
     }
 
     const char *field_names[] = {"sum", "count", "min", "max"};
-    uint64_t values[] = {latency->sum, latency->count, latency->min,
-                         latency->max};
+    uint64_t values[] = {latency_snapshot->sum, latency_snapshot->count,
+                         latency_snapshot->min, latency_snapshot->max};
     for (unsigned long i = 0; i < sizeof(field_names) / sizeof(field_names[0]);
          i++) {
-        if (set_new_attr(err, py_latency, field_names[i],
+        if (set_new_attr(err, py_latency_snapshot, field_names[i],
                          PyLong_FromUnsignedLongLong(values[i])) != 0) {
-            Py_DECREF(py_latency);
+            Py_DECREF(py_latency_snapshot);
             return NULL;
         }
     }
-    return py_latency;
+    return py_latency_snapshot;
 }
 
-static PyObject *
-as_metrics_latencies_to_pyobject(as_error *err,
-                                 const as_metrics_latency_snapshot *series)
+static PyObject *as_metrics_latencies_to_pyobject(
+    as_error *err, const as_metrics_latency_snapshot *latency_snapshots)
 {
-    PyObject *py_latency = PyDict_New();
-    if (!py_latency) {
+    PyObject *py_latencies = PyDict_New();
+    if (!py_latencies) {
         as_error_update(err, AEROSPIKE_ERR,
                         "Failed to create latency dictionary");
         return NULL;
     }
     for (uint8_t i = 0; i < AS_LATENCY_TYPE_MAX; i++) {
         const char *latency_name = as_latency_type_to_string(i);
-        PyObject *py_series =
-            as_metrics_latency_snapshot_to_pyobject(err, &series[i]);
-        if (!py_series) {
-            Py_DECREF(py_latency);
+        PyObject *py_latency_snapshot =
+            as_metrics_latency_snapshot_to_pyobject(err, &latency_snapshots[i]);
+        if (!py_latency_snapshot) {
+            Py_DECREF(py_latencies);
             return NULL;
         }
-        int result = PyDict_SetItemString(py_latency, latency_name, py_series);
-        Py_DECREF(py_series);
+        int result = PyDict_SetItemString(py_latencies, latency_name,
+                                          py_latency_snapshot);
+        Py_DECREF(py_latency_snapshot);
         if (result == -1) {
             PyErr_Clear();
-            Py_DECREF(py_latency);
+            Py_DECREF(py_latencies);
             as_error_update(err, AEROSPIKE_ERR, "Failed to set latencies[%s]",
                             latency_name);
             return NULL;
         }
     }
-    return py_latency;
+    return py_latencies;
 }
 
 static PyObject *as_metrics_namespace_snapshot_to_pyobject(
-    as_error *err, const as_metrics_namespace_snapshot *ns)
+    as_error *err, const as_metrics_namespace_snapshot *namespace_snapshot)
 {
-    PyObject *py_ns = create_class_instance_from_module(
+    PyObject *py_namespace_snapshot = create_class_instance_from_module(
         err, "aerospike_helpers.metrics", "NamespaceSnapshot", NULL);
-    if (!py_ns) {
+    if (!py_namespace_snapshot) {
         return NULL;
     }
 
-    if (set_new_attr(err, py_ns, "name",
-                     PyUnicode_FromString(ns->name ? ns->name : "")) != 0) {
+    if (set_new_attr(err, py_namespace_snapshot, "name",
+                     PyUnicode_FromString(namespace_snapshot->name
+                                              ? namespace_snapshot->name
+                                              : "")) != 0) {
         goto error;
     }
 
     const char *counter_names[] = {
         "errors",         "client_timeouts", "server_timeouts", "key_busy",
         "record_too_big", "device_overload", "bytes_in",        "bytes_out"};
-    uint64_t counters[] = {ns->errors,          ns->client_timeouts,
-                           ns->server_timeouts, ns->key_busy,
-                           ns->record_too_big,  ns->device_overload,
-                           ns->bytes_in,        ns->bytes_out};
+    uint64_t counters[] = {namespace_snapshot->errors,
+                           namespace_snapshot->client_timeouts,
+                           namespace_snapshot->server_timeouts,
+                           namespace_snapshot->key_busy,
+                           namespace_snapshot->record_too_big,
+                           namespace_snapshot->device_overload,
+                           namespace_snapshot->bytes_in,
+                           namespace_snapshot->bytes_out};
     for (unsigned long i = 0;
          i < sizeof(counter_names) / sizeof(counter_names[0]); i++) {
-        if (set_new_attr(err, py_ns, counter_names[i],
+        if (set_new_attr(err, py_namespace_snapshot, counter_names[i],
                          PyLong_FromUnsignedLongLong(counters[i])) != 0) {
             goto error;
         }
     }
 
-    // ns->latencies is the per-attempt series. Command latency is
-    // snapshot->command_latencies.
+    // namespace_snapshot->latencies is the per-attempt series. Command latency
+    // is snapshot->command_latencies.
     PyObject *py_latencies =
-        as_metrics_latencies_to_pyobject(err, ns->latencies);
+        as_metrics_latencies_to_pyobject(err, namespace_snapshot->latencies);
     if (!py_latencies) {
         goto error;
     }
-    if (set_new_attr(err, py_ns, "latencies", py_latencies) != 0) {
+    if (set_new_attr(err, py_namespace_snapshot, "latencies", py_latencies) !=
+        0) {
         goto error;
     }
-    return py_ns;
+    return py_namespace_snapshot;
 
 error:
-    Py_DECREF(py_ns);
+    Py_DECREF(py_namespace_snapshot);
     return NULL;
 }
 
 static PyObject *as_metrics_node_snapshots_to_pyobject(
-    as_error *err, as_metrics_node_snapshot **nodes, uint32_t count)
+    as_error *err, as_metrics_node_snapshot **node_snapshots, uint32_t count)
 {
     PyObject *py_list = PyList_New(count);
     if (!py_list) {
@@ -231,7 +240,7 @@ static PyObject *as_metrics_node_snapshots_to_pyobject(
                         "Failed to create node snapshot list");
         return NULL;
     }
-    if (!nodes && count > 0) {
+    if (!node_snapshots && count > 0) {
         Py_DECREF(py_list);
         as_error_update(err, AEROSPIKE_ERR,
                         "Metrics node snapshot list is missing");
@@ -239,80 +248,88 @@ static PyObject *as_metrics_node_snapshots_to_pyobject(
     }
 
     for (uint32_t i = 0; i < count; i++) {
-        const as_metrics_node_snapshot *node = nodes[i];
-        PyObject *py_node = create_class_instance_from_module(
+        const as_metrics_node_snapshot *node_snapshot = node_snapshots[i];
+        PyObject *py_node_snapshot = create_class_instance_from_module(
             err, "aerospike_helpers.metrics", "NodeSnapshot", NULL);
-        if (!py_node) {
+        if (!py_node_snapshot) {
             Py_DECREF(py_list);
             return NULL;
         }
 
-        if (set_new_attr(err, py_node, "name",
-                         PyUnicode_FromString(node->name ? node->name : "")) !=
+        if (set_new_attr(err, py_node_snapshot, "name",
+                         PyUnicode_FromString(
+                             node_snapshot->name ? node_snapshot->name : "")) !=
                 0 ||
-            set_new_attr(err, py_node, "address",
-                         PyUnicode_FromString(node->address ? node->address
-                                                            : "")) != 0 ||
-            set_new_attr(err, py_node, "port",
-                         PyLong_FromUnsignedLong(node->port)) != 0) {
-            Py_DECREF(py_node);
+            set_new_attr(err, py_node_snapshot, "address",
+                         PyUnicode_FromString(node_snapshot->address
+                                                  ? node_snapshot->address
+                                                  : "")) != 0 ||
+            set_new_attr(err, py_node_snapshot, "port",
+                         PyLong_FromUnsignedLong(node_snapshot->port)) != 0) {
+            Py_DECREF(py_node_snapshot);
             Py_DECREF(py_list);
             return NULL;
         }
 
-        // This client does not run async commands, so node->async is not copied.
+        // This client does not run async commands, so node_snapshot->async is
+        // not copied.
         PyObject *py_sync =
-            as_metrics_conn_snapshot_to_pyobject(err, &node->sync);
-        if (set_new_attr(err, py_node, "sync", py_sync) != 0) {
-            Py_DECREF(py_node);
+            as_metrics_conn_snapshot_to_pyobject(err, &node_snapshot->sync);
+        if (set_new_attr(err, py_node_snapshot, "sync", py_sync) != 0) {
+            Py_DECREF(py_node_snapshot);
             Py_DECREF(py_list);
             return NULL;
         }
-        if (set_new_attr(err, py_node, "conn_open_failures",
-                         PyLong_FromUnsignedLong(node->conn_open_failures)) !=
-                0 ||
-            set_new_attr(err, py_node, "conn_tls_handshake_failures",
+        if (set_new_attr(err, py_node_snapshot, "conn_open_failures",
                          PyLong_FromUnsignedLong(
-                             node->conn_tls_handshake_failures)) != 0 ||
-            set_new_attr(err, py_node, "conn_auth_failures",
-                         PyLong_FromUnsignedLong(node->conn_auth_failures)) !=
-                0) {
-            Py_DECREF(py_node);
+                             node_snapshot->conn_open_failures)) != 0 ||
+            set_new_attr(err, py_node_snapshot, "conn_tls_handshake_failures",
+                         PyLong_FromUnsignedLong(
+                             node_snapshot->conn_tls_handshake_failures)) !=
+                0 ||
+            set_new_attr(err, py_node_snapshot, "conn_auth_failures",
+                         PyLong_FromUnsignedLong(
+                             node_snapshot->conn_auth_failures)) != 0) {
+            Py_DECREF(py_node_snapshot);
             Py_DECREF(py_list);
             return NULL;
         }
 
-        PyObject *py_conn_latency =
-            as_metrics_latency_snapshot_to_pyobject(err, &node->conn_latency);
-        if (set_new_attr(err, py_node, "conn_latency", py_conn_latency) != 0) {
-            Py_DECREF(py_node);
+        PyObject *py_conn_latency = as_metrics_latency_snapshot_to_pyobject(
+            err, &node_snapshot->conn_latency);
+        if (set_new_attr(err, py_node_snapshot, "conn_latency",
+                         py_conn_latency) != 0) {
+            Py_DECREF(py_node_snapshot);
             Py_DECREF(py_list);
             return NULL;
         }
 
-        PyObject *py_namespaces = PyList_New(node->namespace_count);
+        PyObject *py_namespaces = PyList_New(node_snapshot->namespace_count);
         if (!py_namespaces) {
-            Py_DECREF(py_node);
+            Py_DECREF(py_node_snapshot);
             Py_DECREF(py_list);
             as_error_update(err, AEROSPIKE_ERR,
                             "Failed to create namespace snapshot list");
             return NULL;
         }
-        for (uint32_t j = 0; j < node->namespace_count; j++) {
-            PyObject *py_ns = as_metrics_namespace_snapshot_to_pyobject(
-                err, &node->namespaces[j]);
-            if (!py_ns || PyList_SetItem(py_namespaces, j, py_ns) == -1) {
-                Py_XDECREF(py_ns);
+        for (uint32_t j = 0; j < node_snapshot->namespace_count; j++) {
+            PyObject *py_namespace_snapshot =
+                as_metrics_namespace_snapshot_to_pyobject(
+                    err, &node_snapshot->namespaces[j]);
+            if (!py_namespace_snapshot ||
+                PyList_SetItem(py_namespaces, j, py_namespace_snapshot) == -1) {
+                Py_XDECREF(py_namespace_snapshot);
                 Py_DECREF(py_namespaces);
-                Py_DECREF(py_node);
+                Py_DECREF(py_node_snapshot);
                 Py_DECREF(py_list);
                 PyErr_Clear();
                 return NULL;
             }
         }
-        if (set_new_attr(err, py_node, "namespaces", py_namespaces) != 0 ||
-            PyList_SetItem(py_list, i, py_node) == -1) {
-            Py_XDECREF(py_node);
+        if (set_new_attr(err, py_node_snapshot, "namespaces", py_namespaces) !=
+                0 ||
+            PyList_SetItem(py_list, i, py_node_snapshot) == -1) {
+            Py_XDECREF(py_node_snapshot);
             Py_DECREF(py_list);
             PyErr_Clear();
             return NULL;
