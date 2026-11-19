@@ -70,8 +70,9 @@ static int set_new_attr(as_error *err, PyObject *py_obj, const char *name,
     return 0;
 }
 
-static PyObject *create_py_conn_stats_from_as_metrics_conn_snapshot(
-    as_error *err, const as_metrics_conn_snapshot *stats)
+static PyObject *
+as_metrics_conn_snapshot_to_pyobject(as_error *err,
+                                     const as_metrics_conn_snapshot *stats)
 {
     PyObject *py_conn_stats = create_class_instance_from_module(
         err, "aerospike_helpers.metrics", "ConnectionStats", NULL);
@@ -94,7 +95,7 @@ static PyObject *create_py_conn_stats_from_as_metrics_conn_snapshot(
     return py_conn_stats;
 }
 
-static PyObject *create_py_list_of_buckets_from_as_metrics_latency_snapshot(
+static PyObject *as_metrics_latency_buckets_to_pyobject(
     as_error *err, const as_metrics_latency_snapshot *latency)
 {
     uint8_t count = latency->buckets ? latency->bucket_count : 0;
@@ -119,7 +120,7 @@ static PyObject *create_py_list_of_buckets_from_as_metrics_latency_snapshot(
     return py_list;
 }
 
-static PyObject *create_py_latency_snapshot_from_as_metrics_latency_snapshot(
+static PyObject *as_metrics_latency_snapshot_to_pyobject(
     as_error *err, const as_metrics_latency_snapshot *latency)
 {
     PyObject *py_latency = create_class_instance_from_module(
@@ -128,9 +129,7 @@ static PyObject *create_py_latency_snapshot_from_as_metrics_latency_snapshot(
         return NULL;
     }
 
-    PyObject *py_buckets =
-        create_py_list_of_buckets_from_as_metrics_latency_snapshot(err,
-                                                                   latency);
+    PyObject *py_buckets = as_metrics_latency_buckets_to_pyobject(err, latency);
     if (set_new_attr(err, py_latency, "buckets", py_buckets) != 0) {
         Py_DECREF(py_latency);
         return NULL;
@@ -150,8 +149,9 @@ static PyObject *create_py_latency_snapshot_from_as_metrics_latency_snapshot(
     return py_latency;
 }
 
-static PyObject *create_py_latency_dict_from_as_metrics_latency_snapshot(
-    as_error *err, const as_metrics_latency_snapshot *series)
+static PyObject *
+as_metrics_latencies_to_pyobject(as_error *err,
+                                 const as_metrics_latency_snapshot *series)
 {
     PyObject *py_latency = PyDict_New();
     if (!py_latency) {
@@ -162,8 +162,7 @@ static PyObject *create_py_latency_dict_from_as_metrics_latency_snapshot(
     for (uint8_t i = 0; i < AS_LATENCY_TYPE_MAX; i++) {
         const char *latency_name = as_latency_type_to_string(i);
         PyObject *py_series =
-            create_py_latency_snapshot_from_as_metrics_latency_snapshot(
-                err, &series[i]);
+            as_metrics_latency_snapshot_to_pyobject(err, &series[i]);
         if (!py_series) {
             Py_DECREF(py_latency);
             return NULL;
@@ -181,8 +180,7 @@ static PyObject *create_py_latency_dict_from_as_metrics_latency_snapshot(
     return py_latency;
 }
 
-static PyObject *
-create_py_namespace_snapshot_from_as_metrics_namespace_snapshot(
+static PyObject *as_metrics_namespace_snapshot_to_pyobject(
     as_error *err, const as_metrics_namespace_snapshot *ns)
 {
     PyObject *py_ns = create_class_instance_from_module(
@@ -214,8 +212,7 @@ create_py_namespace_snapshot_from_as_metrics_namespace_snapshot(
     // ns->latencies is the per-attempt series. Command latency is
     // snapshot->command_latencies.
     PyObject *py_latencies =
-        create_py_latency_dict_from_as_metrics_latency_snapshot(err,
-                                                                ns->latencies);
+        as_metrics_latencies_to_pyobject(err, ns->latencies);
     if (!py_latencies) {
         goto error;
     }
@@ -229,7 +226,7 @@ error:
     return NULL;
 }
 
-static PyObject *create_py_list_of_node_snapshots_from_as_metrics_node_snapshot(
+static PyObject *as_metrics_node_snapshots_to_pyobject(
     as_error *err, as_metrics_node_snapshot **nodes, uint32_t count)
 {
     PyObject *py_list = PyList_New(count);
@@ -268,8 +265,8 @@ static PyObject *create_py_list_of_node_snapshots_from_as_metrics_node_snapshot(
         }
 
         // This client does not run async commands, so node->async is not copied.
-        PyObject *py_sync = create_py_conn_stats_from_as_metrics_conn_snapshot(
-            err, &node->sync);
+        PyObject *py_sync =
+            as_metrics_conn_snapshot_to_pyobject(err, &node->sync);
         if (set_new_attr(err, py_node, "sync", py_sync) != 0) {
             Py_DECREF(py_node);
             Py_DECREF(py_list);
@@ -290,8 +287,7 @@ static PyObject *create_py_list_of_node_snapshots_from_as_metrics_node_snapshot(
         }
 
         PyObject *py_conn_latency =
-            create_py_latency_snapshot_from_as_metrics_latency_snapshot(
-                err, &node->conn_latency);
+            as_metrics_latency_snapshot_to_pyobject(err, &node->conn_latency);
         if (set_new_attr(err, py_node, "conn_latency", py_conn_latency) != 0) {
             Py_DECREF(py_node);
             Py_DECREF(py_list);
@@ -307,9 +303,8 @@ static PyObject *create_py_list_of_node_snapshots_from_as_metrics_node_snapshot(
             return NULL;
         }
         for (uint32_t j = 0; j < node->namespace_count; j++) {
-            PyObject *py_ns =
-                create_py_namespace_snapshot_from_as_metrics_namespace_snapshot(
-                    err, &node->namespaces[j]);
+            PyObject *py_ns = as_metrics_namespace_snapshot_to_pyobject(
+                err, &node->namespaces[j]);
             if (!py_ns || PyList_SetItem(py_namespaces, j, py_ns) == -1) {
                 Py_XDECREF(py_ns);
                 Py_DECREF(py_namespaces);
@@ -330,8 +325,9 @@ static PyObject *create_py_list_of_node_snapshots_from_as_metrics_node_snapshot(
     return py_list;
 }
 
-static PyObject *create_py_metrics_snapshot_from_as_metrics_snapshot(
-    as_error *err, const as_metrics_snapshot *snapshot)
+static PyObject *
+as_metrics_snapshot_to_pyobject(as_error *err,
+                                const as_metrics_snapshot *snapshot)
 {
     PyObject *py_snapshot = create_class_instance_from_module(
         err, "aerospike_helpers.metrics", "MetricsSnapshot", NULL);
@@ -440,8 +436,7 @@ static PyObject *create_py_metrics_snapshot_from_as_metrics_snapshot(
     }
 
     PyObject *py_command_latencies =
-        create_py_latency_dict_from_as_metrics_latency_snapshot(
-            err, snapshot->command_latencies);
+        as_metrics_latencies_to_pyobject(err, snapshot->command_latencies);
     if (!py_command_latencies) {
         goto error;
     }
@@ -451,12 +446,10 @@ static PyObject *create_py_metrics_snapshot_from_as_metrics_snapshot(
     }
 
     // This client does not run async commands, so event-loop gauges are not copied.
-    PyObject *py_nodes =
-        create_py_list_of_node_snapshots_from_as_metrics_node_snapshot(
-            err, snapshot->nodes, snapshot->nodes_count);
-    PyObject *py_departed =
-        create_py_list_of_node_snapshots_from_as_metrics_node_snapshot(
-            err, snapshot->nodes_departed, snapshot->nodes_departed_count);
+    PyObject *py_nodes = as_metrics_node_snapshots_to_pyobject(
+        err, snapshot->nodes, snapshot->nodes_count);
+    PyObject *py_departed = as_metrics_node_snapshots_to_pyobject(
+        err, snapshot->nodes_departed, snapshot->nodes_departed_count);
     if (!py_nodes || !py_departed) {
         Py_XDECREF(py_nodes);
         Py_XDECREF(py_departed);
@@ -484,8 +477,7 @@ static as_status py_metrics_export(as_metrics_exporter *exporter, as_error *err,
     PyGILState_STATE state = PyGILState_Ensure();
     as_status status = AEROSPIKE_OK;
 
-    PyObject *py_snapshot =
-        create_py_metrics_snapshot_from_as_metrics_snapshot(err, snapshot);
+    PyObject *py_snapshot = as_metrics_snapshot_to_pyobject(err, snapshot);
     if (!py_snapshot) {
         if (PyErr_Occurred()) {
             error_from_raised_exception(err, AEROSPIKE_ERR,
@@ -779,8 +771,7 @@ PyObject *AerospikeClient_GetMetricsSnapshot(AerospikeClient *self)
         return NULL;
     }
 
-    PyObject *py_snapshot =
-        create_py_metrics_snapshot_from_as_metrics_snapshot(&err, snapshot);
+    PyObject *py_snapshot = as_metrics_snapshot_to_pyobject(&err, snapshot);
     as_metrics_snapshot_destroy(snapshot);
     if (py_snapshot == NULL) {
         raise_exception(&err);
