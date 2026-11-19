@@ -55,28 +55,48 @@ static bool client_metrics_enabled(AerospikeClient *self)
 // fails, its Python exception is left raised instead of cleared:
 // raise_exception() chains it to the exception made from err, and
 // py_metrics_export() appends it to err's message.
-static int set_new_attr(as_error *err, PyObject *py_obj, const char *name,
-                        PyObject *py_value)
+static int set_new_attr_error(as_error *err, PyObject *py_obj,
+                              const char *action, const char *name)
 {
     // The snapshot classes are heap types, so tp_name is the class name, like
     // NodeSnapshot.
     const char *snapshot_type_name = Py_TYPE(py_obj)->tp_name;
-    if (!py_value) {
-        as_error_update(err, AEROSPIKE_ERR,
-                        "Unable to create %s: could not create the value of %s",
-                        snapshot_type_name, name);
-        return -1;
-    }
+    as_error_update(err, AEROSPIKE_ERR, "Unable to create %s: could not %s %s",
+                    snapshot_type_name, action, name);
+    return -1;
+}
 
+// Consumes the reference to py_value, including on failure.
+// py_value must not be NULL: the caller checks the call that created it.
+static int set_new_attr(as_error *err, PyObject *py_obj, const char *name,
+                        PyObject *py_value)
+{
     int result = PyObject_SetAttrString(py_obj, name, py_value);
     Py_DECREF(py_value);
     if (result == -1) {
-        as_error_update(err, AEROSPIKE_ERR,
-                        "Unable to create %s: could not set %s",
-                        snapshot_type_name, name);
-        return -1;
+        return set_new_attr_error(err, py_obj, "set", name);
     }
     return 0;
+}
+
+static int set_new_str_attr(as_error *err, PyObject *py_obj, const char *name,
+                            const char *value)
+{
+    PyObject *py_value = PyUnicode_FromString(value);
+    if (!py_value) {
+        return set_new_attr_error(err, py_obj, "create the value of", name);
+    }
+    return set_new_attr(err, py_obj, name, py_value);
+}
+
+static int set_new_uint64_attr(as_error *err, PyObject *py_obj,
+                               const char *name, uint64_t value)
+{
+    PyObject *py_value = PyLong_FromUnsignedLongLong(value);
+    if (!py_value) {
+        return set_new_attr_error(err, py_obj, "create the value of", name);
+    }
+    return set_new_attr(err, py_obj, name, py_value);
 }
 
 static PyObject *as_metrics_conn_snapshot_to_pyobject(
@@ -138,7 +158,12 @@ static PyObject *as_metrics_latency_snapshot_to_pyobject(
 
     PyObject *py_buckets =
         as_metrics_latency_buckets_to_pyobject(err, latency_snapshot);
-    if (set_new_attr(err, py_latency_snapshot, "buckets", py_buckets) != 0) {
+    if (!py_buckets) {
+        Py_DECREF(py_latency_snapshot);
+        return NULL;
+    }
+    int result = set_new_attr(err, py_latency_snapshot, "buckets", py_buckets);
+    if (result != 0) {
         Py_DECREF(py_latency_snapshot);
         return NULL;
     }
@@ -148,9 +173,8 @@ static PyObject *as_metrics_latency_snapshot_to_pyobject(
                          latency_snapshot->min, latency_snapshot->max};
     for (unsigned long i = 0; i < sizeof(field_names) / sizeof(field_names[0]);
          i++) {
-        PyObject *py_value = PyLong_FromUnsignedLongLong(values[i]);
-        int result =
-            set_new_attr(err, py_latency_snapshot, field_names[i], py_value);
+        result = set_new_uint64_attr(err, py_latency_snapshot, field_names[i],
+                                     values[i]);
         if (result != 0) {
             Py_DECREF(py_latency_snapshot);
             return NULL;
@@ -199,8 +223,7 @@ static PyObject *as_metrics_namespace_snapshot_to_pyobject(
     }
 
     const char *name = namespace_snapshot->name ? namespace_snapshot->name : "";
-    PyObject *py_name = PyUnicode_FromString(name);
-    int result = set_new_attr(err, py_namespace_snapshot, "name", py_name);
+    int result = set_new_str_attr(err, py_namespace_snapshot, "name", name);
     if (result != 0) {
         goto error;
     }
@@ -218,9 +241,8 @@ static PyObject *as_metrics_namespace_snapshot_to_pyobject(
                            namespace_snapshot->bytes_out};
     for (unsigned long i = 0;
          i < sizeof(counter_names) / sizeof(counter_names[0]); i++) {
-        PyObject *py_counter = PyLong_FromUnsignedLongLong(counters[i]);
-        result = set_new_attr(err, py_namespace_snapshot, counter_names[i],
-                              py_counter);
+        result = set_new_uint64_attr(err, py_namespace_snapshot,
+                                     counter_names[i], counters[i]);
         if (result != 0) {
             goto error;
         }
@@ -259,9 +281,8 @@ static PyObject *as_metrics_node_snapshot_to_pyobject(
     for (unsigned long i = 0;
          i < sizeof(string_names) / sizeof(string_names[0]); i++) {
         const char *value = string_values[i] ? string_values[i] : "";
-        PyObject *py_value = PyUnicode_FromString(value);
         int result =
-            set_new_attr(err, py_node_snapshot, string_names[i], py_value);
+            set_new_str_attr(err, py_node_snapshot, string_names[i], value);
         if (result != 0) {
             goto error;
         }
@@ -276,9 +297,8 @@ static PyObject *as_metrics_node_snapshot_to_pyobject(
                                 node_snapshot->conn_auth_failures};
     for (unsigned long i = 0;
          i < sizeof(number_names) / sizeof(number_names[0]); i++) {
-        PyObject *py_value = PyLong_FromUnsignedLongLong(number_values[i]);
-        int result =
-            set_new_attr(err, py_node_snapshot, number_names[i], py_value);
+        int result = set_new_uint64_attr(err, py_node_snapshot, number_names[i],
+                                         number_values[i]);
         if (result != 0) {
             goto error;
         }
@@ -288,6 +308,9 @@ static PyObject *as_metrics_node_snapshot_to_pyobject(
     // not copied.
     PyObject *py_sync =
         as_metrics_conn_snapshot_to_pyobject(err, &node_snapshot->sync);
+    if (!py_sync) {
+        goto error;
+    }
     int result = set_new_attr(err, py_node_snapshot, "sync", py_sync);
     if (result != 0) {
         goto error;
@@ -295,6 +318,9 @@ static PyObject *as_metrics_node_snapshot_to_pyobject(
 
     PyObject *py_conn_latency = as_metrics_latency_snapshot_to_pyobject(
         err, &node_snapshot->conn_latency);
+    if (!py_conn_latency) {
+        goto error;
+    }
     result =
         set_new_attr(err, py_node_snapshot, "conn_latency", py_conn_latency);
     if (result != 0) {
@@ -390,8 +416,7 @@ as_metrics_snapshot_to_pyobject(as_error *err,
     for (unsigned long i = 0;
          i < sizeof(string_names) / sizeof(string_names[0]); i++) {
         const char *value = string_values[i] ? string_values[i] : "";
-        PyObject *py_value = PyUnicode_FromString(value);
-        int result = set_new_attr(err, py_snapshot, string_names[i], py_value);
+        int result = set_new_str_attr(err, py_snapshot, string_names[i], value);
         if (result != 0) {
             goto error;
         }
@@ -406,6 +431,7 @@ as_metrics_snapshot_to_pyobject(as_error *err,
                           snapshot->nodes_departed_possibly_truncated};
     for (unsigned long i = 0; i < sizeof(bool_names) / sizeof(bool_names[0]);
          i++) {
+        // PyBool_FromLong() cannot fail
         PyObject *py_value = PyBool_FromLong(bool_values[i]);
         int result = set_new_attr(err, py_snapshot, bool_names[i], py_value);
         if (result != 0) {
@@ -478,8 +504,8 @@ as_metrics_snapshot_to_pyobject(as_error *err,
                                 snapshot->latency_unit};
     for (unsigned long i = 0;
          i < sizeof(number_names) / sizeof(number_names[0]); i++) {
-        PyObject *py_value = PyLong_FromUnsignedLongLong(number_values[i]);
-        result = set_new_attr(err, py_snapshot, number_names[i], py_value);
+        result = set_new_uint64_attr(err, py_snapshot, number_names[i],
+                                     number_values[i]);
         if (result != 0) {
             goto error;
         }
@@ -508,7 +534,7 @@ as_metrics_snapshot_to_pyobject(as_error *err,
         Py_DECREF(py_nodes);
         goto error;
     }
-    // set_new_attr consumes the value reference, including on failure.
+    // See set_new_attr() for who owns py_nodes if this fails
     result = set_new_attr(err, py_snapshot, "nodes", py_nodes);
     if (result != 0) {
         Py_DECREF(py_departed);
