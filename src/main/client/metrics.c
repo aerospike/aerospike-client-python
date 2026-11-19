@@ -548,16 +548,14 @@ as_metrics_snapshot_to_pyobject(as_error *err,
     if (!py_nodes) {
         goto error;
     }
+    result = set_new_attr(err, py_snapshot, "nodes", py_nodes);
+    if (result != 0) {
+        goto error;
+    }
+
     PyObject *py_departed = as_metrics_node_snapshots_to_pyobject(
         err, snapshot->nodes_departed, snapshot->nodes_departed_count);
     if (!py_departed) {
-        Py_DECREF(py_nodes);
-        goto error;
-    }
-    // See set_new_attr() for who owns py_nodes if this fails
-    result = set_new_attr(err, py_snapshot, "nodes", py_nodes);
-    if (result != 0) {
-        Py_DECREF(py_departed);
         goto error;
     }
     result = set_new_attr(err, py_snapshot, "nodes_departed", py_departed);
