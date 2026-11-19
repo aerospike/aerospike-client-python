@@ -611,9 +611,20 @@ class TestExpressions(TestBaseClass):
                 }
             ),
             pytest.param(
+                MapRemoveByValueRange(ctx=None, begin=6, end=None, bin="imap_bin"),
+                {
+                    1: 1,
+                    2: 2
+                }
+            ),
+            pytest.param(
+                MapGetByKeyRange(ctx=None, return_type=aerospike.MAP_RETURN_VALUE, begin=3, end=None, bin="imap_bin"),
+                [6]
+            ),
+            pytest.param(
                 MapGetByValueRange(ctx=None, return_type=aerospike.MAP_RETURN_VALUE, value_begin=6, value_end=None, bin="imap_bin"),
                 [6]
-            )
+            ),
         ]
     )
     def test_setting_end_param_to_none(self, expr, expected_results):
