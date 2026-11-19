@@ -159,11 +159,18 @@ void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search,
                             PyObject *py_persistent_item, bool do_destroy)
 {
     if (((AerospikeGlobalHosts *)py_persistent_item)->ref_cnt == 1) {
+        PyMetricsExporter **active_exporters =
+            ((AerospikeGlobalHosts *)py_persistent_item)
+                ->active_metrics_exporters;
         PyDict_DelItemString(py_global_hosts, alias_to_search);
         AerospikeGlobalHosts_Del(py_persistent_item);
         Py_BEGIN_ALLOW_THREADS
         aerospike_close(as, err);
         Py_END_ALLOW_THREADS
+        // The closed cluster no longer calls them
+        if (err->code == AEROSPIKE_OK) {
+            py_metrics_exporters_destroy(active_exporters);
+        }
     }
     else {
         ((AerospikeGlobalHosts *)py_persistent_item)->ref_cnt--;

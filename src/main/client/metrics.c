@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "client.h"
 #include "conversions.h"
 #include "exceptions.h"
 #include "policy.h"
@@ -626,29 +627,36 @@ void py_metrics_exporters_destroy(PyMetricsExporter **exporters)
     free(exporters);
 }
 
+// Where the exporters installed by enable_metrics() are kept. See
+// aerospike_client_release_active_metrics_exporters() in metrics.h.
+static PyMetricsExporter ***active_metrics_exporters_ref(AerospikeClient *self)
+{
+    if (self->use_shared_connection) {
+        char *alias_to_search = return_search_string(self->as);
+        PyObject *py_global_host =
+            PyDict_GetItemString(py_global_hosts, alias_to_search);
+        PyMem_Free(alias_to_search);
+        AerospikeGlobalHosts *global_host =
+            (AerospikeGlobalHosts *)py_global_host;
+        // Only if this client points to the shared aerospike object
+        if (global_host && global_host->as == self->as) {
+            return &global_host->active_metrics_exporters;
+        }
+    }
+    return &self->active_metrics_exporters;
+}
+
 void aerospike_client_release_active_metrics_exporters(AerospikeClient *self)
 {
     if (!self) {
         return;
     }
-    py_metrics_exporters_destroy(self->active_metrics_exporters);
-    self->active_metrics_exporters = NULL;
+    PyMetricsExporter ***active_exporters = active_metrics_exporters_ref(self);
+    py_metrics_exporters_destroy(*active_exporters);
+    *active_exporters = NULL;
 }
 
-void aerospike_client_release_all_metrics_exporters(AerospikeClient *self)
-{
-    if (!self) {
-        return;
-    }
-    py_metrics_exporters_destroy(self->config_metrics_exporters);
-    py_metrics_exporters_destroy(self->active_metrics_exporters);
-    self->config_metrics_exporters = NULL;
-    self->active_metrics_exporters = NULL;
-}
-
-// Frees the exporters in metrics_policy->exporters and the vector holding them
-static void
-py_metrics_policy_destroy_exporters(as_metrics_policy *metrics_policy)
+void py_metrics_policy_destroy_exporters(as_metrics_policy *metrics_policy)
 {
     as_vector *exporters = metrics_policy->exporters;
     if (!exporters) {
@@ -845,7 +853,7 @@ CLEANUP_ON_ERROR:
     }
     else {
         aerospike_client_release_active_metrics_exporters(self);
-        self->active_metrics_exporters = new_exporters;
+        *active_metrics_exporters_ref(self) = new_exporters;
     }
 
     if (err.code != AEROSPIKE_OK) {

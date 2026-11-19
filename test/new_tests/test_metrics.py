@@ -14,6 +14,7 @@ from aerospike_helpers.metrics import (
     LATENCY_MICROSECONDS,
 )
 import pytest
+import gc
 import shutil
 import glob
 import os
@@ -21,6 +22,7 @@ import threading
 import time
 from typing import Optional
 import re
+import weakref
 import aerospike
 from .test_base_class import TestBaseClass
 from importlib.metadata import version
@@ -668,6 +670,77 @@ class TestMetrics:
         self.as_connection.disable_metrics()
 
         assert exported
+
+    def test_shared_connection_keeps_config_exporters_after_creating_client_is_deleted(self) -> None:
+        # The shared aerospike object keeps the config of the client that created it, including its exporters.
+        # They have to outlive that client, not just the cluster that is closed with the last client.
+        exported: list[MetricsSnapshot] = []
+
+        class RecordingExporter:
+            def export(self, snapshot: MetricsSnapshot) -> None:
+                exported.append(snapshot)
+
+        exporter = RecordingExporter()
+        exporter_ref = weakref.ref(exporter)
+        policy = MetricsPolicy(report_dir="", interval=60)
+        policy.add_exporter(exporter)
+        policies = TestBaseClass.get_policies_info()
+        policies["metrics"] = policy
+
+        creator = TestBaseClass.get_new_connection({"use_shared_connection": True, "policies": policies})
+        sharer = TestBaseClass.get_new_connection({"use_shared_connection": True})
+        try:
+            creator.close()
+            sharer.close()
+            del creator
+            del exporter, policy, policies
+            gc.collect()
+            # The sharer reconnects with the aerospike object that the creator made
+            assert exporter_ref() is not None
+
+            sharer.connect()
+            sharer.enable_metrics()
+            sharer.disable_metrics()
+            assert exported
+        finally:
+            sharer.close()
+
+    @pytest.mark.parametrize("end_with", ["disable_metrics", "close"])
+    def test_shared_connection_keeps_active_exporters_after_installing_client_is_deleted(
+        self, end_with: str
+    ) -> None:
+        # The cluster of a shared connection outlives any one client. The exporters passed to enable_metrics()
+        # have to stay alive until the cluster stops calling them, not until the client that passed them is deleted.
+        exported: list[MetricsSnapshot] = []
+
+        class RecordingExporter:
+            def export(self, snapshot: MetricsSnapshot) -> None:
+                exported.append(snapshot)
+
+        exporter = RecordingExporter()
+        exporter_ref = weakref.ref(exporter)
+        policy = MetricsPolicy(report_dir="", interval=60)
+        policy.add_exporter(exporter)
+
+        installer = TestBaseClass.get_new_connection({"use_shared_connection": True})
+        other = TestBaseClass.get_new_connection({"use_shared_connection": True})
+        try:
+            installer.enable_metrics(policy=policy)
+            installer.close()
+            del installer
+            del exporter, policy
+            gc.collect()
+            assert exporter_ref() is not None
+
+            if end_with == "disable_metrics":
+                other.disable_metrics()
+                assert exported
+            else:
+                other.close()
+            gc.collect()
+            assert exporter_ref() is None
+        finally:
+            other.close()
 
     def test_latency_unit_must_be_a_known_value(self):
         policy = MetricsPolicy(latency_unit=2)

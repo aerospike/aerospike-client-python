@@ -39,12 +39,19 @@ as_status as_metrics_policy_add_exporters_from_pyobject(
 
 /*
  * as_metrics_policy_destroy() frees metrics_policy->exporters but not the
- * exporters in it, and the cluster keeps using them after that. So whoever
- * sets a policy with as_metrics_policy_add_exporters_from_pyobject() calls this
- * before the policy is destroyed, to keep track of the exporters.
- * Returns them as a NULL-terminated array, which the caller owns. Returns NULL
- * if there are none, or if err was populated, in which case the exporters were
- * freed.
+ * exporters in it. Call this before aerospike_destroy() or as_config_destroy()
+ * for a config that had exporters added by
+ * as_metrics_policy_add_exporters_from_pyobject(). That ends their lifetime
+ * with the C config's. Frees the exporters and the vector.
+ */
+void py_metrics_policy_destroy_exporters(as_metrics_policy *metrics_policy);
+
+/*
+ * For a policy that is destroyed while the cluster still uses its exporters,
+ * which is the case for enable_metrics(). Returns the exporters in
+ * metrics_policy->exporters as a NULL-terminated array, which the caller owns.
+ * Returns NULL if there are none, or if err was populated, in which case the
+ * exporters were freed.
  */
 PyMetricsExporter **
 create_py_metrics_exporters_from_policy(as_error *err,
@@ -53,8 +60,10 @@ create_py_metrics_exporters_from_policy(as_error *err,
 // exporters is a NULL-terminated array, or NULL
 void py_metrics_exporters_destroy(PyMetricsExporter **exporters);
 
-/* Release exporters installed by enable_metrics(). */
+/*
+ * Release the exporters installed by enable_metrics().
+ * The cluster calls them, so they are owned by whatever owns the cluster: the
+ * AerospikeGlobalHosts of a shared connection, which outlives any one client,
+ * and otherwise the client.
+ */
 void aerospike_client_release_active_metrics_exporters(AerospikeClient *self);
-
-/* Release config and enable_metrics() exporters. */
-void aerospike_client_release_all_metrics_exporters(AerospikeClient *self);

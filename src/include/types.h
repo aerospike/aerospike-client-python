@@ -52,10 +52,15 @@ typedef struct {
     PyObject_HEAD
 } AerospikeCDTInfObject;
 
+typedef struct PyMetricsExporter PyMetricsExporter;
+
 typedef struct {
     PyObject_HEAD aerospike *as;
     int shm_key;
     int ref_cnt;
+    // NULL-terminated array of the exporters passed to enable_metrics() on this
+    // shared cluster, or NULL. See aerospike_client_release_active_metrics_exporters().
+    PyMetricsExporter **active_metrics_exporters;
 } AerospikeGlobalHosts;
 
 typedef struct {
@@ -67,8 +72,6 @@ typedef struct {
     PyObject *ob[MAX_UNICODE_OBJECTS];
     int size;
 } UnicodePyObjects;
-
-typedef struct PyMetricsExporter PyMetricsExporter;
 
 typedef struct {
     PyObject_HEAD aerospike *as;
@@ -82,15 +85,9 @@ typedef struct {
     uint8_t send_bool_as;
     bool validate_keys;
     /*
-     * NULL-terminated array of the exporters registered on the client config
-     * metrics policy. Owned here for the life of this client. The C config
-     * holds the same pointers.
-     */
-    PyMetricsExporter **config_metrics_exporters;
-    /*
-     * NULL-terminated array of the exporters passed to enable_metrics().
-     * Replaced on the next enable and released after metrics are disabled. Not
-     * used for the config policy.
+     * NULL-terminated array of the exporters passed to enable_metrics(), or
+     * NULL. Not used for a shared connection, which has them in its
+     * AerospikeGlobalHosts. See aerospike_client_release_active_metrics_exporters().
      */
     PyMetricsExporter **active_metrics_exporters;
     // The ip_map the constructor allocated. A config file can point as->config.ip_map at a

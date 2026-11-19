@@ -1119,12 +1119,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             if (retval != AEROSPIKE_OK) {
                 goto RAISE_EXCEPTION_WITH_AS_ERROR;
             }
-            self->config_metrics_exporters =
-                create_py_metrics_exporters_from_policy(
-                    &constructor_err, &(config.policies.metrics));
-            if (constructor_err.code != AEROSPIKE_OK) {
-                goto RAISE_EXCEPTION_WITH_AS_ERROR;
-            }
         }
 
         PyObject *py_login_timeout =
@@ -1517,6 +1511,7 @@ RAISE_EXCEPTION_WITH_AS_ERROR:
     raise_exception(&constructor_err);
 RAISE_EXCEPTION_WITHOUT_AS_ERROR:
     destroy_ip_map(&config.ip_map, &config.ip_map_size);
+    py_metrics_policy_destroy_exporters(&config.policies.metrics);
     as_config_destroy(&config);
     return -1;
 }
@@ -1623,30 +1618,14 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
     PyObject *py_persistent_item = NULL;
     AerospikeGlobalHosts *global_host = NULL;
     AerospikeClient *client = (AerospikeClient *)self;
-    bool keep_metrics_exporters = false;
-
-    // A shared cluster that outlives this client still calls registered exporters.
-    if (client->use_shared_connection && client->is_conn_16 && client->as) {
-        alias_to_search = return_search_string(client->as);
-        py_persistent_item =
-            PyDict_GetItemString(py_global_hosts, alias_to_search);
-        if (py_persistent_item) {
-            global_host = (AerospikeGlobalHosts *)py_persistent_item;
-            if (client->as == global_host->as && global_host->ref_cnt > 1) {
-                keep_metrics_exporters = true;
-            }
-        }
-        PyMem_Free(alias_to_search);
-        alias_to_search = NULL;
-        py_persistent_item = NULL;
-        global_host = NULL;
-    }
 
     // If the client has never connected
     // It is safe to destroy the aerospike structure
     if (client->as) {
         if (!client->has_connected) {
             destroy_ip_map(&client->ip_map, &client->ip_map_size);
+            py_metrics_policy_destroy_exporters(
+                &client->as->config.policies.metrics);
             aerospike_destroy(client->as);
         }
         else {
@@ -1679,13 +1658,13 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
                     Py_END_ALLOW_THREADS
                 }
                 destroy_ip_map(&client->ip_map, &client->ip_map_size);
+                py_metrics_policy_destroy_exporters(
+                    &client->as->config.policies.metrics);
                 aerospike_destroy(client->as);
             }
         }
     }
-    if (!keep_metrics_exporters) {
-        aerospike_client_release_all_metrics_exporters(client);
-    }
+    py_metrics_exporters_destroy(client->active_metrics_exporters);
     self->ob_type->tp_free((PyObject *)self);
 }
 
