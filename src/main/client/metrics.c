@@ -55,9 +55,11 @@ static bool client_metrics_enabled(AerospikeClient *self)
 //
 // The helpers that build a Python snapshot describe a failure in err, but they
 // leave the Python exception raised by the failed C-API call alone instead of
-// clearing it. The exception is the only description if the constructor of a
-// snapshot class raised, because create_class_instance_from_module() does not
-// populate err then. What happens to that exception depends on the caller:
+// clearing it. The one failure they do not describe is a snapshot class whose
+// constructor raised, because create_class_instance_from_module() does not
+// populate err then. as_metrics_snapshot_to_pyobject() describes it, so err is
+// always populated when that function fails. What happens to the exception
+// depends on the caller:
 // - get_metrics_snapshot() passes err to raise_exception(), which chains the
 //   exception to the one it raises, so the user sees both.
 // - call_py_metrics_exporter() returns into C code, which cannot carry a
@@ -427,7 +429,7 @@ as_metrics_snapshot_to_pyobject(as_error *err,
     PyObject *py_snapshot = create_class_instance_from_module(
         err, "aerospike_helpers.metrics", "MetricsSnapshot", NULL);
     if (!py_snapshot) {
-        return NULL;
+        goto error;
     }
 
     const char *string_names[] = {"timestamp", "cluster_name", "client_type",
@@ -567,7 +569,13 @@ as_metrics_snapshot_to_pyobject(as_error *err,
     return py_snapshot;
 
 error:
-    Py_DECREF(py_snapshot);
+    Py_XDECREF(py_snapshot);
+    if (err->code == AEROSPIKE_OK) {
+        // The constructor of a snapshot class raised (see "Snapshot helpers"
+        // above). The exception describes why.
+        as_error_update(err, AEROSPIKE_ERR,
+                        "Unable to build the metrics snapshot");
+    }
     return NULL;
 }
 
@@ -583,20 +591,12 @@ static as_status call_py_metrics_exporter(as_metrics_exporter *exporter,
 
     PyObject *py_snapshot = as_metrics_snapshot_to_pyobject(err, snapshot);
     if (!py_snapshot) {
-        if (PyErr_Occurred()) {
-            // The exception cannot be chained here, so move it into err's
-            // message (see "Snapshot helpers" above). If err has a message,
-            // use it as the prefix instead of the default one. It is copied
-            // first because the update below overwrites err's message.
-            char context[AS_ERROR_MESSAGE_MAX_SIZE] =
-                "Unable to build the metrics snapshot";
-            if (err->code != AEROSPIKE_OK) {
-                snprintf(context, sizeof(context), "%s", err->message);
-            }
-            as_error_update_from_raised_exc(err, AEROSPIKE_ERR, context);
-        }
-        // err is populated: by a helper, or by the exception moved into it
-        status = err->code;
+        // The exception cannot be chained here, so move it into err's message
+        // (see "Snapshot helpers" above), after the message that err has. That
+        // message is copied first because the update below overwrites it.
+        char context[AS_ERROR_MESSAGE_MAX_SIZE];
+        snprintf(context, sizeof(context), "%s", err->message);
+        status = as_error_update_from_raised_exc(err, AEROSPIKE_ERR, context);
         goto done;
     }
 
@@ -896,12 +896,9 @@ PyObject *AerospikeClient_GetMetricsSnapshot(AerospikeClient *self)
     PyObject *py_snapshot = as_metrics_snapshot_to_pyobject(&err, snapshot);
     as_metrics_snapshot_destroy(snapshot);
     if (py_snapshot == NULL) {
-        // If err is not set, a snapshot class raised a Python exception, which
-        // is returned as is. Otherwise, raise_exception() chains the exception
-        // raised by the failed C-API call (see "Snapshot helpers" above).
-        if (err.code != AEROSPIKE_OK) {
-            raise_exception(&err);
-        }
+        // raise_exception() chains the exception raised by the failed C-API
+        // call (see "Snapshot helpers" above).
+        raise_exception(&err);
         return NULL;
     }
     return py_snapshot;

@@ -734,14 +734,19 @@ class TestMetrics:
         assert isinstance(excinfo.value.__context__, AttributeError)
         assert str(excinfo.value.__context__) == attribute_name
 
-    def test_get_metrics_snapshot_raises_exception_from_snapshot_class(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_get_metrics_snapshot_chains_exception_from_snapshot_class(self, monkeypatch: pytest.MonkeyPatch) -> None:
         def raise_from_init(self) -> None:
             raise ValueError("snapshot class failed")
 
         with monkeypatch.context() as patch:
             patch.setattr(LatencySnapshot, "__init__", raise_from_init)
-            with pytest.raises(ValueError, match="snapshot class failed"):
+            with pytest.raises(e.ClientError) as excinfo:
                 self.as_connection.get_metrics_snapshot()
+
+        assert excinfo.value.msg == "Unable to build the metrics snapshot"
+        # The exception raised by the snapshot class is chained to the one we raise
+        assert isinstance(excinfo.value.__context__, ValueError)
+        assert str(excinfo.value.__context__) == "snapshot class failed"
 
     @pytest.mark.parametrize(
         "method_name, error, expected",
@@ -752,7 +757,7 @@ class TestMetrics:
                 AttributeError("timestamp"),
                 "Unable to create MetricsSnapshot: could not set timestamp: AttributeError: timestamp",
             ),
-            # The class's constructor raised: err is not populated, so the log shows only the exception
+            # The class's constructor raised: the log shows the context for it and the exception
             (
                 "__init__",
                 ValueError("snapshot class failed"),
