@@ -1675,12 +1675,15 @@ int as_metrics_policy_set_using_pyobject(as_error *err,
     }
     metrics_policy->latency_unit = (as_metrics_latency_unit)latency_unit;
 
-    if (set_metrics_bool_field(err, py_metrics_policy, "operational_enabled",
-                               true, &metrics_policy->operational_enabled) !=
-            AEROSPIKE_OK ||
-        set_metrics_bool_field(err, py_metrics_policy, "usage_enabled", false,
-                               &metrics_policy->usage_enabled) !=
-            AEROSPIKE_OK) {
+    result =
+        set_metrics_bool_field(err, py_metrics_policy, "operational_enabled",
+                               true, &metrics_policy->operational_enabled);
+    if (result != AEROSPIKE_OK) {
+        goto error;
+    }
+    result = set_metrics_bool_field(err, py_metrics_policy, "usage_enabled",
+                                    false, &metrics_policy->usage_enabled);
+    if (result != AEROSPIKE_OK) {
         goto error;
     }
 
@@ -1709,12 +1712,15 @@ int as_metrics_policy_set_using_pyobject(as_error *err,
     strcpy(metrics_policy->export_interval, export_interval);
     Py_DECREF(py_export_interval);
 
-    if (set_metrics_uint32_field(err, py_metrics_policy, "sampler_range",
-                                 &metrics_policy->sampler_range) !=
-            AEROSPIKE_OK ||
+    result = set_metrics_uint32_field(err, py_metrics_policy, "sampler_range",
+                                      &metrics_policy->sampler_range);
+    if (result != AEROSPIKE_OK) {
+        goto error;
+    }
+    result =
         set_metrics_uint32_field(err, py_metrics_policy, "sampler_threshold",
-                                 &metrics_policy->sampler_threshold) !=
-            AEROSPIKE_OK) {
+                                 &metrics_policy->sampler_threshold);
+    if (result != AEROSPIKE_OK) {
         goto error;
     }
     if (metrics_policy->sampler_range < 1 ||
@@ -1769,8 +1775,9 @@ int as_metrics_policy_set_using_pyobject(as_error *err,
         goto error;
     }
 
-    if (py_metrics_exporters_from_pyobject(
-            err, py_metrics_policy, metrics_policy, exporters_out) != 0) {
+    result = py_metrics_exporters_from_pyobject(err, py_metrics_policy,
+                                                metrics_policy, exporters_out);
+    if (result != 0) {
         goto error;
     }
 
