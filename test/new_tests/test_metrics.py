@@ -652,6 +652,23 @@ class TestMetrics:
         assert "fail" in calls
         assert "ok" in calls
 
+    def test_exporter_exception_is_not_left_pending_for_disable_metrics(self) -> None:
+        # disable_metrics() runs the final export on the calling thread. If the exception raised by the exporter
+        # stayed pending, disable_metrics() would fail with a SystemError.
+        exported: list[MetricsSnapshot] = []
+
+        class RaisingExporter:
+            def export(self, snapshot: MetricsSnapshot) -> None:
+                exported.append(snapshot)
+                raise RuntimeError("exporter failed")
+
+        policy = MetricsPolicy(report_dir="", interval=60)
+        policy.add_exporter(RaisingExporter())
+        self.as_connection.enable_metrics(policy)
+        self.as_connection.disable_metrics()
+
+        assert exported
+
     def test_latency_unit_must_be_a_known_value(self):
         policy = MetricsPolicy(latency_unit=2)
         with pytest.raises(e.ParamError) as excinfo:
