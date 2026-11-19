@@ -30,7 +30,7 @@
 #include <aerospike/as_metrics.h>
 #include <aerospike/as_string_operations.h>
 
-struct PyMetricsExporterList;
+struct PyMetricsExporter;
 
 enum Aerospike_serializer_values {
     SERIALIZER_NONE, /* default handler for serializer type */
@@ -391,11 +391,12 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
 // py_metrics_policy must be non-NULL
 // Returns non-zero integer value on error.
 // On error, all memory from this function is freed.
-// On success, *exporters_out owns any exporter wrappers (NULL if none).
+// exporters_out must be non-NULL. On success, *exporters_out owns the
+// NULL-terminated array of exporter wrappers (NULL if none).
 int as_metrics_policy_set_using_pyobject(
     as_error *err, PyObject *py_metrics_policy,
     as_metrics_policy *metrics_policy,
-    struct PyMetricsExporterList **exporters_out);
+    struct PyMetricsExporter ***exporters_out);
 
 typedef struct {
     // Use listener name for error messages

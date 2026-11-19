@@ -1542,11 +1542,9 @@ static int set_metrics_uint32_field(as_error *err, PyObject *py_metrics_policy,
 int as_metrics_policy_set_using_pyobject(as_error *err,
                                          PyObject *py_metrics_policy,
                                          as_metrics_policy *metrics_policy,
-                                         PyMetricsExporterList **exporters_out)
+                                         PyMetricsExporter ***exporters_out)
 {
-    if (exporters_out) {
-        *exporters_out = NULL;
-    }
+    *exporters_out = NULL;
 
     if (!is_pyobj_correct_as_helpers_type(py_metrics_policy, "metrics",
                                           "MetricsPolicy", false)) {
@@ -1778,11 +1776,12 @@ int as_metrics_policy_set_using_pyobject(as_error *err,
         goto error;
     }
 
-    result = py_metrics_exporters_from_pyobject(err, py_metrics_policy,
-                                                metrics_policy, exporters_out);
-    if (result != 0) {
+    PyMetricsExporter **exporters = py_metrics_exporters_from_pyobject(
+        err, py_metrics_policy, metrics_policy);
+    if (err->code != AEROSPIKE_OK) {
         goto error;
     }
+    *exporters_out = exporters;
 
     return 0;
 

@@ -35,14 +35,9 @@
 // operational sampler stay at the C client defaults unless the policy sets them.
 // Usage counts feature.api.blocking, deferred, and background on public API calls.
 
-typedef struct PyMetricsExporter {
+struct PyMetricsExporter {
     as_metrics_exporter base;
     PyObject *py_exporter;
-} PyMetricsExporter;
-
-struct PyMetricsExporterList {
-    PyMetricsExporter **items;
-    uint32_t count;
 };
 
 static bool client_metrics_enabled(AerospikeClient *self)
@@ -615,20 +610,19 @@ done:
     return status;
 }
 
-void py_metrics_exporter_list_destroy(PyMetricsExporterList *list)
+void py_metrics_exporters_destroy(PyMetricsExporter **exporters)
 {
-    if (!list) {
+    if (!exporters) {
         return;
     }
 
     PyGILState_STATE state = PyGILState_Ensure();
-    for (uint32_t i = 0; i < list->count; i++) {
-        Py_XDECREF(list->items[i]->py_exporter);
-        free(list->items[i]);
+    for (size_t i = 0; exporters[i]; i++) {
+        Py_XDECREF(exporters[i]->py_exporter);
+        free(exporters[i]);
     }
     PyGILState_Release(state);
-    free(list->items);
-    free(list);
+    free(exporters);
 }
 
 void aerospike_client_release_active_metrics_exporters(AerospikeClient *self)
@@ -636,7 +630,7 @@ void aerospike_client_release_active_metrics_exporters(AerospikeClient *self)
     if (!self) {
         return;
     }
-    py_metrics_exporter_list_destroy(self->active_metrics_exporters);
+    py_metrics_exporters_destroy(self->active_metrics_exporters);
     self->active_metrics_exporters = NULL;
 }
 
@@ -645,41 +639,38 @@ void aerospike_client_release_all_metrics_exporters(AerospikeClient *self)
     if (!self) {
         return;
     }
-    py_metrics_exporter_list_destroy(self->config_metrics_exporters);
-    py_metrics_exporter_list_destroy(self->active_metrics_exporters);
+    py_metrics_exporters_destroy(self->config_metrics_exporters);
+    py_metrics_exporters_destroy(self->active_metrics_exporters);
     self->config_metrics_exporters = NULL;
     self->active_metrics_exporters = NULL;
 }
 
-int py_metrics_exporters_from_pyobject(as_error *err,
-                                       PyObject *py_metrics_policy,
-                                       as_metrics_policy *metrics_policy,
-                                       PyMetricsExporterList **out)
+PyMetricsExporter **
+py_metrics_exporters_from_pyobject(as_error *err, PyObject *py_metrics_policy,
+                                   as_metrics_policy *metrics_policy)
 {
-    if (out) {
-        *out = NULL;
-    }
-
     PyObject *py_exporters =
         PyObject_GetAttrString(py_metrics_policy, "exporters");
     if (!py_exporters) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Unable to fetch exporters attribute");
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "Unable to fetch exporters attribute");
+        return NULL;
     }
     if (py_exporters == Py_None) {
         Py_DECREF(py_exporters);
-        return 0;
+        return NULL;
     }
     if (!PyList_Check(py_exporters)) {
         Py_DECREF(py_exporters);
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "MetricsPolicy.exporters must be a list type");
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "MetricsPolicy.exporters must be a list type");
+        return NULL;
     }
 
     Py_ssize_t count = PyList_GET_SIZE(py_exporters);
     if (count == 0) {
         Py_DECREF(py_exporters);
-        return 0;
+        return NULL;
     }
 
     // Check every exporter before allocating anything for them
@@ -688,58 +679,51 @@ int py_metrics_exporters_from_pyobject(as_error *err,
         PyObject *py_export = PyObject_GetAttrString(py_exporter, "export");
         if (!py_export) {
             Py_DECREF(py_exporters);
-            return as_error_update(
+            as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
                 "MetricsPolicy.exporters[%zd] must have an export method", i);
+            return NULL;
         }
         int is_callable = PyCallable_Check(py_export);
         Py_DECREF(py_export);
         if (!is_callable) {
             Py_DECREF(py_exporters);
-            return as_error_update(
+            as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
                 "MetricsPolicy.exporters[%zd].export must be callable", i);
+            return NULL;
         }
     }
 
-    PyMetricsExporterList *list = calloc(1, sizeof(PyMetricsExporterList));
-    if (!list) {
+    // calloc() sets the NULL terminator
+    PyMetricsExporter **exporters =
+        calloc((size_t)count + 1, sizeof(PyMetricsExporter *));
+    if (!exporters) {
         Py_DECREF(py_exporters);
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                               "Failed to allocate metrics exporters");
-    }
-    list->items = calloc((size_t)count, sizeof(PyMetricsExporter *));
-    if (!list->items) {
-        free(list);
-        Py_DECREF(py_exporters);
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                               "Failed to allocate metrics exporters");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to allocate metrics exporters");
+        return NULL;
     }
 
     for (Py_ssize_t i = 0; i < count; i++) {
         PyObject *py_exporter = PyList_GET_ITEM(py_exporters, i);
         PyMetricsExporter *wrapper = calloc(1, sizeof(PyMetricsExporter));
         if (!wrapper) {
-            py_metrics_exporter_list_destroy(list);
+            py_metrics_exporters_destroy(exporters);
             Py_DECREF(py_exporters);
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                   "Failed to allocate metrics exporter");
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Failed to allocate metrics exporter");
+            return NULL;
         }
         wrapper->base.export_fn = call_py_metrics_exporter;
         wrapper->py_exporter = py_exporter;
         Py_INCREF(py_exporter);
-        list->items[list->count++] = wrapper;
+        exporters[i] = wrapper;
         as_metrics_policy_add_exporter(metrics_policy, &wrapper->base);
     }
 
     Py_DECREF(py_exporters);
-    if (out) {
-        *out = list;
-    }
-    else {
-        py_metrics_exporter_list_destroy(list);
-    }
-    return 0;
+    return exporters;
 }
 
 // Extended metrics
@@ -752,7 +736,7 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
 
     PyObject *py_metrics_policy = NULL;
     as_metrics_policy metrics_policy;
-    PyMetricsExporterList *new_exporters = NULL;
+    PyMetricsExporter **new_exporters = NULL;
 
     // Python Function Keyword Arguments
     static char *kwlist[] = {"policy", NULL};
@@ -805,7 +789,7 @@ CLEANUP_ON_ERROR:
         as_error_reset(&err);
         // Enable did not install the new policy. Drop the new wrappers.
         // Listener udata was not retained by the C client.
-        py_metrics_exporter_list_destroy(new_exporters);
+        py_metrics_exporters_destroy(new_exporters);
         new_exporters = NULL;
         if (free_udata_as_py_listener_data) {
             free_py_listener_data(
@@ -813,7 +797,7 @@ CLEANUP_ON_ERROR:
         }
     }
     else if (err.code != AEROSPIKE_OK) {
-        py_metrics_exporter_list_destroy(new_exporters);
+        py_metrics_exporters_destroy(new_exporters);
         new_exporters = NULL;
         if (free_udata_as_py_listener_data) {
             free_py_listener_data(

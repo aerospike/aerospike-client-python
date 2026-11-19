@@ -30,15 +30,16 @@ PyObject *AerospikeClient_GetStats(AerospikeClient *self);
 
 /*
  * Convert MetricsPolicy.exporters into C exporters appended to metrics_policy.
- * On success, *out owns the wrapper list (NULL when no exporters were set).
- * On failure, *out is NULL and nothing is left allocated.
+ * Returns the NULL-terminated array of wrappers, which the caller owns. Returns
+ * NULL if no exporters were set, or if err was populated, in which case nothing
+ * is left allocated.
  */
-int py_metrics_exporters_from_pyobject(as_error *err,
-                                       PyObject *py_metrics_policy,
-                                       as_metrics_policy *metrics_policy,
-                                       PyMetricsExporterList **out);
+PyMetricsExporter **
+py_metrics_exporters_from_pyobject(as_error *err, PyObject *py_metrics_policy,
+                                   as_metrics_policy *metrics_policy);
 
-void py_metrics_exporter_list_destroy(PyMetricsExporterList *list);
+// exporters is a NULL-terminated array, or NULL
+void py_metrics_exporters_destroy(PyMetricsExporter **exporters);
 
 /* Release exporters installed by enable_metrics(). */
 void aerospike_client_release_active_metrics_exporters(AerospikeClient *self);

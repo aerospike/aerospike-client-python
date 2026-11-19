@@ -1113,7 +1113,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             goto RAISE_EXCEPTION_WITH_AS_ERROR;
         }
         else {
-            PyMetricsExporterList *config_exporters = NULL;
+            PyMetricsExporter **config_exporters = NULL;
             int retval = as_metrics_policy_set_using_pyobject(
                 &constructor_err, py_obj_metrics_policy,
                 &(config.policies.metrics), &config_exporters);
