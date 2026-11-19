@@ -111,26 +111,6 @@ static int set_new_uint64_attr(as_error *err, PyObject *py_obj,
     return set_new_attr(err, py_obj, name, py_value);
 }
 
-// The snapshot classes name their attributes after the fields of the C
-// snapshot structs, so this takes each field name once, as the attribute name
-// and as the member to read.
-#define SNAPSHOT_ATTR(c_snapshot, field) {#field, (c_snapshot)->field}
-
-typedef struct {
-    const char *name;
-    const char *value;
-} SnapshotStringAttr;
-
-typedef struct {
-    const char *name;
-    bool value;
-} SnapshotBoolAttr;
-
-typedef struct {
-    const char *name;
-    uint64_t value;
-} SnapshotUint64Attr;
-
 static PyObject *as_metrics_conn_snapshot_to_pyobject(
     as_error *err, const as_metrics_conn_snapshot *conn_snapshot)
 {
@@ -200,16 +180,13 @@ static PyObject *as_metrics_latency_snapshot_to_pyobject(
         return NULL;
     }
 
-    const SnapshotUint64Attr number_attrs[] = {
-        SNAPSHOT_ATTR(latency_snapshot, sum),
-        SNAPSHOT_ATTR(latency_snapshot, count),
-        SNAPSHOT_ATTR(latency_snapshot, min),
-        SNAPSHOT_ATTR(latency_snapshot, max)};
-    for (unsigned long i = 0;
-         i < sizeof(number_attrs) / sizeof(number_attrs[0]); i++) {
-        result =
-            set_new_uint64_attr(err, py_latency_snapshot, number_attrs[i].name,
-                                number_attrs[i].value);
+    const char *field_names[] = {"sum", "count", "min", "max"};
+    uint64_t values[] = {latency_snapshot->sum, latency_snapshot->count,
+                         latency_snapshot->min, latency_snapshot->max};
+    for (unsigned long i = 0; i < sizeof(field_names) / sizeof(field_names[0]);
+         i++) {
+        result = set_new_uint64_attr(err, py_latency_snapshot, field_names[i],
+                                     values[i]);
         if (result != 0) {
             Py_DECREF(py_latency_snapshot);
             return NULL;
@@ -263,20 +240,21 @@ static PyObject *as_metrics_namespace_snapshot_to_pyobject(
         goto error;
     }
 
-    const SnapshotUint64Attr counter_attrs[] = {
-        SNAPSHOT_ATTR(namespace_snapshot, errors),
-        SNAPSHOT_ATTR(namespace_snapshot, client_timeouts),
-        SNAPSHOT_ATTR(namespace_snapshot, server_timeouts),
-        SNAPSHOT_ATTR(namespace_snapshot, key_busy),
-        SNAPSHOT_ATTR(namespace_snapshot, record_too_big),
-        SNAPSHOT_ATTR(namespace_snapshot, device_overload),
-        SNAPSHOT_ATTR(namespace_snapshot, bytes_in),
-        SNAPSHOT_ATTR(namespace_snapshot, bytes_out)};
+    const char *counter_names[] = {
+        "errors",         "client_timeouts", "server_timeouts", "key_busy",
+        "record_too_big", "device_overload", "bytes_in",        "bytes_out"};
+    uint64_t counters[] = {namespace_snapshot->errors,
+                           namespace_snapshot->client_timeouts,
+                           namespace_snapshot->server_timeouts,
+                           namespace_snapshot->key_busy,
+                           namespace_snapshot->record_too_big,
+                           namespace_snapshot->device_overload,
+                           namespace_snapshot->bytes_in,
+                           namespace_snapshot->bytes_out};
     for (unsigned long i = 0;
-         i < sizeof(counter_attrs) / sizeof(counter_attrs[0]); i++) {
-        result =
-            set_new_uint64_attr(err, py_namespace_snapshot,
-                                counter_attrs[i].name, counter_attrs[i].value);
+         i < sizeof(counter_names) / sizeof(counter_names[0]); i++) {
+        result = set_new_uint64_attr(err, py_namespace_snapshot,
+                                     counter_names[i], counters[i]);
         if (result != 0) {
             goto error;
         }
@@ -310,28 +288,29 @@ static PyObject *as_metrics_node_snapshot_to_pyobject(
         return NULL;
     }
 
-    const SnapshotStringAttr string_attrs[] = {
-        SNAPSHOT_ATTR(node_snapshot, name),
-        SNAPSHOT_ATTR(node_snapshot, address)};
+    const char *string_names[] = {"name", "address"};
+    const char *string_values[] = {node_snapshot->name, node_snapshot->address};
     for (unsigned long i = 0;
-         i < sizeof(string_attrs) / sizeof(string_attrs[0]); i++) {
-        const char *value = string_attrs[i].value ? string_attrs[i].value : "";
-        int result = set_new_str_attr(err, py_node_snapshot,
-                                      string_attrs[i].name, value);
+         i < sizeof(string_names) / sizeof(string_names[0]); i++) {
+        const char *value = string_values[i] ? string_values[i] : "";
+        int result =
+            set_new_str_attr(err, py_node_snapshot, string_names[i], value);
         if (result != 0) {
             goto error;
         }
     }
 
-    const SnapshotUint64Attr number_attrs[] = {
-        SNAPSHOT_ATTR(node_snapshot, port),
-        SNAPSHOT_ATTR(node_snapshot, conn_open_failures),
-        SNAPSHOT_ATTR(node_snapshot, conn_tls_handshake_failures),
-        SNAPSHOT_ATTR(node_snapshot, conn_auth_failures)};
+    const char *number_names[] = {"port", "conn_open_failures",
+                                  "conn_tls_handshake_failures",
+                                  "conn_auth_failures"};
+    uint64_t number_values[] = {node_snapshot->port,
+                                node_snapshot->conn_open_failures,
+                                node_snapshot->conn_tls_handshake_failures,
+                                node_snapshot->conn_auth_failures};
     for (unsigned long i = 0;
-         i < sizeof(number_attrs) / sizeof(number_attrs[0]); i++) {
-        int result = set_new_uint64_attr(
-            err, py_node_snapshot, number_attrs[i].name, number_attrs[i].value);
+         i < sizeof(number_names) / sizeof(number_names[0]); i++) {
+        int result = set_new_uint64_attr(err, py_node_snapshot, number_names[i],
+                                         number_values[i]);
         if (result != 0) {
             goto error;
         }
@@ -441,33 +420,32 @@ as_metrics_snapshot_to_pyobject(as_error *err,
         return NULL;
     }
 
-    const SnapshotStringAttr string_attrs[] = {
-        SNAPSHOT_ATTR(snapshot, timestamp),
-        SNAPSHOT_ATTR(snapshot, cluster_name),
-        SNAPSHOT_ATTR(snapshot, client_type),
-        SNAPSHOT_ATTR(snapshot, client_version),
-        SNAPSHOT_ATTR(snapshot, app_id)};
+    const char *string_names[] = {"timestamp", "cluster_name", "client_type",
+                                  "client_version", "app_id"};
+    const char *string_values[] = {snapshot->timestamp, snapshot->cluster_name,
+                                   snapshot->client_type,
+                                   snapshot->client_version, snapshot->app_id};
     for (unsigned long i = 0;
-         i < sizeof(string_attrs) / sizeof(string_attrs[0]); i++) {
-        const char *value = string_attrs[i].value ? string_attrs[i].value : "";
-        int result =
-            set_new_str_attr(err, py_snapshot, string_attrs[i].name, value);
+         i < sizeof(string_names) / sizeof(string_names[0]); i++) {
+        const char *value = string_values[i] ? string_values[i] : "";
+        int result = set_new_str_attr(err, py_snapshot, string_names[i], value);
         if (result != 0) {
             goto error;
         }
     }
 
-    const SnapshotBoolAttr bool_attrs[] = {
-        SNAPSHOT_ATTR(snapshot, metrics_enabled),
-        SNAPSHOT_ATTR(snapshot, operational_metrics_enabled),
-        SNAPSHOT_ATTR(snapshot, usage_metrics_enabled),
-        SNAPSHOT_ATTR(snapshot, nodes_departed_possibly_truncated)};
-    for (unsigned long i = 0; i < sizeof(bool_attrs) / sizeof(bool_attrs[0]);
+    const char *bool_names[] = {
+        "metrics_enabled", "operational_metrics_enabled",
+        "usage_metrics_enabled", "nodes_departed_possibly_truncated"};
+    bool bool_values[] = {snapshot->metrics_enabled,
+                          snapshot->operational_metrics_enabled,
+                          snapshot->usage_metrics_enabled,
+                          snapshot->nodes_departed_possibly_truncated};
+    for (unsigned long i = 0; i < sizeof(bool_names) / sizeof(bool_names[0]);
          i++) {
         // PyBool_FromLong() cannot fail
-        PyObject *py_value = PyBool_FromLong(bool_attrs[i].value);
-        int result =
-            set_new_attr(err, py_snapshot, bool_attrs[i].name, py_value);
+        PyObject *py_value = PyBool_FromLong(bool_values[i]);
+        int result = set_new_attr(err, py_snapshot, bool_names[i], py_value);
         if (result != 0) {
             goto error;
         }
@@ -504,27 +482,42 @@ as_metrics_snapshot_to_pyobject(as_error *err,
         goto error;
     }
 
-    const SnapshotUint64Attr number_attrs[] = {
-        SNAPSHOT_ATTR(snapshot, recover_queue_size),
-        SNAPSHOT_ATTR(snapshot, invalid_node_count),
-        SNAPSHOT_ATTR(snapshot, validation_open_failures),
-        SNAPSHOT_ATTR(snapshot, validation_tls_handshake_failures),
-        SNAPSHOT_ATTR(snapshot, validation_auth_failures),
-        SNAPSHOT_ATTR(snapshot, delay_queue_timeout_count),
-        SNAPSHOT_ATTR(snapshot, command_count),
-        SNAPSHOT_ATTR(snapshot, retry_count),
-        SNAPSHOT_ATTR(snapshot, api_blocking),
-        SNAPSHOT_ATTR(snapshot, api_deferred),
-        SNAPSHOT_ATTR(snapshot, api_background),
-        SNAPSHOT_ATTR(snapshot, cpu),
-        SNAPSHOT_ATTR(snapshot, mem),
-        SNAPSHOT_ATTR(snapshot, latency_columns),
-        SNAPSHOT_ATTR(snapshot, latency_shift),
-        SNAPSHOT_ATTR(snapshot, latency_unit)};
+    const char *number_names[] = {"recover_queue_size",
+                                  "invalid_node_count",
+                                  "validation_open_failures",
+                                  "validation_tls_handshake_failures",
+                                  "validation_auth_failures",
+                                  "delay_queue_timeout_count",
+                                  "command_count",
+                                  "retry_count",
+                                  "api_blocking",
+                                  "api_deferred",
+                                  "api_background",
+                                  "cpu",
+                                  "mem",
+                                  "latency_columns",
+                                  "latency_shift",
+                                  "latency_unit"};
+    uint64_t number_values[] = {snapshot->recover_queue_size,
+                                snapshot->invalid_node_count,
+                                snapshot->validation_open_failures,
+                                snapshot->validation_tls_handshake_failures,
+                                snapshot->validation_auth_failures,
+                                snapshot->delay_queue_timeout_count,
+                                snapshot->command_count,
+                                snapshot->retry_count,
+                                snapshot->api_blocking,
+                                snapshot->api_deferred,
+                                snapshot->api_background,
+                                snapshot->cpu,
+                                snapshot->mem,
+                                snapshot->latency_columns,
+                                snapshot->latency_shift,
+                                snapshot->latency_unit};
     for (unsigned long i = 0;
-         i < sizeof(number_attrs) / sizeof(number_attrs[0]); i++) {
-        result = set_new_uint64_attr(err, py_snapshot, number_attrs[i].name,
-                                     number_attrs[i].value);
+         i < sizeof(number_names) / sizeof(number_names[0]); i++) {
+        result = set_new_uint64_attr(err, py_snapshot, number_names[i],
+                                     number_values[i]);
         if (result != 0) {
             goto error;
         }

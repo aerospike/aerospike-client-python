@@ -1539,18 +1539,6 @@ static int set_metrics_uint32_field(as_error *err, PyObject *py_metrics_policy,
     return AEROSPIKE_OK;
 }
 
-// MetricsPolicy attributes are named after the as_metrics_policy fields, so
-// these take each field name once, as the attribute name and as the member to
-// set.
-#define SET_METRICS_BOOL_FIELD(err, py_metrics_policy, metrics_policy, field,  \
-                               allow_none)                                     \
-    set_metrics_bool_field(err, py_metrics_policy, #field, allow_none,         \
-                           &(metrics_policy)->field)
-#define SET_METRICS_UINT32_FIELD(err, py_metrics_policy, metrics_policy,       \
-                                 field)                                        \
-    set_metrics_uint32_field(err, py_metrics_policy, #field,                   \
-                             &(metrics_policy)->field)
-
 int as_metrics_policy_set_using_pyobject(as_error *err,
                                          PyObject *py_metrics_policy,
                                          as_metrics_policy *metrics_policy,
@@ -1687,13 +1675,14 @@ int as_metrics_policy_set_using_pyobject(as_error *err,
     }
     metrics_policy->latency_unit = (as_metrics_latency_unit)latency_unit;
 
-    result = SET_METRICS_BOOL_FIELD(err, py_metrics_policy, metrics_policy,
-                                    operational_enabled, true);
+    result =
+        set_metrics_bool_field(err, py_metrics_policy, "operational_enabled",
+                               true, &metrics_policy->operational_enabled);
     if (result != AEROSPIKE_OK) {
         goto error;
     }
-    result = SET_METRICS_BOOL_FIELD(err, py_metrics_policy, metrics_policy,
-                                    usage_enabled, false);
+    result = set_metrics_bool_field(err, py_metrics_policy, "usage_enabled",
+                                    false, &metrics_policy->usage_enabled);
     if (result != AEROSPIKE_OK) {
         goto error;
     }
@@ -1723,13 +1712,14 @@ int as_metrics_policy_set_using_pyobject(as_error *err,
     strcpy(metrics_policy->export_interval, export_interval);
     Py_DECREF(py_export_interval);
 
-    result = SET_METRICS_UINT32_FIELD(err, py_metrics_policy, metrics_policy,
-                                      sampler_range);
+    result = set_metrics_uint32_field(err, py_metrics_policy, "sampler_range",
+                                      &metrics_policy->sampler_range);
     if (result != AEROSPIKE_OK) {
         goto error;
     }
-    result = SET_METRICS_UINT32_FIELD(err, py_metrics_policy, metrics_policy,
-                                      sampler_threshold);
+    result =
+        set_metrics_uint32_field(err, py_metrics_policy, "sampler_threshold",
+                                 &metrics_policy->sampler_threshold);
     if (result != AEROSPIKE_OK) {
         goto error;
     }
