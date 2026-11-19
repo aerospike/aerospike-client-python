@@ -44,9 +44,6 @@ struct PyMetricsExporterList {
     uint32_t count;
 };
 
-static const char *LATENCY_NAMES[AS_LATENCY_TYPE_MAX] = {
-    "conn", "write", "read", "batch", "query"};
-
 static bool client_metrics_enabled(AerospikeClient *self)
 {
     return self && self->as && self->as->cluster &&
@@ -202,19 +199,19 @@ static PyObject *py_latency_dict(as_error *err,
         return NULL;
     }
     for (uint8_t i = 0; i < AS_LATENCY_TYPE_MAX; i++) {
+        const char *latency_name = as_latency_type_to_string(i);
         PyObject *py_series = py_latency_snapshot(err, &series[i]);
         if (!py_series) {
             Py_DECREF(py_latency);
             return NULL;
         }
-        int result =
-            PyDict_SetItemString(py_latency, LATENCY_NAMES[i], py_series);
+        int result = PyDict_SetItemString(py_latency, latency_name, py_series);
         Py_DECREF(py_series);
         if (result == -1) {
             PyErr_Clear();
             Py_DECREF(py_latency);
             as_error_update(err, AEROSPIKE_ERR, "Failed to set latencies[%s]",
-                            LATENCY_NAMES[i]);
+                            latency_name);
             return NULL;
         }
     }
