@@ -83,6 +83,9 @@ typedef struct {
     // copy that aerospike_destroy() frees, so only this one is freed by the client.
     as_addr_map *ip_map;
     uint32_t ip_map_size;
+    // The SeedCandidateProvider of the client config, or NULL. A sync Client.close()
+    // destroys its registration, so connect() registers it again. See discovery.h.
+    struct PySeedProvider *seed_provider;
 } AerospikeClient;
 
 typedef struct {

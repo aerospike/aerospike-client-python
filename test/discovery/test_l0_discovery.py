@@ -234,15 +234,16 @@ def test_u1_provider_rejected_in_tend_mode() -> None:
     assert sys.getrefcount(provider) == references
 
 
-# The registration outlives Client.close() so the client can connect again, and close() runs once
-# when the client object is destroyed
+# Client.close() destroys the registration and connect() registers the provider again, so the client
+# can connect again, and close() runs once when the client object is destroyed
 def test_u1_provider_closed_when_client_destroyed() -> None:
     provider = SeedProvider([UNREACHABLE])
     client = aerospike.client({**OFFLINE, "hosts": [], "discovery": {"provider": provider}})
+    for _ in range(2):
+        client.close()
+        client.connect()
     client.close()
-    client.connect()
-    client.close()
-    assert len(provider.contexts) == 2
+    assert len(provider.contexts) == 3
     assert provider.closed == 0
     del client
     gc.collect()
