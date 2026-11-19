@@ -724,6 +724,62 @@ class TestMetrics:
         assert after_success["bytes_in"] > after_failure["bytes_in"]
         assert after_success["bytes_out"] > after_failure["bytes_out"]
 
+    @staticmethod
+    def namespace_latency_count(snapshot: MetricsSnapshot, latency_type: str) -> int:
+        count = 0
+        for node in snapshot.nodes:
+            for namespace in node.namespaces:
+                if namespace.name == "test":
+                    count += namespace.latencies[latency_type].count
+        return count
+
+    def test_batch_records_one_command_latency(self) -> None:
+        policy = MetricsPolicy(report_dir="")
+        self.as_connection.enable_metrics(policy)
+        present_keys = [("test", "metrics", f"batch-latency-{i}") for i in range(3)]
+        # A key that is not found is a per-key result, so the batch call still completed.
+        missing_key = ("test", "metrics", "batch-latency-missing")
+        try:
+            for key in present_keys:
+                self.as_connection.put(key, {"a": 1})
+            before = self.as_connection.get_metrics_snapshot()
+            self.as_connection.batch_read(present_keys + [missing_key])
+            after = self.as_connection.get_metrics_snapshot()
+        finally:
+            self.as_connection.disable_metrics()
+            for key in present_keys:
+                self.as_connection.remove(key)
+
+        # One cluster sample for the whole call, however many nodes it reached.
+        assert after.command_latencies["batch"].count == before.command_latencies["batch"].count + 1
+        # Each node's sub-batch records a sample in its keys' namespace.
+        namespace_batches_before = self.namespace_latency_count(before, latency_type="batch")
+        namespace_batches_after = self.namespace_latency_count(after, latency_type="batch")
+        assert namespace_batches_after > namespace_batches_before
+
+    def test_failed_call_records_no_command_latency(self) -> None:
+        policy = MetricsPolicy(report_dir="")
+        self.as_connection.enable_metrics(policy)
+        key = ("test", "metrics", "failed-call-latency")
+        try:
+            self.as_connection.put(key, {"a": 1})
+            before = self.as_connection.get_metrics_snapshot()
+            # The record has a lower generation, so the server rejects this write.
+            with pytest.raises(e.RecordGenerationError):
+                self.as_connection.put(key, {"a": 2}, meta={"gen": 60000}, policy={"gen": aerospike.POLICY_GEN_EQ})
+            after_failure = self.as_connection.get_metrics_snapshot()
+            self.as_connection.put(key, {"a": 3})
+            after_success = self.as_connection.get_metrics_snapshot()
+        finally:
+            self.as_connection.disable_metrics()
+            self.as_connection.remove(key)
+
+        assert after_failure.command_latencies["write"].count == before.command_latencies["write"].count
+        assert after_success.command_latencies["write"].count == before.command_latencies["write"].count + 1
+        namespace_writes_before = self.namespace_latency_count(before, latency_type="write")
+        assert self.namespace_latency_count(after_failure, latency_type="write") == namespace_writes_before
+        assert self.namespace_latency_count(after_success, latency_type="write") == namespace_writes_before + 1
+
     def test_enable_metrics_turns_operational_on_by_default(self):
         policy = MetricsPolicy(report_dir="")
         assert policy.operational_enabled is None
