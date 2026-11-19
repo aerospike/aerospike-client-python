@@ -39,7 +39,7 @@ on:
         type: string
         description: Valid JSON list of Python tags to build the client for.
         required: false
-        default: '["3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]'
+        default: '["3.11", "3.12", "3.13", "3.14", "3.15"]'
       platform-tag:
         # One of these values:
         # - manylinux_x86_64

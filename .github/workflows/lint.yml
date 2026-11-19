@@ -2,7 +2,7 @@ permissions:
   contents: read
 
 env:
-  LOWEST_SUPPORTED_PY_VERSION: '3.10'
+  LOWEST_SUPPORTED_PY_VERSION: '3.11'
 
 on:
   push:

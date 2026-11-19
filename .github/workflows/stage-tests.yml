@@ -43,14 +43,12 @@ jobs:
           ["amazonlinux:2023", "x86_64", "3.11", false],
           ["amazonlinux:2023", "aarch64", "3.11", false],
 
-          ["ubuntu:22.04", "x86_64", "3.10", false],
-          ["ubuntu:22.04", "aarch64", "3.10", false],
+          ["ubuntu:22.04", "x86_64", "3.11", false],
+          ["ubuntu:22.04", "aarch64", "3.11", false],
           ["ubuntu:24.04", "x86_64", "3.12", false],
           ["ubuntu:24.04", "aarch64", "3.12", false],
 
           # Bookworm is Debian 12
-          ["python:3.10-bookworm", "x86_64", "3.10", false],
-          ["python:3.10-bookworm", "aarch64", "3.10", false],
           ["python:3.11-bookworm", "x86_64", "3.11", false],
           ["python:3.11-bookworm", "aarch64", "3.11", false],
           ["python:3.12-bookworm", "x86_64", "3.12", false],
