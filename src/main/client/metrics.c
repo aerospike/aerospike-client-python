@@ -72,25 +72,21 @@ static int set_new_attr(as_error *err, PyObject *py_obj, const char *name,
 
 static PyObject *
 as_metrics_conn_snapshot_to_pyobject(as_error *err,
-                                     const as_metrics_conn_snapshot *stats)
+                                     const as_metrics_conn_snapshot *snapshot)
 {
-    PyObject *py_conn_stats = create_class_instance_from_module(
-        err, "aerospike_helpers.metrics", "ConnectionStats", NULL);
+    // The snapshot has the same counters as as_conn_stats, so both share one
+    // conversion and its field names.
+    as_conn_stats stats = {.in_use = snapshot->in_use,
+                           .in_pool = snapshot->in_pool,
+                           .opened = snapshot->opened,
+                           .closed = snapshot->closed,
+                           .recovered = snapshot->recovered,
+                           .aborted = snapshot->aborted};
+    PyObject *py_conn_stats =
+        create_py_conn_stats_from_as_conn_stats(err, &stats);
     if (!py_conn_stats) {
-        return NULL;
-    }
-
-    const char *field_names[] = {"in_use", "in_pool",   "opened",
-                                 "closed", "recovered", "aborted"};
-    uint32_t values[] = {stats->in_use, stats->in_pool,   stats->opened,
-                         stats->closed, stats->recovered, stats->aborted};
-    for (unsigned long i = 0; i < sizeof(field_names) / sizeof(field_names[0]);
-         i++) {
-        if (set_new_attr(err, py_conn_stats, field_names[i],
-                         PyLong_FromUnsignedLong(values[i])) != 0) {
-            Py_DECREF(py_conn_stats);
-            return NULL;
-        }
+        // err describes the failure, like the other helpers here.
+        PyErr_Clear();
     }
     return py_conn_stats;
 }
