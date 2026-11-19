@@ -131,6 +131,7 @@ class TestOperate(object):
                 ("test", "demo", 1),
                 [operations.prepend("name", "ram"), operations.increment("age", 3), operations.read("name")],
                 {"name": "ramname1"},
+                marks=pytest.mark.removed_in_server_9,
             ),
             (
                 ("test", "demo", 1),  # with_write_float_value
@@ -146,52 +147,61 @@ class TestOperate(object):
                 ("test", "demo", 1),  # with_bin_bytearray
                 [operations.prepend("asd[;asjk", "ram"), operations.read("asd[;asjk")],
                 {"asd[;asjk": "ram"},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytearray_key"),  # with_operator append_val bytearray
                 [operations.append("bytearray_bin", bytearray("abc", "utf-8")), operations.read("bytearray_bin")],
                 {"bytearray_bin": bytearray("asd;as[d'as;dabc", "utf-8")},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytearray_new"),  # with_operator append_val bytearray_newrecord
                 [
                     operations.append("bytearray_bin", bytearray("asd;as[d'as;d", "utf-8")),
                     operations.read("bytearray_bin"),
                 ],
                 {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytes_key"),  # with_operator append_val bytes
                 [operations.append("bytes_bin", b"abc"), operations.read("bytes_bin")],
                 {"bytes_bin": b"abc"},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytes_new"),  # with_operator append_val bytes_newrecord
                 [operations.append("bytes_bin", b"asd;as[d'as;d"), operations.read("bytes_bin")],
                 {"bytes_bin": b"asd;as[d'as;d"},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytearray_key"),  # with_operatorprepend_valbytearray
                 [operations.prepend("bytearray_bin", bytearray("abc", "utf-8")), operations.read("bytearray_bin")],
                 {"bytearray_bin": bytearray("abcasd;as[d'as;d", "utf-8")},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytearray_new"),  # with_operatorprepend_valbytearray_newrecord
                 [
                     operations.prepend("bytearray_bin", bytearray("asd;as[d'as;d", "utf-8")),
                     operations.read("bytearray_bin"),
                 ],
                 {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytes_key"),  # with_operator prepend_val bytes
                 [operations.prepend("bytes_bin", b"abc"), operations.read("bytes_bin")],
                 {"bytes_bin": b"abc"},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytes_new"),  # with_operator prepend_val bytes_newrecord
                 [operations.prepend("bytes_bin", b"asd;as[d'as;d"), operations.read("bytes_bin")],
                 {"bytes_bin": b"asd;as[d'as;d"},
+                marks=pytest.mark.removed_in_server_9,
             ),
             (
                 ("test", "demo", 1),  # write_bool_positive
@@ -251,6 +261,7 @@ class TestOperate(object):
 
         assert bins == {"age": 9.8}
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_correct_policy(self):
         """
         Invoke operate() with correct policy
@@ -286,6 +297,7 @@ class TestOperate(object):
             ),
         ],
     )
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_policy_gen_ignore(self, key, policy, meta, llist):
         """
         Invoke operate() with gen ignore.
@@ -295,6 +307,7 @@ class TestOperate(object):
 
         assert bins == {"name": "name1aa"}
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_policy_gen_EQ(self):
         """
         Invoke operate() with gen EQ positive.
@@ -330,6 +343,7 @@ class TestOperate(object):
 
         assert meta["ttl"] is not None
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_policy_gen_EQ_not_equal(self):
         """
         Invoke operate() with a mismatched generation, and verify
@@ -354,6 +368,7 @@ class TestOperate(object):
         _, _, bins = self.as_connection.get(key)
         assert bins == {"age": 1, "name": "name1"}
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_policy_gen_GT_mismatch(self):
         """
         Invoke operate() with gen GT policy, with amatching generation
@@ -390,6 +405,7 @@ class TestOperate(object):
         # can cause the ttl value to differ from the value it was set to
         assert meta["ttl"] <= 1250 and meta["ttl"] >= 1150
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_policy_gen_GT(self):
         """
         Invoke operate() with gen GT positive.
@@ -405,6 +421,7 @@ class TestOperate(object):
 
         assert bins == {"name": "name1aa"}
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_nonexistent_key(self):
         """
         Invoke operate() with non-existent key
@@ -416,6 +433,7 @@ class TestOperate(object):
         assert bins == {"loc": "mumbai"}
         self.as_connection.remove(new_key)
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_nonexistent_bin(self):
         """
         Invoke operate() with non-existent bin
@@ -474,15 +492,17 @@ class TestOperate(object):
     @pytest.mark.parametrize(
         "key, llist, expected",
         [
-            (
+            pytest.param(
                 ("test", "demo", "prepend_int"),  # prepend_with_int
                 [operations.prepend("age", 4), operations.read("age")],
                 {"age": 4},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "append_dict"),  # append_with_dict
                 [operations.append("dict", {"a": 1, "b": 2}), operations.read("dict")],
                 {"dict": {"a": 1, "b": 2}},
+                marks=pytest.mark.removed_in_server_9,
             ),
             (
                 ("test", "demo", "incr_string"),  # incr_with_string
@@ -502,18 +522,25 @@ class TestOperate(object):
     @pytest.mark.parametrize(
         "key, llist",
         [
-            (("test", "demo", 1), [operations.prepend("age", 4), operations.read("age")]),
-            (
+            pytest.param(
+                ("test", "demo", 1),
+                [operations.prepend("age", 4), operations.read("age")],
+                marks=pytest.mark.removed_in_server_9,
+            ),
+            pytest.param(
                 ("test", "demo", "existing_key"),  # Existing list
                 [operations.prepend("list", ["c"]), operations.read("list")],
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "existing_key"),  # Existing dict
                 [operations.append("dict", {"c": 2}), operations.read("dict")],
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "existing_key"),  # Exiting float
                 [operations.append("float", 3.4), operations.read("float")],
+                marks=pytest.mark.removed_in_server_9,
             ),
             (
                 ("test", "demo", 1),  # Existing string
@@ -551,6 +578,7 @@ class TestOperate(object):
         assert bins["geospatial"].unwrap() == {"coordinates": [42.34, 58.62], "type": "Point"}
         TestOperate.client_no_typechecks.remove(key)
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_bin_length_extra_nostricttypes(self):
         """
         Invoke operate() with bin length extra. Strict types disabled
@@ -567,6 +595,7 @@ class TestOperate(object):
 
         assert bins == {"name": "ramname1", "age": 1}
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_prepend_set_to_aerospike_null(self):
         """
         Invoke operate() with prepend command with bin set to aerospike_null

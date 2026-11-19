@@ -20,7 +20,8 @@ def ensure_dropped_index(client, namespace, index_name):
         pass
     retries = 0
     while retries < 10:
-        responses = client.info_all("sindex")
+        # "sindex" is removed in Server 9.0. "sindex-list" is the replacement.
+        responses = client.info_all("sindex-list")
         if not index_found_in_info_res(responses, index_name):
             return
         time.sleep(0.5)

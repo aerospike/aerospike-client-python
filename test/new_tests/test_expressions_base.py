@@ -181,6 +181,7 @@ class TestExpressions(TestBaseClass):
             self.as_connection.get(("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()})
 
     @pytest.mark.xfail(reason="Will fail on storage engine device.")
+    @pytest.mark.removed_in_server_9
     def test_device_size_pos(self):
         expr = Eq(DeviceSize(), 0)
         record = self.as_connection.get(("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()})

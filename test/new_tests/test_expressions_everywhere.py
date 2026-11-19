@@ -183,7 +183,7 @@ class TestPredEveryWhere(object):
                 {"charges": 3},
                 4,
             ),
-            (  # test string regex
+            pytest.param(  # test string regex
                 [list_operations.list_append("charges", 2)],
                 exp.CmpRegex(aerospike.REGEX_ICASE, ".*4.*", exp.StrBin("user_name")),
                 {
@@ -195,6 +195,7 @@ class TestPredEveryWhere(object):
                 },
                 {"charges": 3},
                 4,
+                marks=pytest.mark.removed_in_server_9,
             ),
             (  # test list or int
                 [list_operations.list_append("charges", 2)],
