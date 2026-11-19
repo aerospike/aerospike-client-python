@@ -51,10 +51,19 @@ static bool client_metrics_enabled(AerospikeClient *self)
            self->as->cluster->metrics_enabled;
 }
 
-// The snapshot helpers below describe a failure in err. When a C-API call
-// fails, its Python exception is left raised instead of cleared:
-// raise_exception() chains it to the exception made from err, and
-// py_metrics_export() appends it to err's message.
+// Snapshot helpers
+//
+// The helpers that build a Python snapshot describe a failure in err, but they
+// leave the Python exception raised by the failed C-API call alone instead of
+// clearing it. What happens to that exception depends on the caller:
+// - get_metrics_snapshot() passes err to raise_exception(), which chains the
+//   exception to the one it raises, so the user sees both.
+// - py_metrics_export() returns into C code, which cannot carry a Python
+//   exception, so it appends the exception to err's message.
+
+// Describes in err that an attribute of a snapshot object could not be created.
+// The exception raised by the failed C-API call stays raised, as described
+// above.
 static int set_new_attr_error(as_error *err, PyObject *py_obj,
                               const char *action, const char *name)
 {
@@ -568,9 +577,9 @@ static as_status py_metrics_export(as_metrics_exporter *exporter, as_error *err,
     PyObject *py_snapshot = as_metrics_snapshot_to_pyobject(err, snapshot);
     if (!py_snapshot) {
         if (PyErr_Occurred()) {
-            // Unlike get_metrics_snapshot(), the exception cannot be chained
-            // because this returns into C code, so it is appended to err's
-            // message, if err has one.
+            // The exception cannot be chained here, so move it into err's
+            // message (see "Snapshot helpers" above). If err has a message,
+            // keep it as the prefix.
             char context[AS_ERROR_MESSAGE_MAX_SIZE] =
                 "Unable to build the metrics snapshot";
             if (err->code != AEROSPIKE_OK) {
@@ -881,8 +890,8 @@ PyObject *AerospikeClient_GetMetricsSnapshot(AerospikeClient *self)
     as_metrics_snapshot_destroy(snapshot);
     if (py_snapshot == NULL) {
         // If err is not set, a snapshot class raised a Python exception, which
-        // is returned as is. Otherwise, any Python exception already raised is
-        // chained by raise_exception().
+        // is returned as is. Otherwise, raise_exception() chains the exception
+        // raised by the failed C-API call (see "Snapshot helpers" above).
         if (err.code != AEROSPIKE_OK) {
             raise_exception(&err);
         }
