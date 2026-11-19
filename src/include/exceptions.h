@@ -26,5 +26,5 @@ void raise_exception_base(as_error *err, PyObject *py_key, PyObject *py_bin,
 void remove_exception(as_error *err);
 
 // Move the raised Python exception into err as "<prefix>: <type>: <message>"
-as_status error_from_raised_exception(as_error *err, as_status code,
-                                      const char *prefix);
+as_status as_error_update_from_raised_exc(as_error *err, as_status code,
+                                          const char *prefix);

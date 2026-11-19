@@ -381,8 +381,8 @@ void remove_exception(as_error *err)
     }
 }
 
-as_status error_from_raised_exception(as_error *err, as_status code,
-                                      const char *prefix)
+as_status as_error_update_from_raised_exc(as_error *err, as_status code,
+                                          const char *prefix)
 {
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
     PyObject *py_exc = PyErr_GetRaisedException();

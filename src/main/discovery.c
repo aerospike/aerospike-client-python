@@ -117,8 +117,8 @@ static as_status check_dict_keys(as_error *err, PyObject *py_dict,
         err, py_dict, py_valid_keys,
         CLIENT_CONFIG_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
     if (retval == -1) {
-        return error_from_raised_exception(err, AEROSPIKE_ERR_CLIENT,
-                                           "Unable to validate config keys");
+        return as_error_update_from_raised_exc(
+            err, AEROSPIKE_ERR_CLIENT, "Unable to validate config keys");
     }
     if (retval == 0) {
         return err->code;
@@ -134,7 +134,7 @@ static int get_pyobject_from_py_dict(as_error *err, PyObject *py_dict,
 {
     int retval = PyDict_GetItemStringRef(py_dict, key, py_value);
     if (retval == -1) {
-        error_from_raised_exception(err, AEROSPIKE_ERR_CLIENT, option_name);
+        as_error_update_from_raised_exc(err, AEROSPIKE_ERR_CLIENT, option_name);
         return -1;
     }
     if (retval == 1 && Py_IsNone(*py_value)) {
@@ -221,8 +221,8 @@ static as_status get_uint32_from_py_dict(as_error *err, PyObject *py_dict,
     uint32_t number = convert_pyobject_to_uint32_t(py_value);
     Py_DECREF(py_value);
     if (PyErr_Occurred()) {
-        return error_from_raised_exception(err, AEROSPIKE_ERR_PARAM,
-                                           option_name);
+        return as_error_update_from_raised_exc(err, AEROSPIKE_ERR_PARAM,
+                                               option_name);
     }
     *value = number;
     return AEROSPIKE_OK;
@@ -260,7 +260,7 @@ static char *get_str_from_py_dict(as_error *err, PyObject *py_dict,
     char *value = NULL;
     const char *str = convert_pyobject_to_str(py_value);
     if (!str) {
-        error_from_raised_exception(err, AEROSPIKE_ERR_PARAM, option_name);
+        as_error_update_from_raised_exc(err, AEROSPIKE_ERR_PARAM, option_name);
         goto CLEANUP;
     }
     value = strdup(str);
@@ -325,7 +325,8 @@ static char **get_str_list_from_py_dict(as_error *err, PyObject *py_dict,
         PyObject *py_item = PyList_GET_ITEM(py_list, i);
         const char *item = convert_pyobject_to_str(py_item);
         if (!item) {
-            error_from_raised_exception(err, AEROSPIKE_ERR_PARAM, option_name);
+            as_error_update_from_raised_exc(err, AEROSPIKE_ERR_PARAM,
+                                            option_name);
             break;
         }
         items[i] = strdup(item);
@@ -485,8 +486,8 @@ create_py_seed_candidate_context(as_error *err,
 
 ERROR:
     Py_XDECREF(py_seeds);
-    error_from_raised_exception(err, AEROSPIKE_ERR_SEED_DISCOVERY_FAILED,
-                                "Unable to create the " CONTEXT_CLASS);
+    as_error_update_from_raised_exc(err, AEROSPIKE_ERR_SEED_DISCOVERY_FAILED,
+                                    "Unable to create the " CONTEXT_CLASS);
     return NULL;
 }
 
@@ -572,9 +573,9 @@ call_python_seed_provider(as_error *err, PyObject *py_provider,
         PyObject_CallMethod(py_provider, REFRESH_METHOD, "O", py_context);
     Py_DECREF(py_context);
     if (!py_hosts) {
-        return error_from_raised_exception(err,
-                                           AEROSPIKE_ERR_SEED_DISCOVERY_FAILED,
-                                           REFRESH_METHOD "() raised");
+        return as_error_update_from_raised_exc(
+            err, AEROSPIKE_ERR_SEED_DISCOVERY_FAILED,
+            REFRESH_METHOD "() raised");
     }
 
     as_status status =
@@ -655,7 +656,7 @@ static as_status register_python_seed_provider(as_error *err, as_config *config,
 {
     PyObject *py_module = PyImport_ImportModule(HELPERS_DISCOVERY_MODULE);
     if (!py_module) {
-        return error_from_raised_exception(
+        return as_error_update_from_raised_exc(
             err, AEROSPIKE_ERR_CLIENT,
             "Unable to import " HELPERS_DISCOVERY_MODULE);
     }
@@ -663,15 +664,15 @@ static as_status register_python_seed_provider(as_error *err, as_config *config,
         PyObject_GetAttrString(py_module, PROVIDER_CLASS);
     Py_DECREF(py_module);
     if (!py_provider_class) {
-        return error_from_raised_exception(
+        return as_error_update_from_raised_exc(
             err, AEROSPIKE_ERR_CLIENT,
             "Unable to get " HELPERS_DISCOVERY_MODULE "." PROVIDER_CLASS);
     }
     int is_provider = PyObject_IsInstance(py_provider, py_provider_class);
     Py_DECREF(py_provider_class);
     if (is_provider == -1) {
-        return error_from_raised_exception(err, AEROSPIKE_ERR_CLIENT,
-                                           "discovery.provider");
+        return as_error_update_from_raised_exc(err, AEROSPIKE_ERR_CLIENT,
+                                               "discovery.provider");
     }
     if (is_provider == 0) {
         char names[NAMED_ENUM_NAMES_SIZE];
@@ -686,7 +687,7 @@ static as_status register_python_seed_provider(as_error *err, as_config *config,
     PyObject *py_periodic =
         PyObject_CallMethod(py_provider, "needs_periodic_refresh", NULL);
     if (!py_periodic) {
-        return error_from_raised_exception(
+        return as_error_update_from_raised_exc(
             err, AEROSPIKE_ERR_PARAM,
             "discovery.provider.needs_periodic_refresh() raised");
     }
@@ -759,8 +760,8 @@ static as_status register_dns_seed_provider(as_error *err, as_config *config,
         uint16_t port = convert_pyobject_to_uint16_t(py_port);
         Py_DECREF(py_port);
         if (PyErr_Occurred()) {
-            error_from_raised_exception(err, AEROSPIKE_ERR_PARAM,
-                                        "discovery.dns.port");
+            as_error_update_from_raised_exc(err, AEROSPIKE_ERR_PARAM,
+                                            "discovery.dns.port");
             goto CLEANUP;
         }
         dns.port = port;
