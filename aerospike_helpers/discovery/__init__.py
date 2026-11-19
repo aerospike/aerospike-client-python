@@ -50,25 +50,21 @@ class SeedCandidateProvider(ABC):
     """Base class of a seed provider implemented in Python.
 
     The client calls the provider on its own discovery thread, so a slow refresh does not delay
-    cluster tending. Connecting waits at most the ``refresh_timeout_ms`` of the ``discovery`` client
-    config for the first refresh, and the client keeps using the previous seeds until a refresh
-    returns. :meth:`refresh_seed_candidates` holds the GIL while it runs Python code, so it should
-    not run long.
+    cluster tending. :meth:`refresh_seed_candidates` holds the GIL while it runs Python code, so it
+    should not run long.
 
-    A provider can only be used with an ``execution_mode`` of ``"thread"`` (the default).
+    The ``discovery`` client config sets how often the provider is refreshed, how long connecting
+    waits for the first refresh, and the ``execution_mode``, which must be ``"thread"`` (the default)
+    for a provider. See :ref:`aerospike_discovery`.
     """
 
     @abstractmethod
     def refresh_seed_candidates(self, context: SeedCandidateContext) -> List[SeedHost]:
         """Return the seed hosts to connect to, with the preferred host first.
 
-        Raise an exception if the seed hosts cannot be determined. The client then keeps the
-        previous seeds, and raises :exc:`~aerospike.exception.SeedDiscoveryFailed` when connecting
-        if it has no seed host left. The result is a failure too, as if this method raised, when
-        a host has an empty address, an address longer than 255 bytes, or a port outside 1 to 65535.
-        An empty list is used as the result, so it can leave the client with no seed host; the client
-        then raises :exc:`~aerospike.exception.ClientError`, not ``SeedDiscoveryFailed``, when
-        connecting without ``hosts``. See the ``discovery`` client config in :ref:`aerospike` for when.
+        Raise an exception if the seed hosts cannot be determined. What the client does when this
+        method raises, returns an invalid host or returns an empty list is described in
+        :ref:`failed and empty refreshes <aerospike_discovery_refresh_results>`.
 
         :param context: The client state when the seeds are refreshed.
         :return: A list of ``(address, port)`` or ``(address, port, tls_name)`` tuples.

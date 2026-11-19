@@ -1086,7 +1086,10 @@ The **discovery** dict of the client config controls where the client gets its s
     * **servers** (:class:`list` [:class:`str`]): the DNS servers, as ``"ip"`` or ``"ip:port"``
       (``"[ipv6]:port"`` for IPv6). Default: the system's DNS servers.
 
-If a refresh fails, the client keeps its previous seeds. A successful refresh is used even when it leaves no
+.. _aerospike_discovery_refresh_results:
+
+If a refresh fails, for example because a :class:`~aerospike_helpers.discovery.SeedCandidateProvider` raised an
+exception, the client keeps its previous seeds. A successful refresh is used even when it leaves no
 seed host. While the client then has no node, it cannot reconnect until a later refresh returns a host, at most
 **refresh_interval_ms** after the provider returns hosts again. To keep a fallback while discovery returns
 nothing, use ``"merge"`` or ``"discovery_only"`` with **hosts**.
@@ -1099,10 +1102,9 @@ If connecting finds no seed host because a refresh failed, :exc:`~aerospike.exce
 raised. If a refresh succeeded but returned no host and **hosts** is empty, a plain
 :exc:`~aerospike.exception.ClientError` is raised, with the message ``No seed host to connect to``.
 
-A :class:`~aerospike_helpers.discovery.SeedCandidateProvider` is called on the client's background thread,
-so a slow refresh does not delay cluster tending, and holds the GIL while it runs Python code. Its
-:meth:`~aerospike_helpers.discovery.SeedCandidateProvider.close` method is called when the client object is
-destroyed, not by :meth:`Client.close`, so the client can connect again.
+How a :class:`~aerospike_helpers.discovery.SeedCandidateProvider` is called, including its use of the GIL and
+when its :meth:`~aerospike_helpers.discovery.SeedCandidateProvider.close` method runs, is described in the
+class documentation.
 
 **translation** keys:
 
