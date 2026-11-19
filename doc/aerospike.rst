@@ -1100,8 +1100,15 @@ The **discovery** dict of the client config controls where the client gets its s
 If a refresh fails, the client keeps its previous seeds. A successful refresh is used even when it leaves no
 seed host. While the client then has no node, it cannot reconnect until a later refresh returns a host, at most
 **refresh_interval_ms** after the provider returns hosts again. To keep a fallback while discovery returns
-nothing, use ``"merge"`` or ``"discovery_only"`` with **hosts**. If connecting finds no seed host,
-:exc:`~aerospike.exception.SeedDiscoveryFailed` is raised.
+nothing, use ``"merge"`` or ``"discovery_only"`` with **hosts**.
+
+A refresh also fails, as if the provider raised an exception, when a host has an empty address, a port outside
+1 to 65535, or an address longer than 255 bytes. The length check skips a host that is one of **hosts**,
+returned as it is.
+
+If connecting finds no seed host because a refresh failed, :exc:`~aerospike.exception.SeedDiscoveryFailed` is
+raised. If a refresh succeeded but returned no host and **hosts** is empty, a plain
+:exc:`~aerospike.exception.ClientError` is raised, with the message ``No seed host to connect to``.
 
 A :class:`~aerospike_helpers.discovery.SeedCandidateProvider` is called on the client's background thread,
 so a slow refresh does not delay cluster tending, and holds the GIL while it runs Python code. Its
