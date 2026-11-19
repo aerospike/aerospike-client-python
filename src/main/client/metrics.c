@@ -55,7 +55,9 @@ static bool client_metrics_enabled(AerospikeClient *self)
 //
 // The helpers that build a Python snapshot describe a failure in err, but they
 // leave the Python exception raised by the failed C-API call alone instead of
-// clearing it. What happens to that exception depends on the caller:
+// clearing it. The exception is the only description if the constructor of a
+// snapshot class raised, because create_class_instance_from_module() does not
+// populate err then. What happens to that exception depends on the caller:
 // - get_metrics_snapshot() passes err to raise_exception(), which chains the
 //   exception to the one it raises, so the user sees both.
 // - call_py_metrics_exporter() returns into C code, which cannot carry a
@@ -592,11 +594,8 @@ static as_status call_py_metrics_exporter(as_metrics_exporter *exporter,
             }
             as_error_update_from_raised_exc(err, AEROSPIKE_ERR, context);
         }
-        else if (err->code == AEROSPIKE_OK) {
-            as_error_set_message(err, AEROSPIKE_ERR,
-                                 "Failed to build metrics snapshot");
-        }
-        status = err->code == AEROSPIKE_OK ? AEROSPIKE_ERR : err->code;
+        // err is populated: by a helper, or by the exception moved into it
+        status = err->code;
         goto done;
     }
 

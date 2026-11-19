@@ -743,14 +743,33 @@ class TestMetrics:
             with pytest.raises(ValueError, match="snapshot class failed"):
                 self.as_connection.get_metrics_snapshot()
 
-    def test_exporter_snapshot_failure_logs_context_and_exception(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    @pytest.mark.parametrize(
+        "method_name, error, expected",
+        [
+            # A failed C-API call: the log shows the context from err and the exception
+            (
+                "__setattr__",
+                AttributeError("timestamp"),
+                "Unable to create MetricsSnapshot: could not set timestamp: AttributeError: timestamp",
+            ),
+            # The class's constructor raised: err is not populated, so the log shows only the exception
+            (
+                "__init__",
+                ValueError("snapshot class failed"),
+                "Unable to build the metrics snapshot: ValueError: snapshot class failed",
+            ),
+        ],
+    )
+    def test_exporter_snapshot_failure_logs_context_and_exception(
+        self, monkeypatch: pytest.MonkeyPatch, method_name: str, error: Exception, expected: str
+    ) -> None:
         log_messages: list[str] = []
 
         def record_log(level: int, func: str, path: str, line: int, msg: str) -> None:
             log_messages.append(msg)
 
-        def reject_attribute(self, name: str, value: object) -> None:
-            raise AttributeError(name)
+        def raise_error(self, *args: object) -> None:
+            raise error
 
         class NoopExporter:
             def export(self, snapshot: MetricsSnapshot) -> None:
@@ -762,7 +781,7 @@ class TestMetrics:
         aerospike.set_log_handler(record_log)
         try:
             with monkeypatch.context() as patch:
-                patch.setattr(MetricsSnapshot, "__setattr__", reject_attribute)
+                patch.setattr(MetricsSnapshot, method_name, raise_error)
                 self.as_connection.enable_metrics(policy)
                 time.sleep(3)
                 self.as_connection.disable_metrics()
@@ -770,7 +789,6 @@ class TestMetrics:
             aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
             aerospike.set_log_handler(None)
 
-        expected = "Unable to create MetricsSnapshot: could not set timestamp: AttributeError: timestamp"
         assert any(expected in message for message in log_messages), log_messages
 
     def test_node_conn_latency_counts_connection_opens(self):
