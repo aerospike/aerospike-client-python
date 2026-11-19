@@ -41,6 +41,9 @@ LATENCY_MICROSECONDS = 1
 class ConnectionStats:
     """Connection statistics.
 
+    A node that leaves and rejoins the cluster is a new node, so the counters "since node creation" start again.
+    :attr:`NodeSnapshot.sync` is the exception. See it.
+
     Attributes:
         in_use (int): Connections actively being used in database commands on this node.
             There can be multiple pools per node. This value is a summary of those pools on this node.
@@ -252,7 +255,10 @@ class NodeSnapshot:
         name (str): Node name.
         address (str): Node address, without the port.
         port (int): Node service port.
-        sync (:class:`ConnectionStats`): Synchronous connection pool.
+        sync (:class:`ConnectionStats`): Synchronous connection pool. ``in_use`` and ``in_pool`` are the values at
+            snapshot time. ``opened``, ``closed``, ``recovered``, and ``aborted`` keep counting when the node rejoins
+            the cluster, unlike the "since node creation" counters in :class:`ConnectionStats`.
+            See :attr:`MetricsSnapshot.nodes_departed`.
         conn_open_failures (int): Failed attempts to open a connection, including TLS
             and authentication failures. Cumulative and not sampler-gated. Zero unless
             operational metrics are enabled.
