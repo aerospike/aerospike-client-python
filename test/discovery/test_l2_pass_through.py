@@ -1,4 +1,4 @@
-"""L2 discovery tests against the pass-through profiles of the discovery-l2-topology action.
+"""L2 discovery tests against the pass-through profiles of the l2-proxy harness.
 
 In pass-through-names each node advertises its own alternate-access-address hostname with its own
 Toxiproxy listener port. In pass-through-ports every node advertises one hostname with its own

@@ -1,5 +1,5 @@
 """L2c fault-injection tests against the default, idle-reset, low-mtu and port-range profiles of the
-discovery-l2-topology action.
+l2-proxy harness.
 
 Every profile here is the default topology: each node advertises its private address in the
 standard list, the client has no route to it, and the port-map translator maps it to the node's

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2020 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,7 +65,8 @@ as_partitions_status *parts_setup(uint16_t part_begin, uint16_t part_count,
 as_status convert_partition_filter(AerospikeClient *self,
                                    PyObject *py_partition_filter,
                                    as_partition_filter *filter,
-                                   as_partitions_status **pss, as_error *err)
+                                   as_partitions_status **pss,
+                                   bool is_top_k_query, as_error *err)
 {
     as_partitions_status *parts_all = NULL;
     as_partition_status *ps = NULL;
@@ -174,6 +175,10 @@ as_status convert_partition_filter(AerospikeClient *self,
             strncpy((char *)filter->digest.value,
                     (char *)PyUnicode_AsUTF8(value), AS_DIGEST_VALUE_SIZE);
         }
+    }
+
+    if (is_top_k_query && !parts_stat) {
+        return err->code;
     }
 
     parts_all =

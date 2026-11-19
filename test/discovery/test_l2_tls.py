@@ -1,5 +1,5 @@
-"""L2 discovery tests of TLS through the proxy against the ee subset of the discovery-l2-topology
-action, which runs Enterprise servers with TLS.
+"""L2 discovery tests of TLS through the proxy against the ee edition of the l2-proxy harness, which
+runs Enterprise servers with TLS.
 
 Every node has a clear and a TLS Toxiproxy listener, the TLS one named after the clear one with a
 -tls suffix, and advertises its private address in the standard TLS list, which the client has no
@@ -74,7 +74,7 @@ def connect(nodes: list[ToxiproxyTlsNode], seed: ToxiproxyTlsNode, tls_name: str
     port_map = {advertised: f"{host}:{node.tls_port}" for node in nodes for advertised in node.tls_advertised}
     config = {
         "hosts": [(host, seed.tls_port, tls_name)],
-        "tls": {"enable": True, "cafile": os.environ["AEROSPIKE_CA_CERT"]},
+        "tls": {"enable": True, "cafile": os.environ["DISCOVERY_TLS_CA_FILE"]},
         "translation": {"provider": "port-map", "port_map": port_map},
         "tend_interval": TEND_INTERVAL_MS,
         "connect_timeout": 1000,
