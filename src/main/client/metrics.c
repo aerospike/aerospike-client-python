@@ -53,9 +53,13 @@ static bool client_metrics_enabled(AerospikeClient *self)
 static int set_new_attr(as_error *err, PyObject *py_obj, const char *name,
                         PyObject *py_value)
 {
+    // The snapshot classes are heap types, so tp_name is the class name, like
+    // NodeSnapshot.
+    const char *snapshot_type_name = Py_TYPE(py_obj)->tp_name;
     if (!py_value) {
         as_error_update(err, AEROSPIKE_ERR,
-                        "Unable to create metrics snapshot field %s", name);
+                        "Unable to create %s: could not create the value of %s",
+                        snapshot_type_name, name);
         return -1;
     }
 
@@ -64,7 +68,8 @@ static int set_new_attr(as_error *err, PyObject *py_obj, const char *name,
     if (result == -1) {
         PyErr_Clear();
         as_error_update(err, AEROSPIKE_ERR,
-                        "Unable to set metrics snapshot field %s", name);
+                        "Unable to create %s: could not set %s",
+                        snapshot_type_name, name);
         return -1;
     }
     return 0;

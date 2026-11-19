@@ -684,6 +684,37 @@ class TestMetrics:
             assert isinstance(node.conn_tls_handshake_failures, int)
             assert isinstance(node.conn_auth_failures, int)
 
+    @pytest.mark.parametrize(
+        "snapshot_class, attribute_name",
+        [
+            (MetricsSnapshot, "timestamp"),
+            (LatencySnapshot, "buckets"),
+            (NodeSnapshot, "name"),
+            (NamespaceSnapshot, "name"),
+        ]
+    )
+    def test_get_metrics_snapshot_names_the_snapshot_type_that_failed(
+        self, monkeypatch: pytest.MonkeyPatch, snapshot_class: type, attribute_name: str
+    ) -> None:
+        def reject_attribute(self, name: str, value: object) -> None:
+            raise AttributeError(name)
+
+        # Operational metrics and a command give the node a namespace snapshot.
+        policy = MetricsPolicy(report_dir="", operational_enabled=True)
+        self.as_connection.enable_metrics(policy)
+        key = ("test", "metrics", "snapshot-type-error")
+        try:
+            self.as_connection.put(key, {"a": 1})
+            with monkeypatch.context() as patch:
+                patch.setattr(snapshot_class, "__setattr__", reject_attribute)
+                with pytest.raises(e.ClientError) as excinfo:
+                    self.as_connection.get_metrics_snapshot()
+        finally:
+            self.as_connection.disable_metrics()
+            self.as_connection.remove(key)
+
+        assert excinfo.value.msg == f"Unable to create {snapshot_class.__name__}: could not set {attribute_name}"
+
     def test_node_conn_latency_counts_connection_opens(self):
         policy = MetricsPolicy(report_dir="", operational_enabled=True)
         self.as_connection.enable_metrics(policy)
