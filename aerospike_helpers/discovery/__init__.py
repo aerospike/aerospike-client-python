@@ -64,8 +64,11 @@ class SeedCandidateProvider(ABC):
 
         Raise an exception if the seed hosts cannot be determined. The client then keeps the
         previous seeds, and raises :exc:`~aerospike.exception.SeedDiscoveryFailed` when connecting
-        if it has no seed host left. An empty list is used as the result, so it can leave the
-        client with no seed host; see the ``discovery`` client config in :ref:`aerospike` for when.
+        if it has no seed host left. The result is a failure too, as if this method raised, when
+        a host has an empty address, an address longer than 255 bytes, or a port outside 1 to 65535.
+        An empty list is used as the result, so it can leave the client with no seed host; the client
+        then raises :exc:`~aerospike.exception.ClientError`, not ``SeedDiscoveryFailed``, when
+        connecting without ``hosts``. See the ``discovery`` client config in :ref:`aerospike` for when.
 
         :param context: The client state when the seeds are refreshed.
         :return: A list of ``(address, port)`` or ``(address, port, tls_name)`` tuples.

@@ -170,6 +170,17 @@ def test_u1_provider_error_without_seeds() -> None:
     assert provider.closed == 1
 
 
+def test_u1_empty_result_without_seeds() -> None:
+    provider = SeedProvider(hosts=[])
+    with pytest.raises(e.ClientError) as error:
+        aerospike.client({"hosts": [], "discovery": {"provider": provider}})
+    # A refresh that succeeds is not a discovery failure, so this is not SeedDiscoveryFailed.
+    assert type(error.value) is e.ClientError
+    assert error.value.msg == "No seed host to connect to"
+    gc.collect()
+    assert provider.closed == 1
+
+
 INVALID_HOST = (
     "refresh_seed_candidates() returned an invalid host at index {}. Each host must be an (address, port) or "
     "(address, port, tls_name) tuple with a str address, an int port from 1 to 65535 and a str or None tls_name"
@@ -184,6 +195,11 @@ INVALID_HOST = (
         ([["127.0.0.1", 3000]], INVALID_HOST.format(0)),
         ([UNREACHABLE, ("127.0.0.1", "3000")], INVALID_HOST.format(1)),
         (("127.0.0.1", 3000), "refresh_seed_candidates() must return a list, but a tuple was returned"),
+        ([("", 3000)], "Unable to add seed candidate :3000"),
+        (
+            [UNREACHABLE, ("a" * 256, 3000)],
+            "Seed provider returned a candidate host name over 255 bytes at index 1",
+        ),
     ],
 )
 def test_u1_provider_invalid_hosts(hosts: Any, reason: str) -> None:
