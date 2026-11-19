@@ -58,8 +58,8 @@ static bool client_metrics_enabled(AerospikeClient *self)
 // clearing it. What happens to that exception depends on the caller:
 // - get_metrics_snapshot() passes err to raise_exception(), which chains the
 //   exception to the one it raises, so the user sees both.
-// - py_metrics_export() returns into C code, which cannot carry a Python
-//   exception, so it appends the exception to err's message.
+// - call_py_metrics_exporter() returns into C code, which cannot carry a
+//   Python exception, so it appends the exception to err's message.
 
 // Describes in err that an attribute of a snapshot object could not be created.
 // The exception raised by the failed C-API call stays raised, as described
@@ -569,8 +569,11 @@ error:
     return NULL;
 }
 
-static as_status py_metrics_export(as_metrics_exporter *exporter, as_error *err,
-                                   const as_metrics_snapshot *snapshot)
+// as_metrics_exporter's export_fn for a Python exporter. It converts the
+// snapshot to a MetricsSnapshot, then calls the exporter's export() with it.
+static as_status call_py_metrics_exporter(as_metrics_exporter *exporter,
+                                          as_error *err,
+                                          const as_metrics_snapshot *snapshot)
 {
     PyMetricsExporter *py_exporter = (PyMetricsExporter *)exporter;
     PyGILState_STATE state = PyGILState_Ensure();
@@ -722,7 +725,7 @@ int py_metrics_exporters_from_pyobject(as_error *err,
             return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                    "Failed to allocate metrics exporter");
         }
-        wrapper->base.export_fn = py_metrics_export;
+        wrapper->base.export_fn = call_py_metrics_exporter;
         wrapper->py_exporter = py_exporter;
         Py_INCREF(py_exporter);
         list->items[list->count++] = wrapper;
