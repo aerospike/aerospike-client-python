@@ -70,46 +70,6 @@ static int set_new_attr(as_error *err, PyObject *py_obj, const char *name,
     return 0;
 }
 
-static void py_exception_to_as_error(as_error *err, const char *callback_name)
-{
-    PyObject *py_exc_type = NULL;
-    PyObject *py_exc_value = NULL;
-    PyObject *py_traceback = NULL;
-    PyErr_Fetch(&py_exc_type, &py_exc_value, &py_traceback);
-    Py_XDECREF(py_traceback);
-
-    const char *exc_type_str =
-        py_exc_type ? ((PyTypeObject *)py_exc_type)->tp_name : "Exception";
-    Py_XDECREF(py_exc_type);
-
-    const char *exc_value_str = "Exception value could not be retrieved";
-    PyObject *py_str = NULL;
-    if (py_exc_value) {
-        py_str = PyObject_Str(py_exc_value);
-        Py_DECREF(py_exc_value);
-        if (!py_str) {
-            PyErr_Clear();
-            exc_value_str = "str() on exception value threw an error";
-        }
-        else {
-            const char *rendered = PyUnicode_AsUTF8(py_str);
-            if (!rendered) {
-                PyErr_Clear();
-                exc_value_str = "str() on exception value threw an error";
-            }
-            else {
-                exc_value_str = rendered;
-            }
-        }
-    }
-
-    as_error_update(
-        err, AEROSPIKE_ERR,
-        "Python callback %s threw a %s exception. Exception value: %s",
-        callback_name, exc_type_str, exc_value_str);
-    Py_XDECREF(py_str);
-}
-
 static PyObject *
 py_conn_stats_from_snapshot(as_error *err,
                             const as_metrics_conn_snapshot *stats)
@@ -515,7 +475,8 @@ static as_status py_metrics_export(as_metrics_exporter *exporter, as_error *err,
     PyObject *py_snapshot = py_metrics_snapshot(err, snapshot);
     if (!py_snapshot) {
         if (PyErr_Occurred()) {
-            py_exception_to_as_error(err, "export");
+            error_from_raised_exception(err, AEROSPIKE_ERR,
+                                        "Unable to build the metrics snapshot");
         }
         else if (err->code == AEROSPIKE_OK) {
             as_error_set_message(err, AEROSPIKE_ERR,
@@ -529,8 +490,8 @@ static as_status py_metrics_export(as_metrics_exporter *exporter, as_error *err,
                                               "export", "O", py_snapshot);
     Py_DECREF(py_snapshot);
     if (!py_result) {
-        py_exception_to_as_error(err, "export");
-        status = AEROSPIKE_ERR;
+        status = error_from_raised_exception(
+            err, AEROSPIKE_ERR, "Metrics exporter's export() raised");
         goto done;
     }
     Py_DECREF(py_result);
