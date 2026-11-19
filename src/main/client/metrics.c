@@ -377,16 +377,11 @@ error:
 static PyObject *as_metrics_node_snapshots_to_pyobject(
     as_error *err, as_metrics_node_snapshot **node_snapshots, uint32_t count)
 {
+    // The caller checked that node_snapshots is not NULL when count > 0.
     PyObject *py_list = PyList_New(count);
     if (!py_list) {
         as_error_update(err, AEROSPIKE_ERR,
                         "Failed to create node snapshot list");
-        return NULL;
-    }
-    if (!node_snapshots && count > 0) {
-        Py_DECREF(py_list);
-        as_error_update(err, AEROSPIKE_ERR,
-                        "Metrics node snapshot list is missing");
         return NULL;
     }
 
@@ -414,6 +409,19 @@ static PyObject *
 as_metrics_snapshot_to_pyobject(as_error *err,
                                 const as_metrics_snapshot *snapshot)
 {
+    // Check the input before creating any Python object, so an invalid
+    // snapshot does not allocate anything.
+    if (!snapshot->nodes && snapshot->nodes_count > 0) {
+        as_error_update(err, AEROSPIKE_ERR,
+                        "Metrics node snapshot list is missing");
+        return NULL;
+    }
+    if (!snapshot->nodes_departed && snapshot->nodes_departed_count > 0) {
+        as_error_update(err, AEROSPIKE_ERR,
+                        "Metrics departed node snapshot list is missing");
+        return NULL;
+    }
+
     PyObject *py_snapshot = create_class_instance_from_module(
         err, "aerospike_helpers.metrics", "MetricsSnapshot", NULL);
     if (!py_snapshot) {
@@ -673,6 +681,26 @@ int py_metrics_exporters_from_pyobject(as_error *err,
         return 0;
     }
 
+    // Check every exporter before allocating anything for them
+    for (Py_ssize_t i = 0; i < count; i++) {
+        PyObject *py_exporter = PyList_GET_ITEM(py_exporters, i);
+        PyObject *py_export = PyObject_GetAttrString(py_exporter, "export");
+        if (!py_export) {
+            Py_DECREF(py_exporters);
+            return as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "MetricsPolicy.exporters[%zd] must have an export method", i);
+        }
+        int is_callable = PyCallable_Check(py_export);
+        Py_DECREF(py_export);
+        if (!is_callable) {
+            Py_DECREF(py_exporters);
+            return as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "MetricsPolicy.exporters[%zd].export must be callable", i);
+        }
+    }
+
     PyMetricsExporterList *list = calloc(1, sizeof(PyMetricsExporterList));
     if (!list) {
         Py_DECREF(py_exporters);
@@ -689,24 +717,6 @@ int py_metrics_exporters_from_pyobject(as_error *err,
 
     for (Py_ssize_t i = 0; i < count; i++) {
         PyObject *py_exporter = PyList_GET_ITEM(py_exporters, i);
-        PyObject *py_export = PyObject_GetAttrString(py_exporter, "export");
-        if (!py_export) {
-            py_metrics_exporter_list_destroy(list);
-            Py_DECREF(py_exporters);
-            return as_error_update(
-                err, AEROSPIKE_ERR_PARAM,
-                "MetricsPolicy.exporters[%zd] must have an export method", i);
-        }
-        int is_callable = PyCallable_Check(py_export);
-        Py_DECREF(py_export);
-        if (!is_callable) {
-            py_metrics_exporter_list_destroy(list);
-            Py_DECREF(py_exporters);
-            return as_error_update(
-                err, AEROSPIKE_ERR_PARAM,
-                "MetricsPolicy.exporters[%zd].export must be callable", i);
-        }
-
         PyMetricsExporter *wrapper = calloc(1, sizeof(PyMetricsExporter));
         if (!wrapper) {
             py_metrics_exporter_list_destroy(list);
