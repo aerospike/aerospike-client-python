@@ -365,12 +365,11 @@ class MetricsExporter(Protocol):
         """Handle one snapshot. The snapshot may be retained after this method returns."""
 
 
-def _require_exporter(exporter) -> None:
-    export = getattr(exporter, "export", None)
-    if not callable(export):
-        raise TypeError(
-            "exporter must be an object with a callable export(snapshot) method"
-        )
+def _require_exporter(exporter: object) -> None:
+    if not hasattr(exporter, "export"):
+        raise TypeError("exporter must have an export(snapshot) method")
+    if not callable(exporter.export):
+        raise TypeError("exporter.export must be callable")
 
 
 class MetricsListeners:
@@ -530,10 +529,14 @@ class MetricsPolicy:
         ``sampler_range`` becomes 1000000 and ``sampler_threshold`` becomes
         ``round(probability * 1000000)``. ``probability`` must be from 0 through 1.
         """
-        if isinstance(probability, bool) or not isinstance(probability, (int, float)):
-            raise TypeError("sampler probability must be a float from 0 through 1")
-        if probability != probability or probability < 0.0 or probability > 1.0:
-            raise ValueError("sampler probability must be from 0 through 1")
+        if isinstance(probability, bool):
+            raise TypeError("sampler probability must be a float, not a bool")
+        if not isinstance(probability, (int, float)):
+            raise TypeError(f"sampler probability must be a float, not {type(probability).__name__}")
+        if probability != probability:
+            raise ValueError("sampler probability must not be NaN")
+        if probability < 0.0 or probability > 1.0:
+            raise ValueError(f"sampler probability must be from 0 through 1, got {probability}")
         self.sampler_range = 1000000
         scaled = probability * 1000000.0 + 0.5
         self.sampler_threshold = int(scaled)

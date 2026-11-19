@@ -445,13 +445,18 @@ class TestMetrics:
             self.as_connection.enable_metrics(policy=policy)
         assert excinfo.value.msg == "Invalid metrics export_interval"
 
-    def test_metrics_policy_sampler_must_be_in_range(self):
+    def test_metrics_policy_sampler_range_must_be_at_least_one(self) -> None:
         policy = MetricsPolicy(sampler_range=0, sampler_threshold=0)
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.enable_metrics(policy=policy)
+        assert excinfo.value.msg == "MetricsPolicy.sampler_range must be at least 1"
+
+    def test_metrics_policy_sampler_threshold_must_not_exceed_range(self) -> None:
+        policy = MetricsPolicy(sampler_range=10, sampler_threshold=11)
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.enable_metrics(policy=policy)
         assert excinfo.value.msg == (
-            "MetricsPolicy.sampler_range must be at least 1 and "
-            "sampler_threshold must be less than or equal to sampler_range"
+            "MetricsPolicy.sampler_threshold must be less than or equal to sampler_range"
         )
 
     def test_set_sampler_probability(self):
@@ -464,6 +469,24 @@ class TestMetrics:
             policy.set_sampler_probability(1.1)
         with pytest.raises(TypeError):
             policy.set_sampler_probability(True)
+
+    @pytest.mark.parametrize(
+        "probability, exception_type, message",
+        [
+            (True, TypeError, "sampler probability must be a float, not a bool"),
+            ("0.5", TypeError, "sampler probability must be a float, not str"),
+            (float("nan"), ValueError, "sampler probability must not be NaN"),
+            (1.1, ValueError, "sampler probability must be from 0 through 1, got 1.1"),
+            (-0.1, ValueError, "sampler probability must be from 0 through 1, got -0.1"),
+        ]
+    )
+    def test_set_sampler_probability_invalid(
+        self, probability: object, exception_type: type[Exception], message: str
+    ) -> None:
+        policy = MetricsPolicy()
+        with pytest.raises(exception_type) as excinfo:
+            policy.set_sampler_probability(probability)
+        assert str(excinfo.value) == message
 
     # Use default metrics writer implementation
     # We are checking that enable_metrics() does not seg fault
@@ -489,10 +512,39 @@ class TestMetrics:
                 snapshot_listener=MyMetricsListeners.snapshot,
             )
 
-    def test_add_exporter_requires_export_method(self):
+    def test_add_exporter_requires_export_method(self) -> None:
         policy = MetricsPolicy(report_dir="")
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError, match=r"exporter must have an export\(snapshot\) method"):
             policy.add_exporter(object())
+
+    def test_add_exporter_requires_callable_export(self) -> None:
+        class NotCallableExporter:
+            export = 1
+
+        policy = MetricsPolicy(report_dir="")
+        with pytest.raises(TypeError, match=r"exporter\.export must be callable"):
+            policy.add_exporter(NotCallableExporter())
+
+    def test_metrics_policy_exporters_entry_requires_export_method(self) -> None:
+        class ValidExporter:
+            def export(self, snapshot: MetricsSnapshot) -> None:
+                pass
+
+        policy = MetricsPolicy(report_dir="")
+        policy.exporters = [ValidExporter(), object()]
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.enable_metrics(policy=policy)
+        assert excinfo.value.msg == "MetricsPolicy.exporters[1] must have an export method"
+
+    def test_metrics_policy_exporters_entry_requires_callable_export(self) -> None:
+        class NotCallableExporter:
+            export = 1
+
+        policy = MetricsPolicy(report_dir="")
+        policy.exporters = [NotCallableExporter()]
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.enable_metrics(policy=policy)
+        assert excinfo.value.msg == "MetricsPolicy.exporters[0].export must be callable"
 
     def test_exporter_receives_snapshot(self):
         snapshots = []

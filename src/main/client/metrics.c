@@ -321,6 +321,9 @@ static PyObject *as_metrics_node_snapshot_to_pyobject(
         if (result == -1) {
             Py_DECREF(py_namespaces);
             PyErr_Clear();
+            as_error_update(
+                err, AEROSPIKE_ERR,
+                "Failed to set namespace snapshot at index %u in list", i);
             goto error;
         }
     }
@@ -363,6 +366,9 @@ static PyObject *as_metrics_node_snapshots_to_pyobject(
         if (result == -1) {
             Py_DECREF(py_list);
             PyErr_Clear();
+            as_error_update(err, AEROSPIKE_ERR,
+                            "Failed to set node snapshot at index %u in list",
+                            i);
             return NULL;
         }
     }
@@ -422,12 +428,20 @@ as_metrics_snapshot_to_pyobject(as_error *err,
             snapshot->labels[i].value ? snapshot->labels[i].value : "";
         PyObject *py_value = PyUnicode_FromString(value);
         if (!py_value) {
-            goto labels_error;
+            Py_DECREF(py_labels);
+            PyErr_Clear();
+            as_error_update(err, AEROSPIKE_ERR,
+                            "Failed to create value of metrics label %s", name);
+            goto error;
         }
         int result = PyDict_SetItemString(py_labels, name, py_value);
         Py_DECREF(py_value);
         if (result == -1) {
-            goto labels_error;
+            Py_DECREF(py_labels);
+            PyErr_Clear();
+            as_error_update(err, AEROSPIKE_ERR,
+                            "Failed to set metrics label %s", name);
+            goto error;
         }
     }
     int result = set_new_attr(err, py_snapshot, "labels", py_labels);
@@ -490,11 +504,13 @@ as_metrics_snapshot_to_pyobject(as_error *err,
     // This client does not run async commands, so event-loop gauges are not copied.
     PyObject *py_nodes = as_metrics_node_snapshots_to_pyobject(
         err, snapshot->nodes, snapshot->nodes_count);
+    if (!py_nodes) {
+        goto error;
+    }
     PyObject *py_departed = as_metrics_node_snapshots_to_pyobject(
         err, snapshot->nodes_departed, snapshot->nodes_departed_count);
-    if (!py_nodes || !py_departed) {
-        Py_XDECREF(py_nodes);
-        Py_XDECREF(py_departed);
+    if (!py_departed) {
+        Py_DECREF(py_nodes);
         goto error;
     }
     // set_new_attr consumes the value reference, including on failure.
@@ -508,11 +524,6 @@ as_metrics_snapshot_to_pyobject(as_error *err,
         goto error;
     }
     return py_snapshot;
-
-labels_error:
-    Py_DECREF(py_labels);
-    PyErr_Clear();
-    as_error_update(err, AEROSPIKE_ERR, "Failed to copy metrics label");
 
 error:
     Py_DECREF(py_snapshot);
@@ -639,17 +650,23 @@ int py_metrics_exporters_from_pyobject(as_error *err,
     for (Py_ssize_t i = 0; i < count; i++) {
         PyObject *py_exporter = PyList_GET_ITEM(py_exporters, i);
         PyObject *py_export = PyObject_GetAttrString(py_exporter, "export");
-        if (!py_export || !PyCallable_Check(py_export)) {
-            Py_XDECREF(py_export);
+        if (!py_export) {
             PyErr_Clear();
             py_metrics_exporter_list_destroy(list);
             Py_DECREF(py_exporters);
             return as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
-                "MetricsPolicy.exporters must contain objects with a callable "
-                "export method");
+                "MetricsPolicy.exporters[%zd] must have an export method", i);
         }
+        int is_callable = PyCallable_Check(py_export);
         Py_DECREF(py_export);
+        if (!is_callable) {
+            py_metrics_exporter_list_destroy(list);
+            Py_DECREF(py_exporters);
+            return as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "MetricsPolicy.exporters[%zd].export must be callable", i);
+        }
 
         PyMetricsExporter *wrapper = calloc(1, sizeof(PyMetricsExporter));
         if (!wrapper) {
@@ -812,10 +829,16 @@ PyObject *AerospikeClient_GetMetricsSnapshot(AerospikeClient *self)
     aerospike_get_metrics_snapshot(self->as, &err, &snapshot);
     Py_END_ALLOW_THREADS
 
-    if (err.code != AEROSPIKE_OK || snapshot == NULL) {
+    if (err.code != AEROSPIKE_OK) {
         if (snapshot) {
             as_metrics_snapshot_destroy(snapshot);
         }
+        raise_exception(&err);
+        return NULL;
+    }
+    if (snapshot == NULL) {
+        as_error_update(&err, AEROSPIKE_ERR,
+                        "The client did not return a metrics snapshot");
         raise_exception(&err);
         return NULL;
     }

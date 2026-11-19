@@ -1723,12 +1723,15 @@ int as_metrics_policy_set_using_pyobject(as_error *err,
     if (result != AEROSPIKE_OK) {
         goto error;
     }
-    if (metrics_policy->sampler_range < 1 ||
-        metrics_policy->sampler_threshold > metrics_policy->sampler_range) {
+    if (metrics_policy->sampler_range < 1) {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "MetricsPolicy.sampler_range must be at least 1 and "
-                        "sampler_threshold must be less than or equal to "
-                        "sampler_range");
+                        "MetricsPolicy.sampler_range must be at least 1");
+        goto error;
+    }
+    if (metrics_policy->sampler_threshold > metrics_policy->sampler_range) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "MetricsPolicy.sampler_threshold must be less than or "
+                        "equal to sampler_range");
         goto error;
     }
 
