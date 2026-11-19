@@ -1511,7 +1511,7 @@ RAISE_EXCEPTION_WITH_AS_ERROR:
     raise_exception(&constructor_err);
 RAISE_EXCEPTION_WITHOUT_AS_ERROR:
     destroy_ip_map(&config.ip_map, &config.ip_map_size);
-    py_metrics_policy_destroy_exporters(&config.policies.metrics);
+    as_metrics_policy_destroy_py_exporters(&config.policies.metrics);
     as_config_destroy(&config);
     return -1;
 }
@@ -1624,7 +1624,7 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
     if (client->as) {
         if (!client->has_connected) {
             destroy_ip_map(&client->ip_map, &client->ip_map_size);
-            py_metrics_policy_destroy_exporters(
+            as_metrics_policy_destroy_py_exporters(
                 &client->as->config.policies.metrics);
             aerospike_destroy(client->as);
         }
@@ -1658,7 +1658,7 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
                     Py_END_ALLOW_THREADS
                 }
                 destroy_ip_map(&client->ip_map, &client->ip_map_size);
-                py_metrics_policy_destroy_exporters(
+                as_metrics_policy_destroy_py_exporters(
                     &client->as->config.policies.metrics);
                 aerospike_destroy(client->as);
             }

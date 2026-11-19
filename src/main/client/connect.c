@@ -66,7 +66,7 @@ int AerospikeClientConnect(AerospikeClient *self)
                 // So it is not safe to destroy it
                 if (!self->has_connected) {
                     destroy_ip_map(&self->ip_map, &self->ip_map_size);
-                    py_metrics_policy_destroy_exporters(
+                    as_metrics_policy_destroy_py_exporters(
                         &self->as->config.policies.metrics);
                     aerospike_destroy(self->as);
                 }

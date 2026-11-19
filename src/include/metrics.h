@@ -44,7 +44,7 @@ as_status as_metrics_policy_add_exporters_from_pyobject(
  * as_metrics_policy_add_exporters_from_pyobject(). That ends their lifetime
  * with the C config's. Frees the exporters and the vector.
  */
-void py_metrics_policy_destroy_exporters(as_metrics_policy *metrics_policy);
+void as_metrics_policy_destroy_py_exporters(as_metrics_policy *metrics_policy);
 
 /*
  * For a policy that is destroyed while the cluster still uses its exporters,

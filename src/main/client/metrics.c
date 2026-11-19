@@ -656,7 +656,7 @@ void aerospike_client_release_active_metrics_exporters(AerospikeClient *self)
     *active_exporters = NULL;
 }
 
-void py_metrics_policy_destroy_exporters(as_metrics_policy *metrics_policy)
+void as_metrics_policy_destroy_py_exporters(as_metrics_policy *metrics_policy)
 {
     as_vector *exporters = metrics_policy->exporters;
     if (!exporters) {
@@ -719,7 +719,7 @@ as_metrics_policy_add_exporters_from_pyobject(as_error *err,
         PyObject *py_exporter = PyList_GET_ITEM(py_exporters, i);
         PyMetricsExporter *wrapper = calloc(1, sizeof(PyMetricsExporter));
         if (!wrapper) {
-            py_metrics_policy_destroy_exporters(metrics_policy);
+            as_metrics_policy_destroy_py_exporters(metrics_policy);
             Py_DECREF(py_exporters);
             return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                    "Failed to allocate metrics exporter");
@@ -747,7 +747,7 @@ create_py_metrics_exporters_from_policy(as_error *err,
     PyMetricsExporter **exporters =
         calloc((size_t)policy_exporters->size + 1, sizeof(PyMetricsExporter *));
     if (!exporters) {
-        py_metrics_policy_destroy_exporters(metrics_policy);
+        as_metrics_policy_destroy_py_exporters(metrics_policy);
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to allocate metrics exporters");
         return NULL;

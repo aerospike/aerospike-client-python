@@ -390,7 +390,7 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
 // Returns non-zero integer value on error.
 // On error, all memory from this function is freed.
 // The exporters are added to metrics_policy->exporters. See
-// py_metrics_policy_destroy_exporters() and
+// as_metrics_policy_destroy_py_exporters() and
 // create_py_metrics_exporters_from_policy() for who frees them.
 int as_metrics_policy_set_using_pyobject(as_error *err,
                                          PyObject *py_metrics_policy,
