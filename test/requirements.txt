@@ -1,4 +1,4 @@
-pytest==9.0.2
+pytest==9.2.0
 # To generate coverage reports in the Github Actions pipeline
 pytest-cov==7.0.0
 numpy==2.2.6; python_version < "3.11"
