@@ -50,17 +50,17 @@ static bool client_metrics_enabled(AerospikeClient *self)
            self->as->cluster->metrics_enabled;
 }
 
-static int set_new_attr(as_error *err, PyObject *obj, const char *name,
-                        PyObject *value)
+static int set_new_attr(as_error *err, PyObject *py_obj, const char *name,
+                        PyObject *py_value)
 {
-    if (!value) {
+    if (!py_value) {
         as_error_update(err, AEROSPIKE_ERR,
                         "Unable to create metrics snapshot field %s", name);
         return -1;
     }
 
-    int result = PyObject_SetAttrString(obj, name, value);
-    Py_DECREF(value);
+    int result = PyObject_SetAttrString(py_obj, name, py_value);
+    Py_DECREF(py_value);
     if (result == -1) {
         PyErr_Clear();
         as_error_update(err, AEROSPIKE_ERR,
