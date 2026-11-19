@@ -22,6 +22,7 @@
 #include <aerospike/as_log_macros.h>
 #include <aerospike/as_metrics.h>
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -50,6 +51,10 @@ static bool client_metrics_enabled(AerospikeClient *self)
            self->as->cluster->metrics_enabled;
 }
 
+// The snapshot helpers below describe a failure in err. When a C-API call
+// fails, its Python exception is left raised instead of cleared:
+// raise_exception() chains it to the exception made from err, and
+// py_metrics_export() appends it to err's message.
 static int set_new_attr(as_error *err, PyObject *py_obj, const char *name,
                         PyObject *py_value)
 {
@@ -66,7 +71,6 @@ static int set_new_attr(as_error *err, PyObject *py_obj, const char *name,
     int result = PyObject_SetAttrString(py_obj, name, py_value);
     Py_DECREF(py_value);
     if (result == -1) {
-        PyErr_Clear();
         as_error_update(err, AEROSPIKE_ERR,
                         "Unable to create %s: could not set %s",
                         snapshot_type_name, name);
@@ -86,13 +90,7 @@ static PyObject *as_metrics_conn_snapshot_to_pyobject(
                            .closed = conn_snapshot->closed,
                            .recovered = conn_snapshot->recovered,
                            .aborted = conn_snapshot->aborted};
-    PyObject *py_conn_stats =
-        create_py_conn_stats_from_as_conn_stats(err, &stats);
-    if (!py_conn_stats) {
-        // err describes the failure, like the other helpers here.
-        PyErr_Clear();
-    }
-    return py_conn_stats;
+    return create_py_conn_stats_from_as_conn_stats(err, &stats);
 }
 
 static PyObject *as_metrics_latency_buckets_to_pyobject(
@@ -112,7 +110,6 @@ static PyObject *as_metrics_latency_buckets_to_pyobject(
             PyLong_FromUnsignedLongLong(latency_snapshot->buckets[i]);
         if (!py_bucket) {
             Py_DECREF(py_list);
-            PyErr_Clear();
             as_error_update(err, AEROSPIKE_ERR,
                             "Failed to create latency bucket at index %u", i);
             return NULL;
@@ -121,7 +118,6 @@ static PyObject *as_metrics_latency_buckets_to_pyobject(
         int result = PyList_SetItem(py_list, i, py_bucket);
         if (result == -1) {
             Py_DECREF(py_list);
-            PyErr_Clear();
             as_error_update(err, AEROSPIKE_ERR,
                             "Failed to set latency bucket at index %u in list",
                             i);
@@ -184,7 +180,6 @@ static PyObject *as_metrics_latencies_to_pyobject(
                                           py_latency_snapshot);
         Py_DECREF(py_latency_snapshot);
         if (result == -1) {
-            PyErr_Clear();
             Py_DECREF(py_latencies);
             as_error_update(err, AEROSPIKE_ERR, "Failed to set latencies[%s]",
                             latency_name);
@@ -318,14 +313,12 @@ static PyObject *as_metrics_node_snapshot_to_pyobject(
                 err, &node_snapshot->namespaces[i]);
         if (!py_namespace_snapshot) {
             Py_DECREF(py_namespaces);
-            PyErr_Clear();
             goto error;
         }
         // PyList_SetItem steals the reference, even on failure.
         result = PyList_SetItem(py_namespaces, i, py_namespace_snapshot);
         if (result == -1) {
             Py_DECREF(py_namespaces);
-            PyErr_Clear();
             as_error_update(
                 err, AEROSPIKE_ERR,
                 "Failed to set namespace snapshot at index %u in list", i);
@@ -370,7 +363,6 @@ static PyObject *as_metrics_node_snapshots_to_pyobject(
         int result = PyList_SetItem(py_list, i, py_node_snapshot);
         if (result == -1) {
             Py_DECREF(py_list);
-            PyErr_Clear();
             as_error_update(err, AEROSPIKE_ERR,
                             "Failed to set node snapshot at index %u in list",
                             i);
@@ -434,7 +426,6 @@ as_metrics_snapshot_to_pyobject(as_error *err,
         PyObject *py_value = PyUnicode_FromString(value);
         if (!py_value) {
             Py_DECREF(py_labels);
-            PyErr_Clear();
             as_error_update(err, AEROSPIKE_ERR,
                             "Failed to create value of metrics label %s", name);
             goto error;
@@ -443,7 +434,6 @@ as_metrics_snapshot_to_pyobject(as_error *err,
         Py_DECREF(py_value);
         if (result == -1) {
             Py_DECREF(py_labels);
-            PyErr_Clear();
             as_error_update(err, AEROSPIKE_ERR,
                             "Failed to set metrics label %s", name);
             goto error;
@@ -545,8 +535,15 @@ static as_status py_metrics_export(as_metrics_exporter *exporter, as_error *err,
     PyObject *py_snapshot = as_metrics_snapshot_to_pyobject(err, snapshot);
     if (!py_snapshot) {
         if (PyErr_Occurred()) {
-            error_from_raised_exception(err, AEROSPIKE_ERR,
-                                        "Unable to build the metrics snapshot");
+            // Unlike get_metrics_snapshot(), the exception cannot be chained
+            // because this returns into C code, so it is appended to err's
+            // message, if err has one.
+            char context[AS_ERROR_MESSAGE_MAX_SIZE] =
+                "Unable to build the metrics snapshot";
+            if (err->code != AEROSPIKE_OK) {
+                snprintf(context, sizeof(context), "%s", err->message);
+            }
+            error_from_raised_exception(err, AEROSPIKE_ERR, context);
         }
         else if (err->code == AEROSPIKE_OK) {
             as_error_set_message(err, AEROSPIKE_ERR,
@@ -656,7 +653,6 @@ int py_metrics_exporters_from_pyobject(as_error *err,
         PyObject *py_exporter = PyList_GET_ITEM(py_exporters, i);
         PyObject *py_export = PyObject_GetAttrString(py_exporter, "export");
         if (!py_export) {
-            PyErr_Clear();
             py_metrics_exporter_list_destroy(list);
             Py_DECREF(py_exporters);
             return as_error_update(
@@ -851,7 +847,12 @@ PyObject *AerospikeClient_GetMetricsSnapshot(AerospikeClient *self)
     PyObject *py_snapshot = as_metrics_snapshot_to_pyobject(&err, snapshot);
     as_metrics_snapshot_destroy(snapshot);
     if (py_snapshot == NULL) {
-        raise_exception(&err);
+        // If err is not set, a snapshot class raised a Python exception, which
+        // is returned as is. Otherwise, any Python exception already raised is
+        // chained by raise_exception().
+        if (err.code != AEROSPIKE_OK) {
+            raise_exception(&err);
+        }
         return NULL;
     }
     return py_snapshot;

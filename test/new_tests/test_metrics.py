@@ -535,6 +535,22 @@ class TestMetrics:
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.enable_metrics(policy=policy)
         assert excinfo.value.msg == "MetricsPolicy.exporters[1] must have an export method"
+        # The failed attribute lookup is chained to the exception we raise
+        assert isinstance(excinfo.value.__context__, AttributeError)
+
+    def test_metrics_policy_exporters_entry_export_lookup_raises(self) -> None:
+        class RaisingExporter:
+            @property
+            def export(self) -> None:
+                raise RuntimeError("export lookup failed")
+
+        policy = MetricsPolicy(report_dir="")
+        policy.exporters = [RaisingExporter()]
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.enable_metrics(policy=policy)
+        assert excinfo.value.msg == "MetricsPolicy.exporters[0] must have an export method"
+        assert isinstance(excinfo.value.__context__, RuntimeError)
+        assert str(excinfo.value.__context__) == "export lookup failed"
 
     def test_metrics_policy_exporters_entry_requires_callable_export(self) -> None:
         class NotCallableExporter:
@@ -714,6 +730,48 @@ class TestMetrics:
             self.as_connection.remove(key)
 
         assert excinfo.value.msg == f"Unable to create {snapshot_class.__name__}: could not set {attribute_name}"
+        # The exception from the failed setattr is chained to the one we raise
+        assert isinstance(excinfo.value.__context__, AttributeError)
+        assert str(excinfo.value.__context__) == attribute_name
+
+    def test_get_metrics_snapshot_raises_exception_from_snapshot_class(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        def raise_from_init(self) -> None:
+            raise ValueError("snapshot class failed")
+
+        with monkeypatch.context() as patch:
+            patch.setattr(LatencySnapshot, "__init__", raise_from_init)
+            with pytest.raises(ValueError, match="snapshot class failed"):
+                self.as_connection.get_metrics_snapshot()
+
+    def test_exporter_snapshot_failure_logs_context_and_exception(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        log_messages: list[str] = []
+
+        def record_log(level: int, func: str, path: str, line: int, msg: str) -> None:
+            log_messages.append(msg)
+
+        def reject_attribute(self, name: str, value: object) -> None:
+            raise AttributeError(name)
+
+        class NoopExporter:
+            def export(self, snapshot: MetricsSnapshot) -> None:
+                pass
+
+        policy = MetricsPolicy(report_dir="", interval=1)
+        policy.add_exporter(NoopExporter())
+        aerospike.set_log_level(aerospike.LOG_LEVEL_WARN)
+        aerospike.set_log_handler(record_log)
+        try:
+            with monkeypatch.context() as patch:
+                patch.setattr(MetricsSnapshot, "__setattr__", reject_attribute)
+                self.as_connection.enable_metrics(policy)
+                time.sleep(3)
+                self.as_connection.disable_metrics()
+        finally:
+            aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
+            aerospike.set_log_handler(None)
+
+        expected = "Unable to create MetricsSnapshot: could not set timestamp: AttributeError: timestamp"
+        assert any(expected in message for message in log_messages), log_messages
 
     def test_node_conn_latency_counts_connection_opens(self):
         policy = MetricsPolicy(report_dir="", operational_enabled=True)
