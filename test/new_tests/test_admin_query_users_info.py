@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import time
 from .test_base_class import TestBaseClass
+from .admin_helpers import assert_eventually_equal
 from aerospike import exception as e
 from .conftest import check_user_dictionary
 
 import aerospike
+from .conftest import admin_drop_user_and_poll, admin_create_user_and_poll
 
 
 class TestQueryUsersInfo(TestBaseClass):
@@ -24,8 +25,7 @@ class TestQueryUsersInfo(TestBaseClass):
         self.client = aerospike.client(config).connect(config["user"], config["password"])
 
         try:
-            self.client.admin_drop_user("example-test")
-            time.sleep(2)
+            admin_drop_user_and_poll(self.client, "example-test")
         except e.InvalidUser:
             pass
         user = "example-test"
@@ -33,8 +33,7 @@ class TestQueryUsersInfo(TestBaseClass):
         roles = ["read-write", "sys-admin", "read"]
 
         try:
-            self.client.admin_create_user(user, password, roles)
-            time.sleep(2)
+            admin_create_user_and_poll(self.client, user, password, roles)
         except e.UserExistsError:
             pass
         self.delete_users = []
@@ -45,14 +44,13 @@ class TestQueryUsersInfo(TestBaseClass):
         """
 
         try:
-            self.client.admin_drop_user("example-test")
+            admin_drop_user_and_poll(self.client, "example-test")
         except Exception:
             pass
         self.client.close()
 
     def test_query_users_info_with_proper_parameters(self):
 
-        time.sleep(2)
         user_details = self.client.admin_query_users_info()
 
         # Usage test; doesn't actually test if the server records user data
@@ -72,9 +70,11 @@ class TestQueryUsersInfo(TestBaseClass):
 
         policy = {"timeout": 180000}
 
-        user_details = self.client.admin_query_users_info(policy)
-
-        assert user_details.get("example-test").get("roles") == ["read", "read-write", "sys-admin"]
+        assert_eventually_equal(
+            self.client,
+            lambda: self.client.admin_query_users_info(policy).get("example-test", {}).get("roles"),
+            ["read", "read-write", "sys-admin"],
+        )
 
     def test_query_users_info_with_no_roles(self):
 
@@ -83,11 +83,9 @@ class TestQueryUsersInfo(TestBaseClass):
 
         status = self.client.admin_revoke_roles(user, roles)
         assert status == 0
-        time.sleep(2)
-
-        user_details = self.client.admin_query_users_info()
-
-        assert user_details.get("example-test").get("roles") == []
+        assert_eventually_equal(
+            self.client, lambda: self.client.admin_query_users_info().get("example-test", {}).get("roles"), []
+        )
 
     def test_query_users_info_with_extra_argument(self):
         """

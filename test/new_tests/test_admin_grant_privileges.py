@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import time
 import platform
 import sys
 from .test_base_class import TestBaseClass
+from .admin_helpers import assert_eventually_equal
 from aerospike import exception as e
 import aerospike
+from .conftest import admin_drop_role_and_poll, admin_create_role_and_poll
 
 
 class TestGrantPrivileges(object):
@@ -30,15 +31,13 @@ class TestGrantPrivileges(object):
         self.client = aerospike.client(config).connect(config["user"], config["password"])
 
         try:
-            self.client.admin_drop_role("usr-sys-admin-test")
-            time.sleep(1)
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except e.InvalidRole:
             pass
-        self.client.admin_create_role(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
+        admin_create_role_and_poll(
+            self.client, "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
         self.delete_users = []
-        time.sleep(1)
 
     def teardown_method(self, method):
         """
@@ -46,8 +45,8 @@ class TestGrantPrivileges(object):
         """
 
         try:
-            self.client.admin_drop_role("usr-sys-admin-test")
-            time.sleep(1)
+            # TODO: is this necessary if we already drop the role at the beginning of each test?
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except e.InvalidRole:
             pass
         self.client.close()
@@ -66,13 +65,11 @@ class TestGrantPrivileges(object):
         status = self.client.admin_grant_privileges("usr-sys-admin-test", [{"code": aerospike.PRIV_READ}])
 
         assert status == 0
-        time.sleep(1)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_role("usr-sys-admin-test"), [
             {"code": 0, "ns": "", "set": ""},
             {"code": 1, "ns": "", "set": ""},
             {"code": 10, "ns": "", "set": ""},
-        ]
+        ])
 
         status = self.client.admin_revoke_privileges("usr-sys-admin-test", [{"code": aerospike.PRIV_READ}])
 
@@ -98,9 +95,11 @@ class TestGrantPrivileges(object):
         status = self.client.admin_grant_privileges("usr-sys-admin-test", privs)
 
         assert status == 0
-        time.sleep(1)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}, *privs]
+        assert_eventually_equal(
+            self.client,
+            lambda: self.client.admin_query_role("usr-sys-admin-test"),
+            [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}, *privs],
+        )
 
         status = self.client.admin_revoke_privileges("usr-sys-admin-test", privs)
 
@@ -113,13 +112,11 @@ class TestGrantPrivileges(object):
         status = self.client.admin_grant_privileges("usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE}])
 
         assert status == 0
-        time.sleep(1)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_role("usr-sys-admin-test"), [
             {"code": 0, "ns": "", "set": ""},
             {"code": 1, "ns": "", "set": ""},
             {"code": 13, "ns": "", "set": ""},
-        ]
+        ])
 
         status = self.client.admin_revoke_privileges("usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE}])
 
@@ -134,13 +131,11 @@ class TestGrantPrivileges(object):
         )
 
         assert status == 0
-        time.sleep(1)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_role("usr-sys-admin-test"), [
             {"code": 0, "ns": "", "set": ""},
             {"code": 1, "ns": "", "set": ""},
             {"code": 10, "ns": "", "set": ""},
-        ]
+        ])
 
         status = self.client.admin_revoke_privileges("usr-sys-admin-test", [{"code": aerospike.PRIV_READ}])
 
@@ -155,13 +150,11 @@ class TestGrantPrivileges(object):
         )
 
         assert status == 0
-        time.sleep(1)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_role("usr-sys-admin-test"), [
             {"code": 0, "ns": "", "set": ""},
             {"code": 1, "ns": "", "set": ""},
             {"code": 10, "ns": "test", "set": "demo"},
-        ]
+        ])
 
         status = self.client.admin_revoke_privileges(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}]

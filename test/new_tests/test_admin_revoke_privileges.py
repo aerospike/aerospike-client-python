@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import time
 from .test_base_class import TestBaseClass
+from .admin_helpers import assert_eventually_equal
 from aerospike import exception as e
 
 import aerospike
+from .conftest import admin_drop_role_and_poll, admin_create_role_and_poll
 
 
 class TestRevokePrivilege(TestBaseClass):
@@ -23,14 +24,12 @@ class TestRevokePrivilege(TestBaseClass):
         config = self.config
         self.client = aerospike.client(config).connect(config["user"], config["password"])
         try:
-            self.client.admin_drop_role("usr-sys-admin-test")
-            time.sleep(2)
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except e.InvalidRole:
             pass
-        self.client.admin_create_role(
+        admin_create_role_and_poll(self.client,
             "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
-        time.sleep(2)
         self.delete_users = []
 
     def teardown_method(self, method):
@@ -38,7 +37,7 @@ class TestRevokePrivilege(TestBaseClass):
         Teardown method
         """
         try:
-            self.client.admin_drop_role("usr-sys-admin-test")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except e.InvalidRole:
             pass
         self.client.close()
@@ -70,16 +69,20 @@ class TestRevokePrivilege(TestBaseClass):
         status = self.client.admin_grant_privileges("usr-sys-admin-test", privs)
 
         assert status == 0
-        time.sleep(2)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}, *privs]
+        assert_eventually_equal(
+            self.client,
+            lambda: self.client.admin_query_role("usr-sys-admin-test"),
+            [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}, *privs],
+        )
 
         status = self.client.admin_revoke_privileges("usr-sys-admin-test", privs)
 
         assert status == 0
-        time.sleep(2)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
+        assert_eventually_equal(
+            self.client,
+            lambda: self.client.admin_query_role("usr-sys-admin-test"),
+            [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}],
+        )
 
     def test_admin_revoke_privileges_positive(self):
         """
@@ -88,20 +91,20 @@ class TestRevokePrivilege(TestBaseClass):
         status = self.client.admin_grant_privileges("usr-sys-admin-test", [{"code": aerospike.PRIV_READ}])
 
         assert status == 0
-        time.sleep(2)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_role("usr-sys-admin-test"), [
             {"code": 0, "ns": "", "set": ""},
             {"code": 1, "ns": "", "set": ""},
             {"code": 10, "ns": "", "set": ""},
-        ]
+        ])
 
         status = self.client.admin_revoke_privileges("usr-sys-admin-test", [{"code": aerospike.PRIV_READ}])
 
         assert status == 0
-        time.sleep(2)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
+        assert_eventually_equal(
+            self.client,
+            lambda: self.client.admin_query_role("usr-sys-admin-test"),
+            [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}],
+        )
 
     def test_admin_revoke_privileges_positive_write(self):
         """
@@ -110,20 +113,20 @@ class TestRevokePrivilege(TestBaseClass):
         status = self.client.admin_grant_privileges("usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE}])
 
         assert status == 0
-        time.sleep(2)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_role("usr-sys-admin-test"), [
             {"code": 0, "ns": "", "set": ""},
             {"code": 1, "ns": "", "set": ""},
             {"code": 13, "ns": "", "set": ""},
-        ]
+        ])
 
         status = self.client.admin_revoke_privileges("usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE}])
 
         assert status == 0
-        time.sleep(2)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
+        assert_eventually_equal(
+            self.client,
+            lambda: self.client.admin_query_role("usr-sys-admin-test"),
+            [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}],
+        )
 
     def test_admin_revoke_privileges_positive_with_policy(self):
         """
@@ -134,22 +137,22 @@ class TestRevokePrivilege(TestBaseClass):
         )
 
         assert status == 0
-        time.sleep(2)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_role("usr-sys-admin-test"), [
             {"code": 0, "ns": "", "set": ""},
             {"code": 1, "ns": "", "set": ""},
             {"code": 10, "ns": "", "set": ""},
-        ]
+        ])
 
         status = self.client.admin_revoke_privileges(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_READ}], {"timeout": 180000}
         )
 
-        time.sleep(1)
         assert status == 0
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
+        assert_eventually_equal(
+            self.client,
+            lambda: self.client.admin_query_role("usr-sys-admin-test"),
+            [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}],
+        )
 
     def test_admin_revoke_privileges_positive_with_policy_write(self):
         """
@@ -160,22 +163,22 @@ class TestRevokePrivilege(TestBaseClass):
         )
 
         assert status == 0
-        time.sleep(2)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_role("usr-sys-admin-test"), [
             {"code": 0, "ns": "", "set": ""},
             {"code": 1, "ns": "", "set": ""},
             {"code": 13, "ns": "", "set": ""},
-        ]
+        ])
 
         status = self.client.admin_revoke_privileges(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE}], {"timeout": 180000}
         )
 
-        time.sleep(1)
         assert status == 0
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
+        assert_eventually_equal(
+            self.client,
+            lambda: self.client.admin_query_role("usr-sys-admin-test"),
+            [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}],
+        )
 
     def test_admin_revoke_privileges_positive_with_ns_set(self):
         """
@@ -186,22 +189,22 @@ class TestRevokePrivilege(TestBaseClass):
         )
 
         assert status == 0
-        time.sleep(1)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_role("usr-sys-admin-test"), [
             {"code": 0, "ns": "", "set": ""},
             {"code": 1, "ns": "", "set": ""},
             {"code": 10, "ns": "test", "set": "demo"},
-        ]
+        ])
 
         status = self.client.admin_revoke_privileges(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}]
         )
 
-        time.sleep(1)
         assert status == 0
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
+        assert_eventually_equal(
+            self.client,
+            lambda: self.client.admin_query_role("usr-sys-admin-test"),
+            [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}],
+        )
 
     def test_revoke_privileges_incorrect_role_type(self):
         """
