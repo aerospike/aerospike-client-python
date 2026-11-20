@@ -636,7 +636,8 @@ static bool is_python_seed_provider_periodic(void *udata)
     return instance->seed_provider->periodic;
 }
 
-static void close_python_seed_provider(PySeedProvider *seed_provider)
+static void
+close_and_destroy_python_seed_provider(PySeedProvider *seed_provider)
 {
     // The client may release the provider while an exception is pending
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
@@ -671,7 +672,7 @@ static void py_seed_provider_release(PySeedProvider *seed_provider)
 {
     seed_provider->references--;
     if (seed_provider->references == 0) {
-        close_python_seed_provider(seed_provider);
+        close_and_destroy_python_seed_provider(seed_provider);
     }
 }
 
