@@ -45,17 +45,14 @@ int AerospikeClientConnect(AerospikeClient *self)
     char *alias_to_search = NULL;
     bool free_alias_to_search = false;
 
-    if (!self || !self->as || !self->as->config.hosts ||
-        !self->as->config.hosts->size) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Invalid aerospike object or hosts not configured");
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }
 
-    alias_to_search = return_search_string(self->as);
-    free_alias_to_search = true;
-
     if (self->use_shared_connection) {
+        alias_to_search = return_search_string(self->as);
+        free_alias_to_search = true;
         PyObject *py_persistent_item =
             PyDict_GetItemString(py_global_hosts, alias_to_search);
         if (py_persistent_item) {
@@ -67,7 +64,7 @@ int AerospikeClientConnect(AerospikeClient *self)
                 // Other clients may share its aerospike* pointer
                 // So it is not safe to destroy it
                 if (!self->has_connected) {
-                    destroy_ip_map(&self->as->config);
+                    destroy_ip_map(&self->ip_map, &self->ip_map_size);
                     aerospike_destroy(self->as);
                 }
                 self->as = as;

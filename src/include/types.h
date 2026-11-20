@@ -79,6 +79,10 @@ typedef struct {
     bool use_shared_connection;
     uint8_t send_bool_as;
     bool validate_keys;
+    // The ip_map the constructor allocated. A config file can point as->config.ip_map at a
+    // copy that aerospike_destroy() frees, so only this one is freed by the client.
+    as_addr_map *ip_map;
+    uint32_t ip_map_size;
 } AerospikeClient;
 
 typedef struct {
@@ -125,6 +129,9 @@ extern PyObject *py_client_config_shm_valid_keys;
 extern PyObject *py_client_config_lua_valid_keys;
 extern PyObject *py_client_config_policies_valid_keys;
 extern PyObject *py_client_config_tls_valid_keys;
+extern PyObject *py_client_config_discovery_valid_keys;
+extern PyObject *py_client_config_discovery_dns_valid_keys;
+extern PyObject *py_client_config_translation_valid_keys;
 extern PyObject *py_apply_policy_valid_keys;
 extern PyObject *py_admin_policy_valid_keys;
 extern PyObject *py_info_policy_valid_keys;
@@ -148,6 +155,8 @@ extern PyObject *py_info_and_write_policy_valid_keys;
 // scan.apply() takes in one policy parameter that accepts both write and info policy options
 extern PyObject *py_info_and_scan_policy_valid_keys;
 extern PyObject *py_record_metadata_valid_keys;
+
+#define CLIENT_CONFIG_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE "client config"
 
 #define INVALID_DICTIONARY_KEY_ERROR_PART1 "is an invalid"
 #define INVALID_DICTIONARY_KEY_ERROR_PART2 "dictionary key"

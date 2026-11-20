@@ -1,0 +1,262 @@
+name: Discovery tests
+
+# Pluggable discovery test layers L0 to L3, from the client libraries testing strategy.
+# L1 does not run: its shared fixtures test discovery and translation, which are C client built-ins, so the C client runs them.
+# The skipped-layers job reports every layer and profile that does not run yet, and why.
+# L2 runs through the l2-proxy harness of aerospike-client-conformance: it builds the client from
+# test/discovery/l5-aws.manifest, runs its rows through test/discovery/l5_driver.py, then the Python L2 tests of
+# each profile through test/discovery/l2_run.sh. L5 runs by hand on AWS through the same driver.
+
+permissions:
+  contents: read
+  id-token: write
+  # For build-and-optionally-test-wheels-on-one-platform.yml
+  statuses: write
+
+on:
+  # Same triggers as smoke-tests.yml
+  push:
+    paths-ignore:
+      - .readthedocs.yml
+      - .git-blame-ignore-revs
+      - .build.yml
+      - benchmarks/**/*
+    tags-ignore:
+      - '**'
+    branches:
+      - '**'
+  workflow_dispatch:
+
+env:
+  # Keep in step with python-versions in the build job
+  PYTHON_VERSION: '3.12'
+  PLATFORM_TAG: manylinux_x86_64
+  WHEEL_DIR: wheel
+
+jobs:
+  skipped-layers:
+    name: Skipped layers
+    runs-on: ubuntu-22.04
+    outputs:
+      has-features: ${{ steps.layers.outputs.has-features }}
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit
+
+    - name: List skipped layers
+      id: layers
+      env:
+        HAS_FEATURES: ${{ secrets.FEATURES_CONTENT != '' }}
+      run: |
+        layers=$(jq -cn '[
+          {layer: "L0", tests: "U-2, U-8, U-10, U-13 and U-15 translator contracts", reason: "the translators are C client built-ins, so the C client suite owns them"},
+          {layer: "L0", tests: "U-12 idle-reaping default", reason: "max_socket_idle defaults to the C client constant, so the C client suite owns it"},
+          {layer: "L1", tests: "shared conformance fixtures", reason: "discovery and translation are C client built-ins, so the C client runs the fixtures (testing strategy TG-4)"},
+          {layer: "L2", tests: "N-13 map refresh", reason: "deferred: TranslationMapProvider is not in this release"},
+          {layer: "L2 proxy", tests: "rows that need driver contract 3 or 5", reason: "l5_driver.py speaks contract 1, so the harness skips them"},
+          {layer: "L2b", tests: "M-1 to M-4 and M-6 to M-12 thread-model harness", reason: "the discovery scheduler is a C client built-in, so the C client suite owns them"},
+          {layer: "TLS certificate matching", tests: "certificate name matching rules", reason: "TLS name matching is a C client built-in, so the C client suite owns it; N-6, N-17 and K-6 cover the handshake through the Python client"}
+        ]')
+        if [[ "$HAS_FEATURES" != true ]]; then
+          layers=$(jq -c '. + [
+            {layer: "L2 EE", tests: "N-6 and N-17 TLS through the proxy", reason: "the FEATURES_CONTENT secret is absent"},
+            {layer: "L3", tests: "K-2, K-3, K-6, K-9 and K-10", reason: "the FEATURES_CONTENT secret is absent"}
+          ]' <<< "$layers")
+        fi
+        echo "has-features=$HAS_FEATURES" >> "$GITHUB_OUTPUT"
+        echo "layers=$layers" >> "$GITHUB_OUTPUT"
+
+    - name: Report skipped layers
+      uses: aerospike/aerospike-client-conformance/.github/actions/report-skipped-layers@a14ec6e68d7231815e1f60024e9121f4618a8850 # main
+      with:
+        layers: ${{ steps.layers.outputs.layers }}
+
+  build:
+    uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
+    with:
+      # Keep in step with PYTHON_VERSION
+      python-versions: '["3.12"]'
+      platform-tag: manylinux_x86_64
+    secrets: inherit
+
+  l0:
+    name: L0 unit tests
+    needs: build
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.PYTHON_VERSION }}-${{ env.PLATFORM_TAG }}
+        path: ${{ env.WHEEL_DIR }}
+
+    - name: Install client and test dependencies
+      run: python3 -m pip install "$WHEEL_DIR"/*.whl -r test/discovery/requirements.txt
+
+    - name: Run L0 tests
+      run: pytest test/discovery/test_l0_naming.py test/discovery/test_l0_discovery.py -p no:cacheprovider -rA
+      env:
+        DISCOVERY_FAIL_ON_SKIP: '1'
+
+  # Every l2-proxy profile on Aerospike Community. unresolved-access runs on the released server,
+  # which resolves access addresses at startup.
+  l2:
+    name: L2 proxy
+    uses: aerospike/aerospike-client-conformance/.github/workflows/l2-proxy.yaml@a14ec6e68d7231815e1f60024e9121f4618a8850 # main
+    with:
+      client-repository: ${{ github.repository }}
+      commit: ${{ github.sha }}
+      manifest: test/discovery/l5-aws.manifest
+      profile: all
+      edition: ce
+      conformance-ref: a14ec6e68d7231815e1f60024e9121f4618a8850
+
+  # Enterprise with server TLS, for N-6 and N-17
+  l2-ee:
+    name: L2 proxy (ee)
+    needs: skipped-layers
+    if: ${{ needs.skipped-layers.outputs.has-features == 'true' }}
+    uses: aerospike/aerospike-client-conformance/.github/workflows/l2-proxy.yaml@a14ec6e68d7231815e1f60024e9121f4618a8850 # main
+    with:
+      client-repository: ${{ github.repository }}
+      commit: ${{ github.sha }}
+      manifest: test/discovery/l5-aws.manifest
+      profile: default,cn-only
+      edition: ee
+      conformance-ref: a14ec6e68d7231815e1f60024e9121f4618a8850
+    secrets:
+      FEATURES_CONF: ${{ secrets.FEATURES_CONTENT }}
+
+  # Released servers resolve their access addresses at startup; this dev build advertises them verbatim.
+  # Move to a release tag once one carries the fix.
+  l2-verbatim:
+    name: L2 proxy (verbatim access address, ${{ matrix.profile }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - profile: pass-through-ports
+          unresolved-hostname: true
+          verbatim-access-address: false
+        - profile: unresolved-access
+          unresolved-hostname: false
+          verbatim-access-address: true
+    uses: aerospike/aerospike-client-conformance/.github/workflows/l2-proxy.yaml@a14ec6e68d7231815e1f60024e9121f4618a8850 # main
+    with:
+      client-repository: ${{ github.repository }}
+      commit: ${{ github.sha }}
+      manifest: test/discovery/l5-aws.manifest
+      profile: ${{ matrix.profile }}
+      edition: ce
+      server-image: aerospike.jfrog.io/database-docker-dev-local/aerospike-server:8.2.1.0-35_20261103T045846Z
+      registry: aerospike.jfrog.io
+      unresolved-hostname: ${{ matrix.unresolved-hostname }}
+      verbatim-access-address: ${{ matrix.verbatim-access-address }}
+      conformance-ref: a14ec6e68d7231815e1f60024e9121f4618a8850
+    secrets:
+      JFROG_OIDC_PROVIDER: ${{ vars.OIDC_PROVIDER_NAME }}
+      JFROG_OIDC_AUDIENCE: ${{ vars.OIDC_AUDIENCE }}
+
+  l3:
+    name: L3 discovery (k8s)
+    needs: [skipped-layers, build]
+    if: ${{ needs.skipped-layers.outputs.has-features == 'true' }}
+    runs-on: ubuntu-22.04
+    # K-2, K-3 and K-9 wait for the operator to scale the cluster several times
+    timeout-minutes: 45
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.PYTHON_VERSION }}-${{ env.PLATFORM_TAG }}
+        path: ${{ env.WHEEL_DIR }}
+
+    - name: Install client and test dependencies
+      run: python3 -m pip install "$WHEEL_DIR"/*.whl -r test/discovery/requirements.txt
+
+    # K-10 needs at least two pods
+    - name: Set up kind and AKO
+      id: kind-ako
+      uses: aerospike/shared-workflows/.github/actions/setup-kind-ako@308f37e0cd5c7a6386a99ea7afc379d5a4ea9256 # v5.1.0
+      with:
+        features-content: ${{ secrets.FEATURES_CONTENT }}
+        cluster-size: 2
+
+    - name: Run L3 tests
+      env:
+        DISCOVERY_ENDPOINT_HOSTNAME: ${{ steps.kind-ako.outputs.endpoint-hostname }}
+        DISCOVERY_INGRESS_PORTS: ${{ steps.kind-ako.outputs.ingress-ports }}
+        DISCOVERY_KUBECONFIG: ${{ steps.kind-ako.outputs.kubeconfig }}
+        AEROSPIKE_ADMIN_PASSWORD: ${{ steps.kind-ako.outputs.admin-password }}
+        DISCOVERY_FAIL_ON_SKIP: '1'
+      run: pytest test/discovery/test_l3_*.py -p no:cacheprovider -rA
+
+  l3-tls:
+    name: L3 discovery (k8s, TLS)
+    needs: [skipped-layers, build]
+    if: ${{ needs.skipped-layers.outputs.has-features == 'true' }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.PYTHON_VERSION }}-${{ env.PLATFORM_TAG }}
+        path: ${{ env.WHEEL_DIR }}
+
+    - name: Install client and test dependencies
+      run: python3 -m pip install "$WHEEL_DIR"/*.whl -r test/discovery/requirements.txt
+
+    # K-6 needs at least two pods
+    # enable-tls is in aerospike/shared-workflows#405; move to the release that carries it
+    - name: Set up kind and AKO
+      id: kind-ako
+      uses: aerospike/shared-workflows/.github/actions/setup-kind-ako@d787123ff883f38a73dfad9534176e969c827b03 # jnguyen/setup-kind-ako-tls
+      with:
+        features-content: ${{ secrets.FEATURES_CONTENT }}
+        cluster-size: 2
+        enable-tls: true
+
+    - name: Run L3 TLS tests
+      env:
+        DISCOVERY_ENDPOINT_HOSTNAME: ${{ steps.kind-ako.outputs.endpoint-hostname }}
+        DISCOVERY_INGRESS_PORTS: ${{ steps.kind-ako.outputs.ingress-ports }}
+        DISCOVERY_KUBECONFIG: ${{ steps.kind-ako.outputs.kubeconfig }}
+        DISCOVERY_TLS_CA_FILE: ${{ steps.kind-ako.outputs.tls-ca-file }}
+        DISCOVERY_TLS_NAME: ${{ steps.kind-ako.outputs.tls-name }}
+        AEROSPIKE_ADMIN_PASSWORD: ${{ steps.kind-ako.outputs.admin-password }}
+        DISCOVERY_FAIL_ON_SKIP: '1'
+      run: pytest test/discovery/test_l3_*.py -p no:cacheprovider -rA

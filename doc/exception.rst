@@ -200,6 +200,31 @@ Client Errors
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
+.. py:exception:: TranslationMiss
+
+    An address translator has no mapping for a node address, and the ``on_miss`` of the ``translation``
+    client config is ``"strict"``. The message names the translator, the node and the address.
+
+    Error code: ``-25``
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
+.. py:exception:: TranslationCollision
+
+    An address translator translated two nodes to the same address.
+
+    Error code: ``-26``
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
+.. py:exception:: SeedDiscoveryFailed
+
+    A seed provider failed and the client has no seed host left.
+
+    Error code: ``-27``
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
 Server Errors
 -------------
 
