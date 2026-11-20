@@ -56,6 +56,14 @@ class SeedCandidateProvider(ABC):
     The ``discovery`` client config sets how often the provider is refreshed, how long connecting
     waits for the first refresh, and the ``execution_mode``, which must be ``"thread"`` (the default)
     for a provider. See :ref:`aerospike_discovery`.
+
+    The methods run in these threads:
+
+    * :meth:`needs_periodic_refresh` runs once, in the thread that creates the client.
+    * :meth:`refresh_seed_candidates` runs on the client's discovery thread, including the first call,
+      which connecting waits for.
+    * :meth:`close` runs in the thread that destroys the client, or on the discovery thread if a refresh
+      is still running then.
     """
 
     @abstractmethod

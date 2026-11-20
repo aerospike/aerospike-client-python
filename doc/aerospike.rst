@@ -1086,6 +1086,13 @@ The **discovery** dict of the client config controls where the client gets its s
     * **servers** (:class:`list` [:class:`str`]): the DNS servers, as ``"ip"`` or ``"ip:port"``
       (``"[ipv6]:port"`` for IPv6). Default: the system's DNS servers.
 
+The **execution_mode** values each provider supports:
+
+* ``"static"``: either. It is never refreshed, so it starts no thread.
+* ``"dns"``: ``"thread"`` or ``"tend"``. With ``"tend"``, the **timeout_ms** of **dns** must be at most
+  **tend_refresh_deadline_ms**, and with the default of 100 ms only a local DNS server answers in time.
+* A :class:`~aerospike_helpers.discovery.SeedCandidateProvider` instance: ``"thread"`` only.
+
 .. _aerospike_discovery_refresh_results:
 
 If a refresh fails, for example because a :class:`~aerospike_helpers.discovery.SeedCandidateProvider` raised an
@@ -1114,6 +1121,9 @@ class documentation.
     * ``"static-map"``: replace the host of an address with its entry in **static_map** or **ip_map**.
     * ``"port-map"``: replace an address with its entry in **port_map**.
     * ``"pass-through"``: use every address as is. No address is a miss.
+
+    A translator changes only the host and port of an address, never the TLS name; see
+    :ref:`aerospike_discovery_tls`.
 
     Default: ``"static-map"``
 * **on_miss** (:class:`str`)
@@ -1154,6 +1164,34 @@ class documentation.
         },
     }
     client = aerospike.client(config)
+
+.. _aerospike_discovery_tls:
+
+TLS Name
+^^^^^^^^
+
+Seed discovery and address translation change only the host and port the client connects to, never the TLS
+name. The client authenticates each node as its TLS name, so the server certificate is checked against the TLS
+name of the node and not against the host the client connected to. The TLS name is the one the server reports
+for the node, or the TLS name of a seed host. A seed host without one gets the **cluster_name** of the client
+config, or else its host name. That includes the hosts returned by a
+:class:`~aerospike_helpers.discovery.SeedCandidateProvider` or the ``"dns"`` provider.
+
+The client matches the TLS name against the subject alternative names (SAN) of the certificate, as RFC 9525
+describes:
+
+* A TLS name that is an IP address matches only an ``iPAddress`` entry with the same address.
+* Any other TLS name matches only a ``dNSName`` entry, ignoring ASCII case. The only wildcard is a ``*`` that is
+  the whole left-most label, and it matches exactly one label. ``*.example.com`` matches ``a.example.com``, but
+  not ``example.com`` or ``a.b.example.com``.
+* The subject common name (CN) is not used.
+
+.. note::
+
+    When that match fails, the client still accepts a certificate whose CN matches the TLS name, and a TLS name
+    that is an IP address and matches a ``dNSName`` entry or the CN as text. It logs a warning once per TLS name
+    per process. This fallback will be removed in the next major release, so issue certificates with a matching
+    ``dNSName`` or ``iPAddress`` entry.
 
 Constants
 =========
