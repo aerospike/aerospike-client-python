@@ -1111,7 +1111,7 @@ raised. If a refresh succeeded but returned no host and **hosts** is empty, a pl
 
 How a :class:`~aerospike_helpers.discovery.SeedCandidateProvider` is called, including its use of the GIL and
 when its :meth:`~aerospike_helpers.discovery.SeedCandidateProvider.close` method runs, is described in the
-class documentation.
+documentation of the class and its methods.
 
 **translation** keys:
 
