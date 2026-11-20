@@ -23,7 +23,6 @@
 
 #include "client.h"
 #include "conversions.h"
-#include "discovery.h"
 #include "global_hosts.h"
 #include "exceptions.h"
 
@@ -117,14 +116,6 @@ int AerospikeClientConnect(AerospikeClient *self)
             shm_key = shm_key + 1;
         }
         self->as->config.shm_key = shm_key;
-    }
-
-    // A sync Client.close() destroyed the registration of the seed provider
-    if (self->seed_provider && self->as->config.discovery.provider_released) {
-        py_seed_provider_register(&err, &self->as->config, self->seed_provider);
-        if (err.code != AEROSPIKE_OK) {
-            goto CLEANUP;
-        }
     }
 
     Py_BEGIN_ALLOW_THREADS
