@@ -234,8 +234,8 @@ def test_u1_provider_rejected_in_tend_mode() -> None:
     assert sys.getrefcount(provider) == references
 
 
-# Client.close() destroys the registration and connect() registers the provider again, so the client
-# can connect again, and close() runs once when the client object is destroyed
+# Client.close() destroys the C client's instance of the provider and connect() builds a new one, so
+# the client can connect again, and close() runs once when the client object is destroyed
 def test_u1_provider_closed_when_client_destroyed() -> None:
     provider = SeedProvider([UNREACHABLE])
     client = aerospike.client({**OFFLINE, "hosts": [], "discovery": {"provider": provider}})
@@ -248,6 +248,24 @@ def test_u1_provider_closed_when_client_destroyed() -> None:
     del client
     gc.collect()
     assert provider.closed == 1
+
+
+# The instance that connect() builds after Client.close() refreshes periodically too
+def test_u1_periodic_refresh_continues_after_reconnect() -> None:
+    provider = SeedProvider([UNREACHABLE], periodic=True)
+    client = aerospike.client(
+        {**OFFLINE, "hosts": [], "discovery": {"provider": provider, "refresh_interval_ms": TEND_INTERVAL_MS}}
+    )
+    try:
+        client.close()
+        client.connect()
+        refreshes_at_connect = len(provider.contexts)
+        deadline = time.monotonic() + 10 * TEND_INTERVAL_MS / 1000
+        while len(provider.contexts) < refreshes_at_connect + 2 and time.monotonic() < deadline:
+            time.sleep(0.05)
+    finally:
+        client.close()
+    assert len(provider.contexts) >= refreshes_at_connect + 2
 
 
 # A refresh still running when the client is destroyed closes the provider when it returns, even

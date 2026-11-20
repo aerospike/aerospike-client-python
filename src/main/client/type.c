@@ -603,7 +603,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     self->validate_keys = false;
     self->ip_map = NULL;
     self->ip_map_size = 0;
-    self->seed_provider = NULL;
 
     as_config config;
     as_config_init(&config);
@@ -1302,8 +1301,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     }
     else if (retval == 1) {
         as_status status = as_discovery_config_init_from_pyobject(
-            &constructor_err, &config, py_discovery, validate_keys,
-            &self->seed_provider);
+            &constructor_err, &config, py_discovery, validate_keys);
         Py_DECREF(py_discovery);
         if (status != AEROSPIKE_OK) {
             goto RAISE_EXCEPTION_WITH_AS_ERROR;

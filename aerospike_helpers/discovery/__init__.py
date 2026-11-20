@@ -62,6 +62,9 @@ class SeedCandidateProvider(ABC):
     def refresh_seed_candidates(self, context: SeedCandidateContext) -> List[SeedHost]:
         """Return the seed hosts to connect to, with the preferred host first.
 
+        This method runs on the client's discovery thread, including the first call, which connecting
+        waits for.
+
         Raise an exception if the seed hosts cannot be determined. What the client does when this
         method raises, returns an invalid host or returns an empty list is described in
         :ref:`failed and empty refreshes <aerospike_discovery_refresh_results>`.
@@ -76,13 +79,14 @@ class SeedCandidateProvider(ABC):
 
         If so, the client calls :meth:`refresh_seed_candidates` every ``refresh_interval_ms`` of
         the ``discovery`` client config. Otherwise, it is only called when the client connects.
-        This method is called once when the client is created.
+        This method is called once, in the thread that creates the client.
         """
 
     def close(self) -> None:
         """Release resources held by the provider.
 
         Called once when the client object is destroyed, but not by :meth:`aerospike.Client.close`
-        because the client can connect again. Exceptions raised by this method are ignored. The
-        default implementation does nothing.
+        because the client can connect again. It runs in the thread that destroys the client, or on
+        the discovery thread if a refresh is still running then. Exceptions raised by this method are
+        ignored. The default implementation does nothing.
         """
