@@ -25,6 +25,7 @@
 #include "conversions.h"
 #include "global_hosts.h"
 #include "exceptions.h"
+#include "metrics.h"
 
 #define MAX_PORT_SIZE 6
 /**
@@ -65,6 +66,8 @@ int AerospikeClientConnect(AerospikeClient *self)
                 // So it is not safe to destroy it
                 if (!self->has_connected) {
                     destroy_ip_map(&self->ip_map, &self->ip_map_size);
+                    as_metrics_policy_destroy_py_exporters(
+                        &self->as->config.policies.metrics);
                     aerospike_destroy(self->as);
                 }
                 self->as = as;

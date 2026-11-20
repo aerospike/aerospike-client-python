@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -388,8 +388,11 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
 // metrics_policy must be declared already
 // py_metrics_policy must be non-NULL
 // Returns non-zero integer value on error.
-// On error, all memory from this function is freed
-int set_as_metrics_policy_using_pyobject(as_error *err,
+// On error, all memory from this function is freed.
+// The exporters are added to metrics_policy->exporters. See
+// as_metrics_policy_destroy_py_exporters() and
+// create_py_metrics_exporters_from_policy() for who frees them.
+int as_metrics_policy_set_using_pyobject(as_error *err,
                                          PyObject *py_metrics_policy,
                                          as_metrics_policy *metrics_policy);
 

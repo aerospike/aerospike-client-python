@@ -52,10 +52,15 @@ typedef struct {
     PyObject_HEAD
 } AerospikeCDTInfObject;
 
+typedef struct PyMetricsExporter PyMetricsExporter;
+
 typedef struct {
     PyObject_HEAD aerospike *as;
     int shm_key;
     int ref_cnt;
+    // NULL-terminated array of the exporters passed to enable_metrics() on this
+    // shared cluster, or NULL. See aerospike_client_release_active_metrics_exporters().
+    PyMetricsExporter **active_metrics_exporters;
 } AerospikeGlobalHosts;
 
 typedef struct {
@@ -79,6 +84,12 @@ typedef struct {
     bool use_shared_connection;
     uint8_t send_bool_as;
     bool validate_keys;
+    /*
+     * NULL-terminated array of the exporters passed to enable_metrics(), or
+     * NULL. Not used for a shared connection, which has them in its
+     * AerospikeGlobalHosts. See aerospike_client_release_active_metrics_exporters().
+     */
+    PyMetricsExporter **active_metrics_exporters;
     // The ip_map the constructor allocated. A config file can point as->config.ip_map at a
     // copy that aerospike_destroy() frees, so only this one is freed by the client.
     as_addr_map *ip_map;

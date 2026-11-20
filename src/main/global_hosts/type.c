@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,6 +103,7 @@ AerospikeGlobalHosts *AerospikeGobalHosts_New(aerospike *as)
     self->as = as;
     self->shm_key = as->config.shm_key;
     self->ref_cnt = 1;
+    self->active_metrics_exporters = NULL;
     Py_INCREF((PyObject *)self);
     return self;
 }

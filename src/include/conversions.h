@@ -210,6 +210,9 @@ PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
                                             struct as_cluster_s *cluster);
 PyObject *create_py_node_from_as_node(as_error *error_p,
                                       struct as_node_s *node);
+PyObject *
+create_py_conn_stats_from_as_conn_stats(as_error *error_p,
+                                        struct as_conn_stats_s *stats);
 
 // obj must be non-NULL
 // Checks if pyobject is an instance of a class type defined in aerospike_helpers or one of its submodules
