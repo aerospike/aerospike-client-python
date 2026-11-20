@@ -645,9 +645,13 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Default transaction policy when rolling the transaction records forward (commit) or back (abort) in a batch.
                 Contains :ref:`aerospike_batch_policies`.
             * **metrics** (:class:`~aerospike_helpers.metrics.MetricsPolicy`)
-                Default metrics policy. Only :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_columns` and :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_shift` will override command-level metrics policies.
+                Default metrics policy.
+
+                Only :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_columns` and :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_shift` will override command-level metrics policies.
+
                 Exporters registered here are used when metrics are enabled from this policy.
                 A non-empty ``report_dir`` installs the learn-metrics file exporter when no exporter is registered.
+
                 Usage metrics stay off unless the policy enables them. A
                 :py:obj:`None` :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.operational_enabled`
                 leaves operational metrics off here, so dynamic configuration ``metrics.enabled``
@@ -655,6 +659,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 uses this policy and still turns operational metrics on when the learn-metrics file
                 exporter or deprecated listeners are used. See
                 :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.operational_enabled`.
+
                 An empty ``export_interval`` uses ``interval``. The operational sampler
                 records every command unless ``sampler_range`` and ``sampler_threshold`` change it.
             * **total_timeout** (:class:`int`)
