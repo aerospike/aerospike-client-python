@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2013-2020 Aerospike, Inc.
+* Copyright 2013-2026 Aerospike, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@
 #include "policy.h"
 #include "serializer.h"
 #include "hll_operations.h"
-#include "cdt_operation_utils.h"
+#include "dict_helpers.h"
 
 #define AS_PY_HLL_POLICY "hll_policy"
 #define AS_PY_HLL_INDEX_BIT_COUNT "index_bit_count"
