@@ -686,11 +686,13 @@ class TestVectorIntegration(object):
             self.as_connection.get(key)
         assert tombstone_count(self.as_connection) - before == replicas
 
-    @pytest.fixture
-    def vector_udf(self):
-        self.as_connection.udf_put("vector_udf.lua", 0)
+    # Registering a UDF blocks for at least 2 s and removing it for at least 1 s,
+    # so do both once per class instead of once per test case that uses it.
+    @pytest.fixture(scope="class")
+    def vector_udf(self, as_connection: aerospike.Client):
+        as_connection.udf_put("vector_udf.lua", 0)
         yield "vector_udf"
-        self.as_connection.udf_remove("vector_udf.lua")
+        as_connection.udf_remove("vector_udf.lua")
 
     # CLIENT-5845 test plan: PC-05
     @pytest.mark.parametrize("factory, values", EVERY_ELEMENT_TYPE)

@@ -37,9 +37,13 @@ def validate_records(client, keys, validator):
 
 
 class TestScanApply(object):
+    # Registering a UDF blocks for at least 2 s and removing it for at least 1 s,
+    # so do both once per class instead of once per test case.
+    connection_setup_functions = (add_test_udf,)
+    connection_teardown_functions = (drop_test_udf,)
+
     @pytest.fixture(autouse=True)
     def setup(self, request, connection_with_config_funcs):
-        add_test_udf(self.as_connection)
         keys = [(TEST_NS, TEST_SET, i) for i in range(50)]
         for i, key in enumerate(keys):
             self.as_connection.put(key, {"number": i})
@@ -51,7 +55,6 @@ class TestScanApply(object):
             self.as_connection.put(key, {"numbers": {1: i, 2: 2 * i, 3: 3 * i}})
 
         def teardown():
-            drop_test_udf(self.as_connection)
             keys = [(TEST_NS, TEST_SET, i) for i in range(50)]
             for i, key in enumerate(keys):
                 self.as_connection.remove(key)

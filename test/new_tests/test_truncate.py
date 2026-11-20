@@ -26,8 +26,8 @@ class TestTruncate(object):
             as_connection.put(key, rec)
             self.keys.append(key)
             self.un_truncated_keys.append(key)
-        # Give some time for time differences to resolve themselves
-        time.sleep(1.1)
+        # Tests that use this threshold shift it by at least 100 s (or negate it),
+        # so the records created above don't need to age before it.
         self.truncate_threshold = int(time.time()) * 10**9
 
         def teardown():
@@ -47,12 +47,13 @@ class TestTruncate(object):
         # If a truncation was expected, give more time
         # to finish it
 
-        attempts = 5
+        # Poll often instead of sleeping for a whole second before the first check
+        attempts = 50
         if not exists:
             while attempts > 0:
                 attempts = attempts - 1
                 truncated = True
-                time.sleep(1)
+                time.sleep(0.1)
                 for key in keys:
                     _, meta = self.as_connection.exists(key)
                     if meta is not None:
