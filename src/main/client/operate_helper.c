@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2013-2019 Aerospike, Inc.
+* Copyright 2013-2026 Aerospike, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@
 #include "policy.h"
 #include "serializer.h"
 #include "cdt_list_operations.h"
-#include "cdt_operation_utils.h"
+#include "dict_helpers.h"
 
 // Estimated size of array: (8 byte const char* address) * 2000 = 16000 bytes = 0.016 MB
 // not including the string constants the array points to
