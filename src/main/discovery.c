@@ -591,10 +591,10 @@ call_python_seed_provider(as_error *err, PyObject *py_provider,
 // new one. The provider's close() method runs when the last reference is
 // released, which is when the client is destroyed, or later if a refresh is
 // still running then.
-// references is only accessed with the GIL held. py_provider and periodic never
+// references is only accessed with the GIL held. py_callback and periodic never
 // change after registration, so the C client's threads read them without it.
 typedef struct {
-    PyObject *py_provider;
+    PyObject *py_callback;
     bool periodic;
     unsigned int references;
 } PySeedProvider;
@@ -623,7 +623,7 @@ refresh_python_seed_provider(as_error *err,
     PySeedProviderInstance *instance = (PySeedProviderInstance *)udata;
     PyGILState_STATE gil_state = PyGILState_Ensure();
     as_status status = call_python_seed_provider(
-        err, instance->seed_provider->py_provider, context, candidates);
+        err, instance->seed_provider->py_callback, context, candidates);
     PyGILState_Release(gil_state);
     return status;
 }
@@ -649,14 +649,14 @@ static void close_python_seed_provider(PySeedProvider *seed_provider)
 #endif
 
     PyObject *py_result =
-        PyObject_CallMethod(seed_provider->py_provider, "close", NULL);
+        PyObject_CallMethod(seed_provider->py_callback, "close", NULL);
     if (py_result) {
         Py_DECREF(py_result);
     }
     else {
-        PyErr_WriteUnraisable(seed_provider->py_provider);
+        PyErr_WriteUnraisable(seed_provider->py_callback);
     }
-    Py_DECREF(seed_provider->py_provider);
+    Py_DECREF(seed_provider->py_callback);
     free(seed_provider);
 
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
@@ -737,7 +737,7 @@ static as_status build_python_seed_provider(as_error *err,
 
     provider->size = sizeof(as_seed_provider);
     provider->api_version = AS_DISCOVERY_API_VERSION;
-    provider->name = Py_TYPE(seed_provider->py_provider)->tp_name;
+    provider->name = Py_TYPE(seed_provider->py_callback)->tp_name;
     provider->refresh = refresh_python_seed_provider;
     provider->needs_periodic_refresh = is_python_seed_provider_periodic;
     provider->supports_deadline = NULL;
@@ -804,7 +804,7 @@ static as_status register_python_seed_provider(as_error *err, as_config *config,
     // The registration holds the first reference. When registering fails, the
     // provider is freed here without calling close().
     Py_INCREF(py_provider);
-    seed_provider->py_provider = py_provider;
+    seed_provider->py_callback = py_provider;
     seed_provider->periodic = periodic;
     seed_provider->references = 1;
     as_status status = as_config_set_binding_seed_provider(
