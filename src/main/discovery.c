@@ -677,12 +677,18 @@ release_python_seed_provider_reference(PySeedProvider *seed_provider)
     }
 }
 
-// Runs on the thread that ends the registration or an instance, which holds no
-// Python thread state when it is aerospike_close() or aerospike_destroy(), or
-// on the discovery thread once a refresh that outlived it returns
+// Runs on the thread that ends the registration or an instance, which:
+// - holds the GIL in aerospike_destroy() and as_config_destroy(), as the client
+//   does not release it around them
+// - has released the GIL in aerospike_close() and aerospike_connect(), as the
+//   client does release it around them
+// - is the discovery thread, which holds no Python thread state, when a refresh
+//   outlived the destroy
 static void release_python_seed_provider(void *udata)
 {
     PySeedProvider *seed_provider = (PySeedProvider *)udata;
+    // Checked first so close() also runs when a client is deallocated while
+    // Python is finalizing
     if (PyGILState_Check()) {
         release_python_seed_provider_reference(seed_provider);
         return;
