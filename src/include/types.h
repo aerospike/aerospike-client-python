@@ -131,6 +131,8 @@ extern PyObject *py_client_config_policies_valid_keys;
 extern PyObject *py_client_config_tls_valid_keys;
 extern PyObject *py_client_config_discovery_valid_keys;
 extern PyObject *py_client_config_discovery_dns_valid_keys;
+extern PyObject *py_client_config_discovery_aws_valid_keys;
+extern PyObject *py_client_config_discovery_aws_filter_valid_keys;
 extern PyObject *py_client_config_translation_valid_keys;
 extern PyObject *py_apply_policy_valid_keys;
 extern PyObject *py_admin_policy_valid_keys;

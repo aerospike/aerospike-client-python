@@ -828,10 +828,18 @@ DEFINE_SET_OF_VALID_KEYS(
 DEFINE_SET_OF_VALID_KEYS(client_config_discovery, "provider", "merge_policy",
                          "execution_mode", "refresh_interval_ms",
                          "refresh_timeout_ms", "tend_refresh_deadline_ms",
-                         "dns", NULL)
+                         "dns", "aws", NULL)
 
 DEFINE_SET_OF_VALID_KEYS(client_config_discovery_dns, "names", "record_type",
                          "port", "tls_name", "timeout_ms", "servers", NULL)
+
+DEFINE_SET_OF_VALID_KEYS(client_config_discovery_aws, "region", "filters",
+                         "address_field", "port", "tls_name", "timeout_ms",
+                         "endpoint", "ca_file", "ca_path", "access_key_id",
+                         "secret_access_key", "session_token", NULL)
+
+DEFINE_SET_OF_VALID_KEYS(client_config_discovery_aws_filter, "name", "values",
+                         NULL)
 
 DEFINE_SET_OF_VALID_KEYS(client_config_translation, "provider", "on_miss",
                          "static_map", "port_map", NULL)
@@ -994,6 +1002,8 @@ static struct py_set_name_to_str_list py_set_name_to_str_lists[] = {
     PY_SET_NAME_TO_STR_LIST(client_config_tls_valid_keys),
     PY_SET_NAME_TO_STR_LIST(client_config_discovery_valid_keys),
     PY_SET_NAME_TO_STR_LIST(client_config_discovery_dns_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(client_config_discovery_aws_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(client_config_discovery_aws_filter_valid_keys),
     PY_SET_NAME_TO_STR_LIST(client_config_translation_valid_keys),
     PY_SET_NAME_TO_STR_LIST(apply_policy_valid_keys),
     PY_SET_NAME_TO_STR_LIST(info_policy_valid_keys),
