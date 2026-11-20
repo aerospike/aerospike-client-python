@@ -27,6 +27,7 @@
 #include <aerospike/as_vector.h>
 
 #include "conversions.h"
+#include "dict_helpers.h"
 #include "discovery.h"
 #include "exceptions.h"
 #include "pythoncapi_compat.h"
@@ -109,9 +110,9 @@ static const struct named_enum miss_policies = {
  * Option parsing
  ******************************************************************************/
 
-// In these helpers, option_name is the full name of the option, such as
-// "discovery.dns.port", and is only used in error messages. The same applies to
-// as_addr_map_new_from_pyobject() (see discovery.h).
+// In these helpers, option_name is the same as in get_pyobject_from_py_dict()
+// (see dict_helpers.h). The same applies to as_addr_map_new_from_pyobject()
+// (see discovery.h).
 
 static as_status check_dict(as_error *err, PyObject *py_value,
                             const char *option_name)
@@ -142,25 +143,6 @@ static as_status check_dict_keys(as_error *err, PyObject *py_dict,
         return err->code;
     }
     return AEROSPIKE_OK;
-}
-
-// Return 1 with a new reference in *py_value if key is set and not None,
-// 0 if it is not, or -1 with err set
-static int get_pyobject_from_py_dict(as_error *err, PyObject *py_dict,
-                                     const char *key, const char *option_name,
-                                     PyObject **py_value)
-{
-    int retval = PyDict_GetItemStringRef(py_dict, key, py_value);
-    if (retval == -1) {
-        as_error_update_from_raised_exc(err, AEROSPIKE_ERR_CLIENT, option_name);
-        return -1;
-    }
-    if (retval == 1 && Py_IsNone(*py_value)) {
-        Py_DECREF(*py_value);
-        *py_value = NULL;
-        return 0;
-    }
-    return retval;
 }
 
 // Write the names of named_enum to names as "\"a\", \"b\""
@@ -237,28 +219,6 @@ static as_status get_uint32_from_py_dict(as_error *err, PyObject *py_dict,
     }
 
     uint32_t number = convert_pyobject_to_uint32_t(py_value);
-    Py_DECREF(py_value);
-    if (PyErr_Occurred()) {
-        return as_error_update_from_raised_exc(err, AEROSPIKE_ERR_PARAM,
-                                               option_name);
-    }
-    *value = number;
-    return AEROSPIKE_OK;
-}
-
-static as_status get_uint16_from_py_dict(as_error *err, PyObject *py_dict,
-                                         const char *key,
-                                         const char *option_name,
-                                         uint16_t *value)
-{
-    PyObject *py_value = NULL;
-    int retval =
-        get_pyobject_from_py_dict(err, py_dict, key, option_name, &py_value);
-    if (retval != 1) {
-        return err->code;
-    }
-
-    uint16_t number = convert_pyobject_to_uint16_t(py_value);
     Py_DECREF(py_value);
     if (PyErr_Occurred()) {
         return as_error_update_from_raised_exc(err, AEROSPIKE_ERR_PARAM,
