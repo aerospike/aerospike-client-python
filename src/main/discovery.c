@@ -37,7 +37,11 @@
 #define CONTEXT_CLASS "SeedCandidateContext"
 #define REFRESH_METHOD "refresh_seed_candidates"
 
-enum seed_provider_kind { SEED_PROVIDER_STATIC, SEED_PROVIDER_DNS };
+enum seed_provider_kind {
+    SEED_PROVIDER_STATIC,
+    SEED_PROVIDER_DNS,
+    SEED_PROVIDER_AWS
+};
 
 struct named_enum_value {
     const char *name;
@@ -48,11 +52,14 @@ struct named_enum_value {
 // NULL name.
 struct named_enum {
     bool ignore_case;
-    struct named_enum_value values[4];
+    struct named_enum_value values[5];
 };
 
 // Large enough for the quoted, comma-separated names of any named_enum
 #define NAMED_ENUM_NAMES_SIZE 128
+
+// Large enough for "discovery.aws.filters[<index>].values"
+#define AWS_FILTER_OPTION_SIZE 64
 
 static const struct named_enum merge_policies = {
     false,
@@ -69,10 +76,21 @@ static const struct named_enum execution_modes = {
 
 static const struct named_enum seed_providers = {
     false,
-    {{"static", SEED_PROVIDER_STATIC}, {"dns", SEED_PROVIDER_DNS}, {NULL, 0}}};
+    {{"static", SEED_PROVIDER_STATIC},
+     {"dns", SEED_PROVIDER_DNS},
+     {"aws-tags", SEED_PROVIDER_AWS},
+     {NULL, 0}}};
 
 static const struct named_enum dns_record_types = {
     true, {{"a", AS_DNS_RECORD_A}, {"srv", AS_DNS_RECORD_SRV}, {NULL, 0}}};
+
+static const struct named_enum aws_address_fields = {
+    false,
+    {{"private_ip", AS_AWS_ADDRESS_PRIVATE_IP},
+     {"public_ip", AS_AWS_ADDRESS_PUBLIC_IP},
+     {"private_dns", AS_AWS_ADDRESS_PRIVATE_DNS},
+     {"public_dns", AS_AWS_ADDRESS_PUBLIC_DNS},
+     {NULL, 0}}};
 
 static const struct named_enum translators = {
     false,
@@ -228,6 +246,28 @@ static as_status get_uint32_from_py_dict(as_error *err, PyObject *py_dict,
     return AEROSPIKE_OK;
 }
 
+static as_status get_uint16_from_py_dict(as_error *err, PyObject *py_dict,
+                                         const char *key,
+                                         const char *option_name,
+                                         uint16_t *value)
+{
+    PyObject *py_value = NULL;
+    int retval =
+        get_pyobject_from_py_dict(err, py_dict, key, option_name, &py_value);
+    if (retval != 1) {
+        return err->code;
+    }
+
+    uint16_t number = convert_pyobject_to_uint16_t(py_value);
+    Py_DECREF(py_value);
+    if (PyErr_Occurred()) {
+        return as_error_update_from_raised_exc(err, AEROSPIKE_ERR_PARAM,
+                                               option_name);
+    }
+    *value = number;
+    return AEROSPIKE_OK;
+}
+
 static as_status get_named_enum_value_from_py_dict(
     as_error *err, PyObject *py_dict, const char *key, const char *option_name,
     const struct named_enum *named_enum, int *value)
@@ -346,6 +386,104 @@ static char **get_str_list_from_py_dict(as_error *err, PyObject *py_dict,
 CLEANUP:
     Py_DECREF(py_list);
     return items;
+}
+
+static void free_aws_filters(as_aws_filter *filters, uint32_t size)
+{
+    if (!filters) {
+        return;
+    }
+    for (uint32_t i = 0; i < size; i++) {
+        free((char *)filters[i].name);
+        free_str_list((char **)filters[i].values, filters[i].values_size);
+    }
+    free(filters);
+}
+
+// Copy the filters option, a list of dicts with a name and a list of values.
+// Return NULL if it is not set or on error (with err set). Otherwise free the
+// returned array with free_aws_filters().
+static as_aws_filter *get_aws_filters_from_py_dict(as_error *err,
+                                                   PyObject *py_aws,
+                                                   bool validate_keys,
+                                                   uint32_t *size)
+{
+    PyObject *py_list = NULL;
+    int retval = get_pyobject_from_py_dict(err, py_aws, "filters",
+                                           "discovery.aws.filters", &py_list);
+    if (retval != 1) {
+        return NULL;
+    }
+
+    as_aws_filter *filters = NULL;
+    if (!PyList_Check(py_list)) {
+        as_error_update(
+            err, AEROSPIKE_ERR_PARAM,
+            "discovery.aws.filters must be a list, but a %s was received "
+            "instead",
+            Py_TYPE(py_list)->tp_name);
+        goto CLEANUP;
+    }
+
+    Py_ssize_t list_size = PyList_GET_SIZE(py_list);
+    if (list_size > UINT32_MAX) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "discovery.aws.filters has too many items");
+        goto CLEANUP;
+    }
+
+    // +1 so an empty list never calls calloc(0), which may return NULL. The
+    // entries start zeroed, so free_aws_filters() can free a partial copy.
+    filters = (as_aws_filter *)calloc(list_size + 1, sizeof(as_aws_filter));
+    if (!filters) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to allocate memory for discovery.aws.filters");
+        goto CLEANUP;
+    }
+
+    for (Py_ssize_t i = 0; i < list_size; i++) {
+        PyObject *py_filter = PyList_GET_ITEM(py_list, i);
+
+        char filter_option[AWS_FILTER_OPTION_SIZE];
+        snprintf(filter_option, sizeof(filter_option),
+                 "discovery.aws.filters[%zd]", i);
+        if (check_dict(err, py_filter, filter_option) != AEROSPIKE_OK) {
+            break;
+        }
+        if (check_dict_keys(err, py_filter,
+                            py_client_config_discovery_aws_filter_valid_keys,
+                            validate_keys) != AEROSPIKE_OK) {
+            break;
+        }
+
+        char name_option[AWS_FILTER_OPTION_SIZE];
+        snprintf(name_option, sizeof(name_option),
+                 "discovery.aws.filters[%zd].name", i);
+        filters[i].name =
+            get_str_from_py_dict(err, py_filter, "name", name_option);
+        if (err->code != AEROSPIKE_OK) {
+            break;
+        }
+
+        char values_option[AWS_FILTER_OPTION_SIZE];
+        snprintf(values_option, sizeof(values_option),
+                 "discovery.aws.filters[%zd].values", i);
+        filters[i].values = (const char *const *)get_str_list_from_py_dict(
+            err, py_filter, "values", values_option, &filters[i].values_size);
+        if (err->code != AEROSPIKE_OK) {
+            break;
+        }
+    }
+    if (err->code != AEROSPIKE_OK) {
+        free_aws_filters(filters, (uint32_t)list_size);
+        filters = NULL;
+        goto CLEANUP;
+    }
+    *size = (uint32_t)list_size;
+
+CLEANUP:
+    Py_DECREF(py_list);
+    return filters;
 }
 
 /*******************************************************************************
@@ -865,20 +1003,9 @@ static as_status register_dns_seed_provider(as_error *err, as_config *config,
     }
     dns.record_type = (as_dns_record_type)record_type;
 
-    PyObject *py_port = NULL;
-    if (get_pyobject_from_py_dict(err, py_dns, "port", "discovery.dns.port",
-                                  &py_port) == -1) {
+    if (get_uint16_from_py_dict(err, py_dns, "port", "discovery.dns.port",
+                                &dns.port) != AEROSPIKE_OK) {
         goto CLEANUP;
-    }
-    if (py_port) {
-        uint16_t port = convert_pyobject_to_uint16_t(py_port);
-        Py_DECREF(py_port);
-        if (PyErr_Occurred()) {
-            as_error_update_from_raised_exc(err, AEROSPIKE_ERR_PARAM,
-                                            "discovery.dns.port");
-            goto CLEANUP;
-        }
-        dns.port = port;
     }
 
     tls_name =
@@ -911,12 +1038,105 @@ CLEANUP:
 }
 
 /*******************************************************************************
+ * AWS EC2 seed provider
+ ******************************************************************************/
+
+// A str option of the aws-tags provider. value is the copy that field points
+// to, which is freed after the provider is registered.
+struct aws_str_option {
+    const char *key;
+    const char *option_name;
+    const char **field;
+    char *value;
+};
+
+static as_status register_aws_seed_provider(as_error *err, as_config *config,
+                                            PyObject *py_aws,
+                                            bool validate_keys)
+{
+    as_aws_seed_provider_config aws;
+    as_aws_seed_provider_config_init(&aws);
+    if (!py_aws) {
+        return as_config_set_aws_seed_provider(config, &aws, err);
+    }
+
+    if (check_dict(err, py_aws, "discovery.aws") != AEROSPIKE_OK) {
+        return err->code;
+    }
+    if (check_dict_keys(err, py_aws, py_client_config_discovery_aws_valid_keys,
+                        validate_keys) != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    struct aws_str_option str_options[] = {
+        {"region", "discovery.aws.region", &aws.region, NULL},
+        {"tls_name", "discovery.aws.tls_name", &aws.tls_name, NULL},
+        {"endpoint", "discovery.aws.endpoint", &aws.endpoint, NULL},
+        {"ca_file", "discovery.aws.ca_file", &aws.ca_file, NULL},
+        {"ca_path", "discovery.aws.ca_path", &aws.ca_path, NULL},
+        {"access_key_id", "discovery.aws.access_key_id", &aws.access_key_id,
+         NULL},
+        {"secret_access_key", "discovery.aws.secret_access_key",
+         &aws.secret_access_key, NULL},
+        {"session_token", "discovery.aws.session_token", &aws.session_token,
+         NULL},
+    };
+    size_t str_options_size = sizeof(str_options) / sizeof(str_options[0]);
+    as_aws_filter *filters = NULL;
+
+    for (size_t i = 0; i < str_options_size; i++) {
+        struct aws_str_option *str_option = &str_options[i];
+        str_option->value = get_str_from_py_dict(err, py_aws, str_option->key,
+                                                 str_option->option_name);
+        if (err->code != AEROSPIKE_OK) {
+            goto CLEANUP;
+        }
+        *str_option->field = str_option->value;
+    }
+
+    filters = get_aws_filters_from_py_dict(err, py_aws, validate_keys,
+                                           &aws.filters_size);
+    if (err->code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
+    aws.filters = filters;
+
+    int address_field = aws.address_field;
+    if (get_named_enum_value_from_py_dict(
+            err, py_aws, "address_field", "discovery.aws.address_field",
+            &aws_address_fields, &address_field) != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
+    aws.address_field = (as_aws_address_field)address_field;
+
+    if (get_uint16_from_py_dict(err, py_aws, "port", "discovery.aws.port",
+                                &aws.port) != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
+
+    if (get_uint32_from_py_dict(err, py_aws, "timeout_ms",
+                                "discovery.aws.timeout_ms",
+                                &aws.timeout_ms) != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
+
+    as_config_set_aws_seed_provider(config, &aws, err);
+
+CLEANUP:
+    free_aws_filters(filters, aws.filters_size);
+    for (size_t i = 0; i < str_options_size; i++) {
+        free(str_options[i].value);
+    }
+    return err->code;
+}
+
+/*******************************************************************************
  * Public functions
  ******************************************************************************/
 
 static as_status register_seed_provider(as_error *err, as_config *config,
                                         PyObject *py_provider, PyObject *py_dns,
-                                        bool validate_keys)
+                                        PyObject *py_aws, bool validate_keys)
 {
     bool is_python_provider = py_provider && !PyUnicode_Check(py_provider);
     int provider = SEED_PROVIDER_STATIC;
@@ -932,11 +1152,19 @@ static as_status register_seed_provider(as_error *err, as_config *config,
             err, AEROSPIKE_ERR_PARAM,
             "discovery.dns needs discovery.provider \"dns\"");
     }
+    if (py_aws && provider != SEED_PROVIDER_AWS) {
+        return as_error_update(
+            err, AEROSPIKE_ERR_PARAM,
+            "discovery.aws needs discovery.provider \"aws-tags\"");
+    }
     if (is_python_provider) {
         return register_python_seed_provider(err, config, py_provider);
     }
     if (provider == SEED_PROVIDER_DNS) {
         return register_dns_seed_provider(err, config, py_dns, validate_keys);
+    }
+    if (provider == SEED_PROVIDER_AWS) {
+        return register_aws_seed_provider(err, config, py_aws, validate_keys);
     }
     return AEROSPIKE_OK;
 }
@@ -1003,11 +1231,19 @@ as_status as_discovery_config_init_from_pyobject(as_error *err,
         Py_XDECREF(py_provider);
         return err->code;
     }
+    PyObject *py_aws = NULL;
+    if (get_pyobject_from_py_dict(err, py_discovery, "aws", "discovery.aws",
+                                  &py_aws) == -1) {
+        Py_XDECREF(py_provider);
+        Py_XDECREF(py_dns);
+        return err->code;
+    }
 
-    as_status status =
-        register_seed_provider(err, config, py_provider, py_dns, validate_keys);
+    as_status status = register_seed_provider(err, config, py_provider, py_dns,
+                                              py_aws, validate_keys);
     Py_XDECREF(py_provider);
     Py_XDECREF(py_dns);
+    Py_XDECREF(py_aws);
     return status;
 }
 
