@@ -668,7 +668,8 @@ close_and_destroy_python_seed_provider(PySeedProvider *seed_provider)
 }
 
 // The GIL must be held
-static void py_seed_provider_release(PySeedProvider *seed_provider)
+static void
+release_python_seed_provider_reference(PySeedProvider *seed_provider)
 {
     seed_provider->references--;
     if (seed_provider->references == 0) {
@@ -683,7 +684,7 @@ static void release_python_seed_provider(void *udata)
 {
     PySeedProvider *seed_provider = (PySeedProvider *)udata;
     if (PyGILState_Check()) {
-        py_seed_provider_release(seed_provider);
+        release_python_seed_provider_reference(seed_provider);
         return;
     }
 
@@ -694,7 +695,7 @@ static void release_python_seed_provider(void *udata)
     }
 
     PyGILState_STATE gil_state = PyGILState_Ensure();
-    py_seed_provider_release(seed_provider);
+    release_python_seed_provider_reference(seed_provider);
     PyGILState_Release(gil_state);
 }
 
