@@ -1032,6 +1032,8 @@ The **discovery** dict of the client config controls where the client gets its s
 
     * ``"static"``: the **hosts** of the client config.
     * ``"dns"``: resolve DNS names on every refresh; see **dns**.
+    * ``"aws-tags"``: list the running Amazon EC2 instances that match filters, such as a tag, on every
+      refresh; see **aws** and :ref:`aerospike_discovery_aws`.
     * A :class:`~aerospike_helpers.discovery.SeedCandidateProvider` instance.
 
     Default: ``"static"``
@@ -1052,8 +1054,8 @@ The **discovery** dict of the client config controls where the client gets its s
     * ``"thread"``: on a background thread started by the client.
     * ``"tend"``: on the cluster tend thread, every **refresh_interval_ms**. A refresh that takes longer
       than **tend_refresh_deadline_ms** is discarded, and after 3 such refreshes in a row the provider is
-      no longer refreshed. A :class:`~aerospike_helpers.discovery.SeedCandidateProvider` cannot be used
-      in this mode.
+      no longer refreshed. A :class:`~aerospike_helpers.discovery.SeedCandidateProvider` and the
+      ``"aws-tags"`` provider cannot be used in this mode.
 
     Default: ``"thread"``
 * **refresh_interval_ms** (:class:`int`)
@@ -1085,12 +1087,38 @@ The **discovery** dict of the client config controls where the client gets its s
       Default: ``80``
     * **servers** (:class:`list` [:class:`str`]): the DNS servers, as ``"ip"`` or ``"ip:port"``
       (``"[ipv6]:port"`` for IPv6). Default: the system's DNS servers.
+* **aws** (:class:`dict`)
+    Settings of the ``"aws-tags"`` provider:
+
+    * **region** (:class:`str`): the AWS region of the instances, such as ``"us-east-1"``. Required.
+    * **filters** (:class:`list` [:class:`dict`]): the filters of the EC2 ``DescribeInstances`` request, which
+      an instance must all match. Required, with at least one filter. Each filter has a **name** (:class:`str`),
+      such as ``"tag:Cluster"``, and **values** (:class:`list` [:class:`str`]), of which an instance matches any.
+      A **name** cannot be empty, be ``"instance-state-name"``, which is always ``"running"``, or be used by two
+      filters, and **values** cannot be empty.
+    * **address_field** (:class:`str`): the field of the instance that is the address of the host:
+      ``"private_ip"``, ``"public_ip"``, ``"private_dns"`` or ``"public_dns"``. Default: ``"private_ip"``
+    * **port** (:class:`int`): the port of every host. Default: ``3000``
+    * **tls_name** (:class:`str`): the TLS name of every host. Default: no TLS name.
+    * **timeout_ms** (:class:`int`): the most time one refresh can take, in milliseconds, across all its
+      requests. Must be at most **refresh_timeout_ms**. Default: ``5000``
+    * **endpoint** (:class:`str`): the URL of the EC2 API, for example of a VPC interface endpoint, with the
+      scheme ``"http"`` or ``"https"`` and no query. Default: the regional endpoint
+      ``https://ec2.<region>.amazonaws.com``, or ``https://ec2.<region>.amazonaws.com.cn`` in a ``cn-`` region.
+    * **ca_file** (:class:`str`): a PEM file of the certificate authorities trusted for the HTTPS requests of the
+      provider, which include those for the credentials. Default: the system's certificate authorities.
+    * **ca_path** (:class:`str`): a directory of hashed certificate authority files, trusted in addition to
+      **ca_file**. Default: none.
+    * **access_key_id** (:class:`str`), **secret_access_key** (:class:`str`) and **session_token** (:class:`str`):
+      static AWS credentials. Set **access_key_id** and **secret_access_key** together or not at all, and
+      **session_token** only with both. Default: the credentials chain in :ref:`aerospike_discovery_aws`.
 
 The **execution_mode** values each provider supports:
 
 * ``"static"``: either. It is never refreshed, so it starts no thread.
 * ``"dns"``: ``"thread"`` or ``"tend"``. With ``"tend"``, the **timeout_ms** of **dns** must be at most
   **tend_refresh_deadline_ms**, and with the default of 100 ms only a local DNS server answers in time.
+* ``"aws-tags"``: ``"thread"`` only, because a call to EC2 takes several hundred milliseconds.
 * A :class:`~aerospike_helpers.discovery.SeedCandidateProvider` instance: ``"thread"`` only.
 
 .. _aerospike_discovery_refresh_results:
@@ -1165,6 +1193,58 @@ documentation of the class and its methods.
     }
     client = aerospike.client(config)
 
+.. _aerospike_discovery_aws:
+
+Amazon EC2 Seed Provider
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``"aws-tags"`` provider sends one ``DescribeInstances`` request to the EC2 API on every refresh, plus one per
+additional page, and returns one host for each running instance that matches the **filters**. It lists only the
+instances of the account and region of its credentials, so it is for Aerospike clusters that you run on EC2
+yourself and not for Aerospike Cloud. A refresh that finds no running instance succeeds with no host, which
+:ref:`is used <aerospike_discovery_refresh_results>` like any other result.
+
+The credentials need this IAM policy:
+
+.. code-block:: json
+
+    {
+      "Version": "2012-10-17",
+      "Statement": [{"Effect": "Allow", "Action": ["ec2:DescribeInstances"], "Resource": "*"}]
+    }
+
+The provider uses the first of these sources that has credentials, read once when the client connects:
+
+#. **access_key_id**, **secret_access_key** and **session_token** of **aws**.
+#. The environment variables ``AWS_ACCESS_KEY_ID``, ``AWS_SECRET_ACCESS_KEY`` and ``AWS_SESSION_TOKEN``.
+#. The static keys of the profile ``AWS_PROFILE``, or ``default``, in the file ``AWS_SHARED_CREDENTIALS_FILE``,
+   or ``~/.aws/credentials``.
+#. EKS web identity, with ``AWS_WEB_IDENTITY_TOKEN_FILE`` and ``AWS_ROLE_ARN``.
+#. ECS container credentials, with ``AWS_CONTAINER_CREDENTIALS_RELATIVE_URI`` or
+   ``AWS_CONTAINER_CREDENTIALS_FULL_URI``.
+#. The EC2 instance profile, unless ``AWS_EC2_METADATA_DISABLED`` is ``true``.
+
+AWS SSO, ``credential_process``, profiles with a ``role_arn`` and cross-account roles are not in this chain, and
+this client has no way to supply them. Export their credentials as the environment variables above instead.
+The client logs the source it used once, as ``AWS EC2 seed provider credentials from <source>``, and never logs a
+key, a token or a role name.
+
+If a refresh fails, the message starts with ``AWS EC2 seed provider:``. See
+:ref:`above <aerospike_discovery_refresh_results>` for what the client then does.
+
+.. code-block:: python
+
+    config = {
+        "hosts": [("seed.example.com", 3000)],
+        "discovery": {
+            "provider": "aws-tags",
+            "aws": {
+                "region": "us-east-1",
+                "filters": [{"name": "tag:Cluster", "values": ["prod"]}],
+            },
+        },
+    }
+
 .. _aerospike_discovery_tls:
 
 TLS Name
@@ -1175,7 +1255,7 @@ name. The client authenticates each node as its TLS name, so the server certific
 name of the node and not against the host the client connected to. The TLS name is the one the server reports
 for the node, or the TLS name of a seed host. A seed host without one gets the **cluster_name** of the client
 config, or else its host name. That includes the hosts returned by a
-:class:`~aerospike_helpers.discovery.SeedCandidateProvider` or the ``"dns"`` provider.
+:class:`~aerospike_helpers.discovery.SeedCandidateProvider` or the ``"dns"`` or ``"aws-tags"`` provider.
 
 The client matches the TLS name against the subject alternative names (SAN) of the certificate, as RFC 9525
 describes:

@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2013-2021 Aerospike, Inc.
+* Copyright 2013-2026 Aerospike, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@
 #include "policy.h"
 #include "serializer.h"
 #include "expression_operations.h"
-#include "cdt_operation_utils.h"
+#include "dict_helpers.h"
 
 static as_status add_op_expr_read(AerospikeClient *self, as_error *err,
                                   PyObject *op_dict,
