@@ -42,7 +42,10 @@ as_status as_metrics_policy_add_exporters_from_pyobject(
  * exporters in it. Call this before aerospike_destroy() or as_config_destroy()
  * for a config that had exporters added by
  * as_metrics_policy_add_exporters_from_pyobject(). That ends their lifetime
- * with the C config's. Frees the exporters and the vector.
+ * with the C config's. Frees the exporters and the vector, then sets
+ * metrics_policy->exporters to NULL. That way the as_metrics_policy_destroy()
+ * that aerospike_destroy() and as_config_destroy() call does not free the
+ * vector a second time.
  */
 void as_metrics_policy_destroy_py_exporters(as_metrics_policy *metrics_policy);
 
