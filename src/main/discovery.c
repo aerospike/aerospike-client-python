@@ -584,19 +584,26 @@ call_python_seed_provider(as_error *err, PyObject *py_provider,
     return status;
 }
 
-// The seed provider of one client. The registration holds a reference, and so
-// does every instance the C client builds from it: a sync Client.close()
-// destroys the instance and Client.connect() builds a new one. The provider's
-// close() method runs once the registration and every instance are released.
-// Only accessed with the GIL held.
+// The Python seed provider of one client, shared by the registration and its
+// instances. The registration (as_config_set_binding_seed_provider()) holds a
+// reference, and so does each instance the C client builds from it:
+// Client.close() destroys the current instance and Client.connect() builds a
+// new one. The provider's close() method runs when the last reference is
+// released, which is when the client is destroyed, or later if a refresh is
+// still running then.
+// references is only accessed with the GIL held. py_provider and periodic never
+// change after registration, so the C client's threads read them without it.
 typedef struct {
     PyObject *py_provider;
     bool periodic;
     unsigned int references;
 } PySeedProvider;
 
-// One instance of the seed provider, which the C client owns. Its udata must
-// not be the registration's, so it points to the provider instead of being it.
+// One instance of the seed provider, which the C client owns. The C client
+// tells instances apart by their udata pointer, for example to hold back the
+// destroy of an instance until its running refresh returns, and requires it to
+// differ from the registration's. So each instance has its own udata, which
+// only points to the shared provider and counts as one reference to it.
 typedef struct {
     PySeedProvider *seed_provider;
 } PySeedProviderInstance;
