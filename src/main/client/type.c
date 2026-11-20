@@ -1665,9 +1665,6 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
         }
     }
     py_metrics_exporters_destroy(client->active_metrics_exporters);
-    // The provider is closed once a registration that is still running a
-    // refresh ends too
-    py_seed_provider_release(client->seed_provider);
     self->ob_type->tp_free((PyObject *)self);
 }
 
