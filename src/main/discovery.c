@@ -687,15 +687,15 @@ release_python_seed_provider_reference(PySeedProvider *seed_provider)
 static void release_python_seed_provider(void *udata)
 {
     PySeedProvider *seed_provider = (PySeedProvider *)udata;
-    // Checked first so close() also runs when a client is deallocated while
-    // Python is finalizing
+    // Checked first so the seed provider's close() method also runs when a
+    // client is deallocated while Python is finalizing
     if (PyGILState_Check()) {
         release_python_seed_provider_reference(seed_provider);
         return;
     }
 
-    // PyGILState_Ensure() never returns once Python is finalizing, so the
-    // provider is not closed then
+    // PyGILState_Ensure() never returns once Python is finalizing, so the seed
+    // provider's close() method does not run then
     if (Py_IsFinalizing()) {
         return;
     }
@@ -810,7 +810,7 @@ static as_status register_python_seed_provider(as_error *err, as_config *config,
     }
 
     // The registration holds the first reference. When registering fails, the
-    // provider is freed here without calling close().
+    // provider is freed here without calling its close() method.
     Py_INCREF(py_provider);
     seed_provider->py_callback = py_provider;
     seed_provider->periodic = periodic;
