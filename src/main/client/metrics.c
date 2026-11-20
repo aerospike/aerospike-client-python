@@ -196,7 +196,7 @@ static PyObject *as_metrics_latency_snapshot_to_pyobject(
     return py_latency_snapshot;
 }
 
-static PyObject *as_metrics_latencies_to_pyobject(
+static PyObject *as_metrics_latency_snapshots_to_pyobject(
     as_error *err, const as_metrics_latency_snapshot *latency_snapshots)
 {
     PyObject *py_latencies = PyDict_New();
@@ -263,8 +263,8 @@ static PyObject *as_metrics_namespace_snapshot_to_pyobject(
 
     // namespace_snapshot->latencies is the per-attempt series. Command latency
     // is snapshot->command_latencies.
-    PyObject *py_latencies =
-        as_metrics_latencies_to_pyobject(err, namespace_snapshot->latencies);
+    PyObject *py_latencies = as_metrics_latency_snapshots_to_pyobject(
+        err, namespace_snapshot->latencies);
     if (!py_latencies) {
         goto error;
     }
@@ -532,8 +532,8 @@ as_metrics_snapshot_to_pyobject(as_error *err,
         }
     }
 
-    PyObject *py_command_latencies =
-        as_metrics_latencies_to_pyobject(err, snapshot->command_latencies);
+    PyObject *py_command_latencies = as_metrics_latency_snapshots_to_pyobject(
+        err, snapshot->command_latencies);
     if (!py_command_latencies) {
         goto error;
     }
