@@ -584,6 +584,16 @@ call_python_seed_provider(as_error *err, PyObject *py_provider,
     return status;
 }
 
+// The seed provider of one client, shared with the registrations made for it. A
+// sync Client.close() destroys the registration and Client.connect() registers
+// the provider again, so its close() method runs once the client and every
+// registration are released. Only accessed with the GIL held.
+struct PySeedProvider {
+    PyObject *py_provider;
+    bool periodic;
+    unsigned int references;
+};
+
 // Runs on the C client's discovery thread, which holds no Python thread state
 static as_status
 refresh_python_seed_provider(as_error *err,
@@ -596,14 +606,15 @@ refresh_python_seed_provider(as_error *err,
                                "Python is finalizing");
     }
 
+    PySeedProvider *seed_provider = (PySeedProvider *)udata;
     PyGILState_STATE gil_state = PyGILState_Ensure();
-    as_status status =
-        call_python_seed_provider(err, (PyObject *)udata, context, candidates);
+    as_status status = call_python_seed_provider(
+        err, seed_provider->py_provider, context, candidates);
     PyGILState_Release(gil_state);
     return status;
 }
 
-static void close_python_seed_provider(PyObject *py_provider)
+static void close_python_seed_provider(PySeedProvider *seed_provider)
 {
     // The client may release the provider while an exception is pending
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
@@ -615,14 +626,16 @@ static void close_python_seed_provider(PyObject *py_provider)
     PyErr_Fetch(&py_pending_type, &py_pending, &py_pending_traceback);
 #endif
 
-    PyObject *py_result = PyObject_CallMethod(py_provider, "close", NULL);
+    PyObject *py_result =
+        PyObject_CallMethod(seed_provider->py_provider, "close", NULL);
     if (py_result) {
         Py_DECREF(py_result);
     }
     else {
-        PyErr_WriteUnraisable(py_provider);
+        PyErr_WriteUnraisable(seed_provider->py_provider);
     }
-    Py_DECREF(py_provider);
+    Py_DECREF(seed_provider->py_provider);
+    free(seed_provider);
 
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
     PyErr_SetRaisedException(py_pending);
@@ -631,12 +644,26 @@ static void close_python_seed_provider(PyObject *py_provider)
 #endif
 }
 
-// Runs on the thread destroying the client, which holds the GIL, or on the
-// discovery thread once a refresh that outlived the client returns
+void py_seed_provider_release(PySeedProvider *seed_provider)
+{
+    if (!seed_provider) {
+        return;
+    }
+
+    seed_provider->references--;
+    if (seed_provider->references == 0) {
+        close_python_seed_provider(seed_provider);
+    }
+}
+
+// Runs on the thread that ends a registration, which holds no Python thread
+// state when it is aerospike_close() or aerospike_destroy(), or on the
+// discovery thread once a refresh that outlived the registration returns
 static void release_python_seed_provider(void *udata)
 {
+    PySeedProvider *seed_provider = (PySeedProvider *)udata;
     if (PyGILState_Check()) {
-        close_python_seed_provider((PyObject *)udata);
+        py_seed_provider_release(seed_provider);
         return;
     }
 
@@ -647,12 +674,28 @@ static void release_python_seed_provider(void *udata)
     }
 
     PyGILState_STATE gil_state = PyGILState_Ensure();
-    close_python_seed_provider((PyObject *)udata);
+    py_seed_provider_release(seed_provider);
     PyGILState_Release(gil_state);
 }
 
+as_status py_seed_provider_register(as_error *err, as_config *config,
+                                    PySeedProvider *seed_provider)
+{
+    // The registration owns this reference once it succeeds
+    seed_provider->references++;
+    as_status status = as_config_set_binding_seed_provider(
+        config, Py_TYPE(seed_provider->py_provider)->tp_name,
+        refresh_python_seed_provider, seed_provider->periodic,
+        release_python_seed_provider, seed_provider, err);
+    if (status != AEROSPIKE_OK) {
+        seed_provider->references--;
+    }
+    return status;
+}
+
 static as_status register_python_seed_provider(as_error *err, as_config *config,
-                                               PyObject *py_provider)
+                                               PyObject *py_provider,
+                                               PySeedProvider **seed_provider)
 {
     PyObject *py_module = PyImport_ImportModule(HELPERS_DISCOVERY_MODULE);
     if (!py_module) {
@@ -700,15 +743,27 @@ static as_status register_python_seed_provider(as_error *err, as_config *config,
             "discovery.provider.needs_periodic_refresh() must return a bool");
     }
 
-    // The registration owns this reference once it succeeds
+    PySeedProvider *new_seed_provider = malloc(sizeof(*new_seed_provider));
+    if (!new_seed_provider) {
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Unable to allocate the seed provider");
+    }
+
+    // The client owns the reference that a failed registration leaves
     Py_INCREF(py_provider);
-    as_status status = as_config_set_binding_seed_provider(
-        config, Py_TYPE(py_provider)->tp_name, refresh_python_seed_provider,
-        periodic, release_python_seed_provider, py_provider, err);
+    new_seed_provider->py_provider = py_provider;
+    new_seed_provider->periodic = periodic;
+    new_seed_provider->references = 1;
+    as_status status =
+        py_seed_provider_register(err, config, new_seed_provider);
     if (status != AEROSPIKE_OK) {
         Py_DECREF(py_provider);
+        free(new_seed_provider);
+        return status;
     }
-    return status;
+
+    *seed_provider = new_seed_provider;
+    return AEROSPIKE_OK;
 }
 
 /*******************************************************************************
@@ -802,7 +857,8 @@ CLEANUP:
 
 static as_status register_seed_provider(as_error *err, as_config *config,
                                         PyObject *py_provider, PyObject *py_dns,
-                                        bool validate_keys)
+                                        bool validate_keys,
+                                        PySeedProvider **seed_provider)
 {
     bool is_python_provider = py_provider && !PyUnicode_Check(py_provider);
     int provider = SEED_PROVIDER_STATIC;
@@ -819,7 +875,8 @@ static as_status register_seed_provider(as_error *err, as_config *config,
             "discovery.dns needs discovery.provider \"dns\"");
     }
     if (is_python_provider) {
-        return register_python_seed_provider(err, config, py_provider);
+        return register_python_seed_provider(err, config, py_provider,
+                                             seed_provider);
     }
     if (provider == SEED_PROVIDER_DNS) {
         return register_dns_seed_provider(err, config, py_dns, validate_keys);
@@ -830,7 +887,8 @@ static as_status register_seed_provider(as_error *err, as_config *config,
 as_status as_discovery_config_init_from_pyobject(as_error *err,
                                                  as_config *config,
                                                  PyObject *py_discovery,
-                                                 bool validate_keys)
+                                                 bool validate_keys,
+                                                 PySeedProvider **seed_provider)
 {
     if (check_dict(err, py_discovery, "discovery") != AEROSPIKE_OK) {
         return err->code;
@@ -890,8 +948,8 @@ as_status as_discovery_config_init_from_pyobject(as_error *err,
         return err->code;
     }
 
-    as_status status =
-        register_seed_provider(err, config, py_provider, py_dns, validate_keys);
+    as_status status = register_seed_provider(err, config, py_provider, py_dns,
+                                              validate_keys, seed_provider);
     Py_XDECREF(py_provider);
     Py_XDECREF(py_dns);
     return status;

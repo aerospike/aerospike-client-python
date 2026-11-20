@@ -603,6 +603,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     self->validate_keys = false;
     self->ip_map = NULL;
     self->ip_map_size = 0;
+    self->seed_provider = NULL;
 
     as_config config;
     as_config_init(&config);
@@ -1301,7 +1302,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     }
     else if (retval == 1) {
         as_status status = as_discovery_config_init_from_pyobject(
-            &constructor_err, &config, py_discovery, validate_keys);
+            &constructor_err, &config, py_discovery, validate_keys,
+            &self->seed_provider);
         Py_DECREF(py_discovery);
         if (status != AEROSPIKE_OK) {
             goto RAISE_EXCEPTION_WITH_AS_ERROR;
@@ -1665,6 +1667,9 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
         }
     }
     py_metrics_exporters_destroy(client->active_metrics_exporters);
+    // The provider is closed once a registration that is still running a
+    // refresh ends too
+    py_seed_provider_release(client->seed_provider);
     self->ob_type->tp_free((PyObject *)self);
 }
 

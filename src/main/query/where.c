@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -283,6 +283,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         PyObject *py_err = NULL;
         create_py_tuple_from_as_error(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
+        // PyErr_SetObject() doesn't steal a reference to py_err
+        Py_XDECREF(py_err);
         goto CLEANUP_AS_VALUES_ON_ERROR;
     }
 
