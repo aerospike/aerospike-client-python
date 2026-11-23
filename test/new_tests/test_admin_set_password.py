@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+from .conftest import admin_drop_user_and_poll, admin_create_user_and_poll
 
 
 class TestSetPassword(TestBaseClass):
@@ -22,17 +22,15 @@ class TestSetPassword(TestBaseClass):
         TestSetPassword.Me = self
         self.client = aerospike.client(config).connect(config["user"], config["password"])
         try:
-            self.client.admin_drop_user("testsetpassworduser")
-            time.sleep(2)
+            admin_drop_user_and_poll(self.client, "testsetpassworduser")
         except e.InvalidUser:
             pass
 
         try:
-            self.client.admin_create_user("testsetpassworduser", "aerospike", ["read"])
+            admin_create_user_and_poll(self.client, "testsetpassworduser", "aerospike", ["read"])
         except e.UserExistsError:
             pass
 
-        time.sleep(2)
         self.delete_users = []
 
     def teardown_method(self, method):
@@ -41,8 +39,7 @@ class TestSetPassword(TestBaseClass):
         """
 
         try:
-            self.client.admin_drop_user("testsetpassworduser")
-            time.sleep(2)
+            admin_drop_user_and_poll(self.client, "testsetpassworduser")
         except e.InvalidUser:
             pass
         self.client.close()

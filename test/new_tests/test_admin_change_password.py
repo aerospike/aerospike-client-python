@@ -3,12 +3,13 @@
 import pytest
 import time
 from .test_base_class import TestBaseClass
+from .conftest import admin_create_user_and_poll, admin_drop_user_and_poll
 
 import aerospike
 
 
 @pytest.mark.usefixtures("connection_config")
-class TestChangePassword(object):
+class TestChangePassword:
     def setup_method(self, method):
         """
         Setup method
@@ -20,10 +21,9 @@ class TestChangePassword(object):
         self.client = aerospike.client(config).connect(config["user"], config["password"])
 
         try:
-            self.client.admin_create_user("testchangepassworduser", "aerospike", ["read"])
-            time.sleep(2)
+            admin_create_user_and_poll(self.client, "testchangepassworduser", "aerospike", ["read"])
         except aerospike.exception.UserExistsError:
-            pass  # we are good, no such role exists
+            pass  # The user already exists, so use it as is
         self.delete_users = []
 
     def teardown_method(self, method):
@@ -32,7 +32,7 @@ class TestChangePassword(object):
         """
 
         try:
-            self.client.admin_drop_user("testchangepassworduser")
+            admin_drop_user_and_poll(self.client, "testchangepassworduser")
         except Exception:
             pass
 
@@ -56,8 +56,6 @@ class TestChangePassword(object):
         status = self.clientreaduser.admin_change_password(user, password)
 
         assert status == 0
-
-        time.sleep(2)
         config = self.connection_config
 
         # Assert that connecting to the server with the old password fails
