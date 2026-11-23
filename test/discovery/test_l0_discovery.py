@@ -7,10 +7,12 @@ without an ID are last.
 
 import gc
 import os
+import ssl
 import subprocess
 import sys
 import threading
 import time
+from pathlib import Path
 from typing import Any, Optional
 
 import pytest
@@ -22,6 +24,16 @@ from aerospike_helpers.discovery import SeedCandidateContext, SeedCandidateProvi
 UNREACHABLE = ("127.0.0.1", 1)
 TEND_INTERVAL_MS = 250
 OFFLINE = {"hosts": [UNREACHABLE], "fail_if_not_connected": False, "tend_interval": TEND_INTERVAL_MS}
+
+# The options of the aws-tags provider. The endpoint is one that nothing listens on and the credentials
+# are static, so a refresh never sends a request to AWS or looks for credentials.
+AWS = {
+    "region": "us-east-1",
+    "filters": [{"name": "tag:Cluster", "values": ["test"]}],
+    "endpoint": f"http://{UNREACHABLE[0]}:{UNREACHABLE[1]}",
+    "access_key_id": "AKIAEXAMPLE",
+    "secret_access_key": "secret",
+}
 
 
 class SeedProvider(SeedCandidateProvider):
@@ -291,6 +303,11 @@ def test_u3_default_construction_adds_no_thread() -> None:
     assert provider == default + 1
 
 
+def aws_config(**changes: Any) -> dict[str, Any]:
+    """Return a discovery config for the aws-tags provider, with the options of AWS changed by changes."""
+    return {"discovery": {"provider": "aws-tags", "aws": {**AWS, **changes}}}
+
+
 # U-4: the binding accepts the dns provider's config. The C client tests resolution.
 def test_u4_dns_provider_config_accepted() -> None:
     dns = {"names": ["provider.test"], "record_type": "SRV", "port": 3100, "tls_name": "db", "timeout_ms": 50,
@@ -306,12 +323,122 @@ def test_u4_dns_record_type_accepts_either_case(record_type: str) -> None:
     client.close()
 
 
+# U-4 for the aws-tags provider: the binding accepts its config and passes every option to the C client,
+# which tests the provider itself. The option errors show each option reaches its field, because the
+# C client names the value it rejected.
+def test_u4_aws_provider_config_accepted(tmp_path: Path) -> None:
+    aws = {
+        "region": "eu-west-2",
+        "filters": [{"name": "tag:Cluster", "values": ["a", "b"]}, {"name": "tag:Role", "values": ["db"]}],
+        "address_field": "public_dns",
+        "port": 3100,
+        "tls_name": "db",
+        "timeout_ms": 50,
+        "endpoint": AWS["endpoint"],
+        "ca_path": str(tmp_path),
+        "access_key_id": "AKIAEXAMPLE",
+        "secret_access_key": "secret",
+        "session_token": "token",
+    }
+    client = aerospike.client({**OFFLINE, "validate_keys": True, **aws_config(**aws)})
+    client.close()
+
+
+@pytest.mark.parametrize("address_field", ["private_ip", "public_ip", "private_dns", "public_dns"])
+def test_u4_aws_address_field_accepts_every_name(address_field: str) -> None:
+    client = aerospike.client({**OFFLINE, **aws_config(address_field=address_field)})
+    client.close()
+
+
+def test_u4_aws_ca_file_accepted() -> None:
+    ca_file = ssl.get_default_verify_paths().cafile
+    if not ca_file or not os.path.isfile(ca_file):
+        pytest.skip("Python has no default CA file")
+    client = aerospike.client({**OFFLINE, **aws_config(ca_file=ca_file)})
+    client.close()
+
+
+def test_u4_aws_ca_file_unreadable(tmp_path: Path) -> None:
+    message = client_raises(e.TLSError, {**OFFLINE, **aws_config(ca_file=str(tmp_path / "missing.pem"))})
+    assert "ca_file" in message
+
+
+# A refresh that fails keeps the configured seeds. Without any, the failure names the provider and the
+# endpoint, which shows the refresh ran with the options of the config.
+def test_u4_aws_failed_refresh_without_seeds() -> None:
+    message = client_raises(e.SeedDiscoveryFailed, {"hosts": [], **aws_config()})
+    assert "AWS EC2 seed provider:" in message
+
+
+def test_u4_aws_failed_refresh_keeps_configured_seeds(warnings: list[str]) -> None:
+    client = aerospike.client({**OFFLINE, **aws_config()})
+    client.close()
+    assert any(message.startswith(SEED_CONNECT_WARNING) for message in warnings), warnings
+
+
+@pytest.mark.parametrize(
+    "changes, message",
+    [
+        ({"region": None}, "Invalid AWS EC2 seed provider region: '(null)'"),
+        ({"region": ""}, "Invalid AWS EC2 seed provider region: ''"),
+        ({"region": "US_EAST"}, "Invalid AWS EC2 seed provider region: 'US_EAST'"),
+        ({"region": 5}, "discovery.aws.region: TypeError"),
+        ({"filters": None}, "Invalid AWS EC2 seed provider filters: at least one filter is required"),
+        ({"filters": []}, "Invalid AWS EC2 seed provider filters: at least one filter is required"),
+        ({"filters": "tag:Cluster"}, "discovery.aws.filters must be a list"),
+        ({"filters": ["tag:Cluster"]}, "discovery.aws.filters[0] must be a dict"),
+        ({"filters": [{"name": "a", "values": ["b"], "bogus": 1}]},
+         '"bogus" is an invalid client config dictionary key'),
+        ({"filters": [{"values": ["b"]}]}, "Invalid AWS EC2 seed provider filter name: '(null)'"),
+        ({"filters": [{"name": "", "values": ["b"]}]}, "Invalid AWS EC2 seed provider filter name: ''"),
+        ({"filters": [{"name": 5, "values": ["b"]}]}, "discovery.aws.filters[0].name: TypeError"),
+        ({"filters": [{"name": "instance-state-name", "values": ["stopped"]}]},
+         "Invalid AWS EC2 seed provider filter name: 'instance-state-name'"),
+        ({"filters": [{"name": "a", "values": ["b"]}, {"name": "a", "values": ["c"]}]},
+         "Invalid AWS EC2 seed provider filter name: 'a': duplicate"),
+        ({"filters": [{"name": "a"}]}, "Invalid AWS EC2 seed provider filter 'a' values: empty"),
+        ({"filters": [{"name": "a", "values": []}]}, "Invalid AWS EC2 seed provider filter 'a' values: empty"),
+        ({"filters": [{"name": "a", "values": [""]}]}, "Invalid AWS EC2 seed provider filter 'a' value: ''"),
+        ({"filters": [{"name": "a", "values": "b"}]}, "discovery.aws.filters[0].values must be a list"),
+        ({"filters": [{"name": "a", "values": [5]}]}, "discovery.aws.filters[0].values: TypeError"),
+        ({"address_field": "dns"}, "discovery.aws.address_field must be"),
+        ({"address_field": "PRIVATE_IP"}, "discovery.aws.address_field must be"),
+        ({"port": 0}, "Invalid AWS EC2 seed provider port: 0"),
+        ({"port": 70000}, "discovery.aws.port: ValueError"),
+        ({"tls_name": ""}, "Invalid AWS EC2 seed provider tls_name: empty"),
+        ({"tls_name": 5}, "discovery.aws.tls_name: TypeError"),
+        ({"timeout_ms": 0}, "Invalid AWS EC2 seed provider timeout_ms: 0"),
+        ({"timeout_ms": 2**32}, "discovery.aws.timeout_ms: ValueError"),
+        ({"endpoint": "ftp://127.0.0.1"}, "Invalid AWS EC2 seed provider endpoint: 'ftp://127.0.0.1'"),
+        ({"endpoint": "http://127.0.0.1:1?a=b"}, "Invalid AWS EC2 seed provider endpoint: 'http://127.0.0.1:1?a=b'"),
+        ({"ca_file": ""}, "Invalid AWS EC2 seed provider ca_file: empty"),
+        ({"ca_path": ""}, "Invalid AWS EC2 seed provider ca_path: empty"),
+        ({"secret_access_key": None}, "Invalid AWS EC2 seed provider credentials: secret_access_key is empty"),
+        ({"access_key_id": None}, "Invalid AWS EC2 seed provider credentials: access_key_id is empty"),
+        ({"access_key_id": None, "secret_access_key": None, "session_token": "token"},
+         "Invalid AWS EC2 seed provider credentials: session_token requires access_key_id and secret_access_key"),
+        ({"access_key_id": "AKIA-EXAMPLE"}, "Invalid AWS EC2 seed provider access_key_id: expected letters and digits"),
+        ({"secret_access_key": "se cret\n"}, "Invalid AWS EC2 seed provider secret_access_key: invalid character"),
+        ({"session_token": "to\x01ken"}, "Invalid AWS EC2 seed provider session_token: invalid character"),
+    ],
+)
+def test_u4_aws_invalid_option(changes: dict[str, Any], message: str) -> None:
+    actual = client_raises(e.ParamError, {**OFFLINE, "validate_keys": True, **aws_config(**changes)})
+    assert message in actual
+
+
+def test_u4_aws_must_be_a_dict() -> None:
+    message = client_raises(e.ParamError, {**OFFLINE, "discovery": {"provider": "aws-tags", "aws": []}})
+    assert "discovery.aws must be a dict" in message
+
+
 # U-5 and every other option that takes a name: each documented name is accepted
 @pytest.mark.parametrize(
     "config",
     [{"discovery": {"merge_policy": name}} for name in ("merge", "replace", "discovery_only")]
     + [{"discovery": {"execution_mode": name}} for name in ("thread", "tend")]
     + [{"discovery": {"provider": "static"}}]
+    + [{"discovery": {"provider": "aws-tags", "aws": AWS}}]
     + [{"translation": {"provider": name}} for name in ("static-map", "port-map", "pass-through")]
     + [{"translation": {"on_miss": name}} for name in ("pass_through", "strict")],
 )
@@ -359,7 +486,7 @@ def test_hosts_needed_without_provider() -> None:
         ({"discovery": {"provider": "dns", "dns": {"bogus": 1}}}, '"bogus" is an invalid client config dictionary key'),
         ({"translation": {"bogus": 1}}, '"bogus" is an invalid client config dictionary key'),
         ({"discovery": []}, "discovery must be a dict"),
-        ({"discovery": {"provider": "aws-tags"}}, "discovery.provider must be"),
+        ({"discovery": {"provider": "zookeeper"}}, "discovery.provider must be"),
         ({"discovery": {"provider": object()}}, "SeedCandidateProvider"),
         ({"discovery": {"merge_policy": "first"}}, "discovery.merge_policy must be"),
         ({"discovery": {"execution_mode": "process"}}, "discovery.execution_mode must be"),
@@ -378,6 +505,19 @@ def test_hosts_needed_without_provider() -> None:
         ({"discovery": {"provider": "dns", "dns": {"names": ["a.test"], "port": 70000}}},
          "discovery.dns.port: ValueError"),
         ({"discovery": {"provider": "dns", "dns": {"names": ["a.test"], "record_type": "mx"}}}, "record_type"),
+        ({"discovery": {"provider": "aws-tags"}}, "Invalid AWS EC2 seed provider region: '(null)'"),
+        ({"discovery": {"aws": AWS}}, 'discovery.aws needs discovery.provider "aws-tags"'),
+        ({"discovery": {"provider": "dns", "aws": AWS, "dns": {"names": ["a.test"]}}},
+         'discovery.aws needs discovery.provider "aws-tags"'),
+        ({"discovery": {"provider": SeedProvider(), "aws": AWS}}, 'discovery.aws needs discovery.provider "aws-tags"'),
+        ({"discovery": {"provider": "aws-tags", "dns": {"names": ["a.test"]}, "aws": AWS}},
+         'discovery.dns needs discovery.provider "dns"'),
+        ({"discovery": {"provider": "aws-tags", "execution_mode": "tend", "aws": AWS}},
+         "AWS EC2 seed provider requires thread execution mode"),
+        ({"discovery": {"provider": "aws-tags", "refresh_timeout_ms": 1000, "aws": {**AWS, "timeout_ms": 2000}}},
+         "timeout_ms"),
+        ({"use_shared_connection": True, "discovery": {"provider": "aws-tags", "aws": AWS}},
+         "use_shared_connection"),
         ({"translation": {"provider": "custom"}}, "translation.provider must be"),
         ({"translation": {"on_miss": "fail"}}, "translation.on_miss must be"),
         ({"translation": {"provider": "pass-through", "port_map": {}}}, 'needs translation.provider "port-map"'),
