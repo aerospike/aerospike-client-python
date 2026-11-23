@@ -132,6 +132,15 @@ as_status get_uint32_from_py_dict(
     uint32_t *value
 );
 
+// Same as get_uint32_from_py_dict(), but for a uint16_t.
+as_status get_uint16_from_py_dict(
+    as_error *err,
+    PyObject *py_dict,
+    const char *key,
+    const char *option_name,
+    uint16_t *value
+);
+
 // clang-format on
 
 as_status get_list_return_type(as_error *err, PyObject *op_dict,

@@ -825,20 +825,9 @@ static as_status register_dns_seed_provider(as_error *err, as_config *config,
     }
     dns.record_type = (as_dns_record_type)record_type;
 
-    PyObject *py_port = NULL;
-    if (get_pyobject_from_py_dict(err, py_dns, "port", "discovery.dns.port",
-                                  &py_port) == -1) {
+    if (get_uint16_from_py_dict(err, py_dns, "port", "discovery.dns.port",
+                                &dns.port) != AEROSPIKE_OK) {
         goto CLEANUP;
-    }
-    if (py_port) {
-        uint16_t port = convert_pyobject_to_uint16_t(py_port);
-        Py_DECREF(py_port);
-        if (PyErr_Occurred()) {
-            as_error_update_from_raised_exc(err, AEROSPIKE_ERR_PARAM,
-                                            "discovery.dns.port");
-            goto CLEANUP;
-        }
-        dns.port = port;
     }
 
     tls_name =
