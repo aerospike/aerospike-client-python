@@ -30,7 +30,7 @@
 #include "serializer.h"
 #include "exceptions.h"
 #include "policy.h"
-#include "cdt_operation_utils.h"
+#include "dict_helpers.h"
 #include "geo.h"
 #include "cdt_types.h"
 #include "key_ordered_dict.h"
