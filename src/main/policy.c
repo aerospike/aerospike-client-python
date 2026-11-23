@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@
 #include "policy.h"
 #include "macros.h"
 #include "policy_config.h"
-#include "cdt_operation_utils.h"
+#include "dict_helpers.h"
 
 #define MAP_WRITE_FLAGS_KEY "map_write_flags"
 #define BIT_WRITE_FLAGS_KEY "bit_write_flags"
