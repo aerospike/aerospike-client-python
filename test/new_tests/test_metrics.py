@@ -1,12 +1,28 @@
 from aerospike import exception as e
-from aerospike_helpers.metrics import MetricsPolicy, MetricsListeners, Cluster, Node, ConnectionStats, NamespaceMetrics
+from aerospike_helpers.metrics import (
+    MetricsPolicy,
+    MetricsListeners,
+    Cluster,
+    Node,
+    ConnectionStats,
+    NamespaceMetrics,
+    MetricsSnapshot,
+    NodeSnapshot,
+    NamespaceSnapshot,
+    LatencySnapshot,
+    LATENCY_MILLISECONDS,
+    LATENCY_MICROSECONDS,
+)
 import pytest
+import gc
 import shutil
 import glob
 import os
+import threading
 import time
 from typing import Optional
 import re
+import weakref
 import aerospike
 from .test_base_class import TestBaseClass
 from importlib.metadata import version
@@ -354,6 +370,36 @@ class TestMetrics:
                 "latency_shift",
                 "unsigned 8-bit integer"
             ),
+            (
+                MetricsPolicy(latency_unit="ms"),
+                "latency_unit",
+                "unsigned 8-bit integer"
+            ),
+            (
+                MetricsPolicy(operational_enabled=1),
+                "operational_enabled",
+                "bool or None"
+            ),
+            (
+                MetricsPolicy(usage_enabled="yes"),
+                "usage_enabled",
+                "bool"
+            ),
+            (
+                MetricsPolicy(export_interval=30),
+                "export_interval",
+                "str"
+            ),
+            (
+                MetricsPolicy(sampler_range="1"),
+                "sampler_range",
+                "unsigned 32-bit integer"
+            ),
+            (
+                MetricsPolicy(sampler_threshold="1"),
+                "sampler_threshold",
+                "unsigned 32-bit integer"
+            ),
             # Invalid labels
             (
                 MetricsPolicy(labels={1: "a"}),
@@ -389,6 +435,61 @@ class TestMetrics:
             self.as_connection.enable_metrics(policy=policy)
         assert excinfo.value.msg == "MetricsPolicy.report_dir must be less than 256 chars"
 
+    def test_metrics_policy_export_interval_too_long(self):
+        policy = MetricsPolicy(export_interval="1" * 32)
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.enable_metrics(policy=policy)
+        assert excinfo.value.msg == "MetricsPolicy.export_interval must be less than 32 chars"
+
+    def test_metrics_policy_export_interval_must_be_a_duration(self):
+        policy = MetricsPolicy(export_interval="30x")
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.enable_metrics(policy=policy)
+        assert excinfo.value.msg == "Invalid metrics export_interval"
+
+    def test_metrics_policy_sampler_range_must_be_at_least_one(self) -> None:
+        policy = MetricsPolicy(sampler_range=0, sampler_threshold=0)
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.enable_metrics(policy=policy)
+        assert excinfo.value.msg == "MetricsPolicy.sampler_range must be at least 1"
+
+    def test_metrics_policy_sampler_threshold_must_not_exceed_range(self) -> None:
+        policy = MetricsPolicy(sampler_range=10, sampler_threshold=11)
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.enable_metrics(policy=policy)
+        assert excinfo.value.msg == (
+            "MetricsPolicy.sampler_threshold must be less than or equal to sampler_range"
+        )
+
+    def test_set_sampler_probability(self):
+        policy = MetricsPolicy()
+        policy.set_sampler_probability(0.1)
+        assert policy.sampler_range == 1000000
+        assert policy.sampler_threshold == 100000
+
+        with pytest.raises(ValueError):
+            policy.set_sampler_probability(1.1)
+        with pytest.raises(TypeError):
+            policy.set_sampler_probability(True)
+
+    @pytest.mark.parametrize(
+        "probability, exception_type, message",
+        [
+            (True, TypeError, "sampler probability must be a float, not a bool"),
+            ("0.5", TypeError, "sampler probability must be a float, not str"),
+            (float("nan"), ValueError, "sampler probability must not be NaN"),
+            (1.1, ValueError, "sampler probability must be from 0 through 1, got 1.1"),
+            (-0.1, ValueError, "sampler probability must be from 0 through 1, got -0.1"),
+        ]
+    )
+    def test_set_sampler_probability_invalid(
+        self, probability: object, exception_type: type[Exception], message: str
+    ) -> None:
+        policy = MetricsPolicy()
+        with pytest.raises(exception_type) as excinfo:
+            policy.set_sampler_probability(probability)
+        assert str(excinfo.value) == message
+
     # Use default metrics writer implementation
     # We are checking that enable_metrics() does not seg fault
     def test_enable_metrics_with_invalid_report_size_limit(self):
@@ -403,6 +504,594 @@ class TestMetrics:
     def test_disable_metrics_invalid_args(self):
         with pytest.raises(TypeError):
             self.as_connection.disable_metrics(1)
+
+    def test_metrics_listeners_deprecated(self):
+        with pytest.warns(DeprecationWarning, match="MetricsListeners is deprecated"):
+            MetricsListeners(
+                enable_listener=MyMetricsListeners.enable,
+                disable_listener=MyMetricsListeners.disable,
+                node_close_listener=MyMetricsListeners.node_close,
+                snapshot_listener=MyMetricsListeners.snapshot,
+            )
+
+    def test_add_exporter_requires_export_method(self) -> None:
+        policy = MetricsPolicy(report_dir="")
+        with pytest.raises(TypeError, match=r"exporter must have an export\(snapshot\) method"):
+            policy.add_exporter(object())
+
+    def test_add_exporter_requires_callable_export(self) -> None:
+        class NotCallableExporter:
+            export = 1
+
+        policy = MetricsPolicy(report_dir="")
+        with pytest.raises(TypeError, match=r"exporter\.export must be callable"):
+            policy.add_exporter(NotCallableExporter())
+
+    def test_metrics_policy_exporters_entry_requires_export_method(self) -> None:
+        class ValidExporter:
+            def export(self, snapshot: MetricsSnapshot) -> None:
+                pass
+
+        policy = MetricsPolicy(report_dir="")
+        policy.exporters = [ValidExporter(), object()]
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.enable_metrics(policy=policy)
+        assert excinfo.value.msg == "MetricsPolicy.exporters[1] must have an export method"
+        # The failed attribute lookup is chained to the exception we raise
+        assert isinstance(excinfo.value.__context__, AttributeError)
+
+    def test_metrics_policy_exporters_entry_export_lookup_raises(self) -> None:
+        class RaisingExporter:
+            @property
+            def export(self) -> None:
+                raise RuntimeError("export lookup failed")
+
+        policy = MetricsPolicy(report_dir="")
+        policy.exporters = [RaisingExporter()]
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.enable_metrics(policy=policy)
+        assert excinfo.value.msg == "MetricsPolicy.exporters[0] must have an export method"
+        assert isinstance(excinfo.value.__context__, RuntimeError)
+        assert str(excinfo.value.__context__) == "export lookup failed"
+
+    def test_metrics_policy_exporters_entry_requires_callable_export(self) -> None:
+        class NotCallableExporter:
+            export = 1
+
+        policy = MetricsPolicy(report_dir="")
+        policy.exporters = [NotCallableExporter()]
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.enable_metrics(policy=policy)
+        assert excinfo.value.msg == "MetricsPolicy.exporters[0].export must be callable"
+
+    def test_exporter_receives_snapshot(self):
+        snapshots = []
+
+        class RecordingExporter:
+            def export(self, snapshot):
+                snapshots.append(snapshot)
+
+        policy = MetricsPolicy(
+            report_dir="",
+            interval=1,
+            labels={"region": "test"},
+            operational_enabled=True,
+        )
+        policy.add_exporter(RecordingExporter())
+        self.as_connection.enable_metrics(policy)
+        time.sleep(3)
+        self.as_connection.disable_metrics()
+
+        assert snapshots
+        live = [item for item in snapshots if item.metrics_enabled]
+        assert live
+        snapshot = live[-1]
+        assert isinstance(snapshot, MetricsSnapshot)
+        assert snapshot.client_type == "python"
+        assert snapshot.operational_metrics_enabled is True
+        assert snapshot.usage_metrics_enabled is False
+        assert snapshot.labels == {"region": "test"}
+        assert snapshot.latency_columns == 7
+        assert snapshot.latency_shift == 1
+        assert snapshot.latency_unit == LATENCY_MILLISECONDS
+        assert isinstance(snapshot.mem, int)
+        assert isinstance(snapshot.validation_open_failures, int)
+        assert isinstance(snapshot.validation_tls_handshake_failures, int)
+        assert isinstance(snapshot.validation_auth_failures, int)
+        assert isinstance(snapshot.api_blocking, int)
+        assert isinstance(snapshot.api_deferred, int)
+        assert isinstance(snapshot.api_background, int)
+        assert isinstance(snapshot.nodes, list)
+        assert snapshot.nodes_departed == [] or isinstance(snapshot.nodes_departed, list)
+        assert snapshot.nodes_departed_possibly_truncated is False
+        assert set(snapshot.command_latencies) == {"conn", "write", "read", "batch", "query"}
+        for latency in snapshot.command_latencies.values():
+            assert isinstance(latency, LatencySnapshot)
+            assert len(latency.buckets) == 7
+        assert sum(snapshot.command_latencies["conn"].buckets) == 0
+        assert isinstance(snapshot.app_id, str) and snapshot.app_id
+        for node in snapshot.nodes:
+            assert isinstance(node, NodeSnapshot)
+            assert isinstance(node.sync, ConnectionStats)
+            assert not hasattr(node, "async_conns")
+            assert isinstance(node.conn_open_failures, int)
+            assert isinstance(node.conn_tls_handshake_failures, int)
+            assert isinstance(node.conn_auth_failures, int)
+            assert isinstance(node.conn_latency, LatencySnapshot)
+            assert len(node.conn_latency.buckets) == 7
+            for namespace in node.namespaces:
+                assert isinstance(namespace, NamespaceSnapshot)
+                assert isinstance(namespace.client_timeouts, int)
+                assert isinstance(namespace.server_timeouts, int)
+                assert isinstance(namespace.record_too_big, int)
+                assert isinstance(namespace.device_overload, int)
+                assert set(namespace.latencies) == {"conn", "write", "read", "batch", "query"}
+                for latency in namespace.latencies.values():
+                    assert isinstance(latency, LatencySnapshot)
+                assert sum(namespace.latencies["conn"].buckets) == 0
+
+        assert glob.glob("./metrics-*.log") == []
+
+    def test_exporter_failure_does_not_stop_the_next_exporter(self):
+        calls = []
+
+        class FailingExporter:
+            def export(self, snapshot):
+                calls.append("fail")
+                raise RuntimeError("exporter failed")
+
+        class RecordingExporter:
+            def export(self, snapshot):
+                calls.append("ok")
+
+        policy = MetricsPolicy(report_dir="", interval=1)
+        policy.add_exporter(FailingExporter())
+        policy.add_exporter(RecordingExporter())
+        self.as_connection.enable_metrics(policy)
+        time.sleep(3)
+        self.as_connection.disable_metrics()
+
+        assert "fail" in calls
+        assert "ok" in calls
+
+    def test_exporter_exception_is_not_left_pending_for_disable_metrics(self) -> None:
+        # disable_metrics() runs the final export on the calling thread. If the exception raised by the exporter
+        # stayed pending, disable_metrics() would fail with a SystemError.
+        exported: list[MetricsSnapshot] = []
+
+        class RaisingExporter:
+            def export(self, snapshot: MetricsSnapshot) -> None:
+                exported.append(snapshot)
+                raise RuntimeError("exporter failed")
+
+        policy = MetricsPolicy(report_dir="", interval=60)
+        policy.add_exporter(RaisingExporter())
+        self.as_connection.enable_metrics(policy)
+        self.as_connection.disable_metrics()
+
+        assert exported
+
+    def test_shared_connection_keeps_config_exporters_after_creating_client_is_deleted(self) -> None:
+        # The shared aerospike object keeps the config of the client that created it, including its exporters.
+        # They have to outlive that client, not just the cluster that is closed with the last client.
+        exported: list[MetricsSnapshot] = []
+
+        class RecordingExporter:
+            def export(self, snapshot: MetricsSnapshot) -> None:
+                exported.append(snapshot)
+
+        exporter = RecordingExporter()
+        exporter_ref = weakref.ref(exporter)
+        policy = MetricsPolicy(report_dir="", interval=60)
+        policy.add_exporter(exporter)
+        policies = TestBaseClass.get_policies_info()
+        policies["metrics"] = policy
+
+        creator = TestBaseClass.get_new_connection({"use_shared_connection": True, "policies": policies})
+        sharer = TestBaseClass.get_new_connection({"use_shared_connection": True})
+        try:
+            creator.close()
+            sharer.close()
+            del creator
+            del exporter, policy, policies
+            gc.collect()
+            # The sharer reconnects with the aerospike object that the creator made
+            assert exporter_ref() is not None
+
+            sharer.connect()
+            sharer.enable_metrics()
+            sharer.disable_metrics()
+            assert exported
+        finally:
+            sharer.close()
+
+    @pytest.mark.parametrize("end_with", ["disable_metrics", "close"])
+    def test_shared_connection_keeps_active_exporters_after_installing_client_is_deleted(
+        self, end_with: str
+    ) -> None:
+        # The cluster of a shared connection outlives any one client. The exporters passed to enable_metrics()
+        # have to stay alive until the cluster stops calling them, not until the client that passed them is deleted.
+        exported: list[MetricsSnapshot] = []
+
+        class RecordingExporter:
+            def export(self, snapshot: MetricsSnapshot) -> None:
+                exported.append(snapshot)
+
+        exporter = RecordingExporter()
+        exporter_ref = weakref.ref(exporter)
+        policy = MetricsPolicy(report_dir="", interval=60)
+        policy.add_exporter(exporter)
+
+        installer = TestBaseClass.get_new_connection({"use_shared_connection": True})
+        other = TestBaseClass.get_new_connection({"use_shared_connection": True})
+        try:
+            installer.enable_metrics(policy=policy)
+            installer.close()
+            del installer
+            del exporter, policy
+            gc.collect()
+            assert exporter_ref() is not None
+
+            if end_with == "disable_metrics":
+                other.disable_metrics()
+                assert exported
+            else:
+                other.close()
+            gc.collect()
+            assert exporter_ref() is None
+        finally:
+            other.close()
+
+    def test_latency_unit_must_be_a_known_value(self):
+        policy = MetricsPolicy(latency_unit=2)
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.enable_metrics(policy)
+        assert excinfo.value.msg == (
+            "MetricsPolicy.latency_unit must be "
+            "LATENCY_MILLISECONDS or LATENCY_MICROSECONDS"
+        )
+
+    def test_get_metrics_snapshot(self):
+        before = self.as_connection.get_metrics_snapshot()
+        assert isinstance(before, MetricsSnapshot)
+        assert before.metrics_enabled is False
+        assert before.operational_metrics_enabled is False
+        assert before.usage_metrics_enabled is False
+        assert before.nodes_departed == []
+        assert before.latency_unit == LATENCY_MILLISECONDS
+
+        policy = MetricsPolicy(
+            report_dir="",
+            operational_enabled=True,
+            usage_enabled=True,
+            latency_unit=LATENCY_MICROSECONDS,
+        )
+        self.as_connection.enable_metrics(policy)
+        key = ("test", "metrics", "usage")
+        try:
+            self.as_connection.put(key, {"a": 1})
+            snapshot = self.as_connection.get_metrics_snapshot()
+        finally:
+            self.as_connection.disable_metrics()
+            self.as_connection.remove(key)
+
+        assert snapshot.metrics_enabled is True
+        assert snapshot.operational_metrics_enabled is True
+        assert snapshot.usage_metrics_enabled is True
+        assert snapshot.api_blocking >= 1
+        assert snapshot.api_deferred == 0
+        assert isinstance(snapshot.api_background, int)
+        assert snapshot.latency_unit == LATENCY_MICROSECONDS
+        assert snapshot.nodes_departed == []
+        assert snapshot.nodes_departed_possibly_truncated is False
+        assert set(snapshot.command_latencies) == {"conn", "write", "read", "batch", "query"}
+        for node in snapshot.nodes:
+            assert isinstance(node.conn_open_failures, int)
+            assert isinstance(node.conn_tls_handshake_failures, int)
+            assert isinstance(node.conn_auth_failures, int)
+
+    @pytest.mark.parametrize(
+        "snapshot_class, attribute_name",
+        [
+            (MetricsSnapshot, "timestamp"),
+            (LatencySnapshot, "buckets"),
+            (NodeSnapshot, "name"),
+            (NamespaceSnapshot, "name"),
+        ]
+    )
+    def test_get_metrics_snapshot_names_the_snapshot_type_that_failed(
+        self, monkeypatch: pytest.MonkeyPatch, snapshot_class: type, attribute_name: str
+    ) -> None:
+        def reject_attribute(self, name: str, value: object) -> None:
+            raise AttributeError(name)
+
+        # Operational metrics and a command give the node a namespace snapshot.
+        policy = MetricsPolicy(report_dir="", operational_enabled=True)
+        self.as_connection.enable_metrics(policy)
+        key = ("test", "metrics", "snapshot-type-error")
+        try:
+            self.as_connection.put(key, {"a": 1})
+            with monkeypatch.context() as patch:
+                patch.setattr(snapshot_class, "__setattr__", reject_attribute)
+                with pytest.raises(e.ClientError) as excinfo:
+                    self.as_connection.get_metrics_snapshot()
+        finally:
+            self.as_connection.disable_metrics()
+            self.as_connection.remove(key)
+
+        assert excinfo.value.msg == f"Unable to create {snapshot_class.__name__}: could not set {attribute_name}"
+        # The exception from the failed setattr is chained to the one we raise
+        assert isinstance(excinfo.value.__context__, AttributeError)
+        assert str(excinfo.value.__context__) == attribute_name
+
+    def test_get_metrics_snapshot_chains_exception_from_snapshot_class(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        def raise_from_init(self) -> None:
+            raise ValueError("snapshot class failed")
+
+        with monkeypatch.context() as patch:
+            patch.setattr(LatencySnapshot, "__init__", raise_from_init)
+            with pytest.raises(e.ClientError) as excinfo:
+                self.as_connection.get_metrics_snapshot()
+
+        assert excinfo.value.msg == "Unable to build the metrics snapshot"
+        # The exception raised by the snapshot class is chained to the one we raise
+        assert isinstance(excinfo.value.__context__, ValueError)
+        assert str(excinfo.value.__context__) == "snapshot class failed"
+
+    @pytest.mark.parametrize(
+        "method_name, error, expected",
+        [
+            # A failed C-API call: the log shows the context from err and the exception
+            (
+                "__setattr__",
+                AttributeError("timestamp"),
+                "Unable to create MetricsSnapshot: could not set timestamp: AttributeError: timestamp",
+            ),
+            # The class's constructor raised: the log shows the context for it and the exception
+            (
+                "__init__",
+                ValueError("snapshot class failed"),
+                "Unable to build the metrics snapshot: ValueError: snapshot class failed",
+            ),
+        ],
+    )
+    def test_exporter_snapshot_failure_logs_context_and_exception(
+        self, monkeypatch: pytest.MonkeyPatch, method_name: str, error: Exception, expected: str
+    ) -> None:
+        log_messages: list[str] = []
+
+        def record_log(level: int, func: str, path: str, line: int, msg: str) -> None:
+            log_messages.append(msg)
+
+        def raise_error(self, *args: object) -> None:
+            raise error
+
+        class NoopExporter:
+            def export(self, snapshot: MetricsSnapshot) -> None:
+                pass
+
+        policy = MetricsPolicy(report_dir="", interval=1)
+        policy.add_exporter(NoopExporter())
+        aerospike.set_log_level(aerospike.LOG_LEVEL_WARN)
+        aerospike.set_log_handler(record_log)
+        try:
+            with monkeypatch.context() as patch:
+                patch.setattr(MetricsSnapshot, method_name, raise_error)
+                self.as_connection.enable_metrics(policy)
+                time.sleep(3)
+                self.as_connection.disable_metrics()
+        finally:
+            aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
+            aerospike.set_log_handler(None)
+
+        assert any(expected in message for message in log_messages), log_messages
+
+    def test_node_conn_latency_counts_connection_opens(self):
+        policy = MetricsPolicy(report_dir="", operational_enabled=True)
+        self.as_connection.enable_metrics(policy)
+        opened_before = {node.name: node.sync.opened for node in self.as_connection.get_metrics_snapshot().nodes}
+        keys = [("test", "metrics", f"conn-latency-{i}") for i in range(8)]
+        threads = [threading.Thread(target=self.as_connection.put, args=(key, {"a": 1})) for key in keys]
+        try:
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
+            snapshot = self.as_connection.get_metrics_snapshot()
+        finally:
+            self.as_connection.disable_metrics()
+            for key in keys:
+                self.as_connection.remove(key)
+
+        for node in snapshot.nodes:
+            assert node.conn_latency.count == node.sync.opened - opened_before[node.name]
+            assert sum(node.conn_latency.buckets) == node.conn_latency.count
+
+    @staticmethod
+    def assert_latency_summary(latency: LatencySnapshot):
+        assert latency.count == sum(latency.buckets)
+        if latency.count == 0:
+            assert latency.sum == latency.min == latency.max == 0
+            return
+        # Samples round up to at least one unit.
+        assert 1 <= latency.min <= latency.max
+        assert latency.count * latency.min <= latency.sum <= latency.count * latency.max
+
+    def test_latency_snapshot_summary(self):
+        policy = MetricsPolicy(report_dir="")
+        self.as_connection.enable_metrics(policy)
+        keys = [("test", "metrics", f"summary-{i}") for i in range(2)]
+        try:
+            for key in keys:
+                self.as_connection.put(key, {"a": 1})
+            snapshot = self.as_connection.get_metrics_snapshot()
+        finally:
+            self.as_connection.disable_metrics()
+            for key in keys:
+                self.as_connection.remove(key)
+
+        write = snapshot.command_latencies["write"]
+        assert write.count == 2
+        for latency in snapshot.command_latencies.values():
+            self.assert_latency_summary(latency)
+        namespace_writes = 0
+        for node in snapshot.nodes:
+            self.assert_latency_summary(node.conn_latency)
+            for namespace in node.namespaces:
+                for latency in namespace.latencies.values():
+                    self.assert_latency_summary(latency)
+                namespace_writes += namespace.latencies["write"].count
+        assert namespace_writes == 2
+
+    @staticmethod
+    def namespace_totals(snapshot):
+        totals = {"errors": 0, "bytes_in": 0, "bytes_out": 0}
+        for node in snapshot.nodes:
+            for namespace in node.namespaces:
+                if namespace.name != "test":
+                    continue
+                for field in totals:
+                    totals[field] += getattr(namespace, field)
+        return totals
+
+    def test_failed_attempt_adds_error_without_bytes(self):
+        policy = MetricsPolicy(report_dir="")
+        self.as_connection.enable_metrics(policy)
+        key = ("test", "metrics", "failed-attempt")
+        try:
+            self.as_connection.put(key, {"a": 1})
+            before = self.namespace_totals(self.as_connection.get_metrics_snapshot())
+            # The record has a lower generation, so the server rejects this write.
+            with pytest.raises(e.RecordGenerationError):
+                self.as_connection.put(key, {"a": 2}, meta={"gen": 60000}, policy={"gen": aerospike.POLICY_GEN_EQ})
+            after_failure = self.namespace_totals(self.as_connection.get_metrics_snapshot())
+            self.as_connection.put(key, {"a": 3})
+            after_success = self.namespace_totals(self.as_connection.get_metrics_snapshot())
+        finally:
+            self.as_connection.disable_metrics()
+            self.as_connection.remove(key)
+
+        assert after_failure["errors"] == before["errors"] + 1
+        assert after_failure["bytes_in"] == before["bytes_in"]
+        assert after_failure["bytes_out"] == before["bytes_out"]
+        assert after_success["errors"] == after_failure["errors"]
+        assert after_success["bytes_in"] > after_failure["bytes_in"]
+        assert after_success["bytes_out"] > after_failure["bytes_out"]
+
+    @staticmethod
+    def namespace_latency_count(snapshot: MetricsSnapshot, latency_type: str) -> int:
+        count = 0
+        for node in snapshot.nodes:
+            for namespace in node.namespaces:
+                if namespace.name == "test":
+                    count += namespace.latencies[latency_type].count
+        return count
+
+    def test_batch_records_one_command_latency(self) -> None:
+        policy = MetricsPolicy(report_dir="")
+        self.as_connection.enable_metrics(policy)
+        present_keys = [("test", "metrics", f"batch-latency-{i}") for i in range(3)]
+        # A key that is not found is a per-key result, so the batch call still completed.
+        missing_key = ("test", "metrics", "batch-latency-missing")
+        try:
+            for key in present_keys:
+                self.as_connection.put(key, {"a": 1})
+            before = self.as_connection.get_metrics_snapshot()
+            self.as_connection.batch_read(present_keys + [missing_key])
+            after = self.as_connection.get_metrics_snapshot()
+        finally:
+            self.as_connection.disable_metrics()
+            for key in present_keys:
+                self.as_connection.remove(key)
+
+        # One cluster sample for the whole call, however many nodes it reached.
+        assert after.command_latencies["batch"].count == before.command_latencies["batch"].count + 1
+        # Each node's sub-batch records a sample in its keys' namespace.
+        namespace_batches_before = self.namespace_latency_count(before, latency_type="batch")
+        namespace_batches_after = self.namespace_latency_count(after, latency_type="batch")
+        assert namespace_batches_after > namespace_batches_before
+
+    def test_failed_call_records_no_command_latency(self) -> None:
+        policy = MetricsPolicy(report_dir="")
+        self.as_connection.enable_metrics(policy)
+        key = ("test", "metrics", "failed-call-latency")
+        try:
+            self.as_connection.put(key, {"a": 1})
+            before = self.as_connection.get_metrics_snapshot()
+            # The record has a lower generation, so the server rejects this write.
+            with pytest.raises(e.RecordGenerationError):
+                self.as_connection.put(key, {"a": 2}, meta={"gen": 60000}, policy={"gen": aerospike.POLICY_GEN_EQ})
+            after_failure = self.as_connection.get_metrics_snapshot()
+            self.as_connection.put(key, {"a": 3})
+            after_success = self.as_connection.get_metrics_snapshot()
+        finally:
+            self.as_connection.disable_metrics()
+            self.as_connection.remove(key)
+
+        assert after_failure.command_latencies["write"].count == before.command_latencies["write"].count
+        assert after_success.command_latencies["write"].count == before.command_latencies["write"].count + 1
+        namespace_writes_before = self.namespace_latency_count(before, latency_type="write")
+        assert self.namespace_latency_count(after_failure, latency_type="write") == namespace_writes_before
+        assert self.namespace_latency_count(after_success, latency_type="write") == namespace_writes_before + 1
+
+    def test_enable_metrics_turns_operational_on_by_default(self):
+        policy = MetricsPolicy(report_dir="")
+        assert policy.operational_enabled is None
+        self.as_connection.enable_metrics(policy)
+        try:
+            snapshot = self.as_connection.get_metrics_snapshot()
+        finally:
+            self.as_connection.disable_metrics()
+        assert snapshot.operational_metrics_enabled is True
+        assert snapshot.usage_metrics_enabled is False
+
+    def test_enable_metrics_operational_off(self):
+        policy = MetricsPolicy(report_dir="", operational_enabled=False)
+        self.as_connection.enable_metrics(policy)
+        try:
+            snapshot = self.as_connection.get_metrics_snapshot()
+        finally:
+            self.as_connection.disable_metrics()
+        assert snapshot.operational_metrics_enabled is False
+
+    def test_config_metrics_policy_leaves_operational_off_by_default(self):
+        config = TestBaseClass.get_connection_config()
+        config["policies"] = {"metrics": MetricsPolicy(report_dir="")}
+        client = aerospike.client(config)
+        try:
+            client.enable_metrics()
+            snapshot = client.get_metrics_snapshot()
+            client.disable_metrics()
+        finally:
+            client.close()
+        assert snapshot.metrics_enabled is True
+        assert snapshot.operational_metrics_enabled is False
+
+    def test_disable_metrics_keeps_exporter_registered(self):
+        calls = []
+
+        class RecordingExporter:
+            def export(self, snapshot):
+                calls.append(snapshot.metrics_enabled)
+
+        exporter = RecordingExporter()
+        policy = MetricsPolicy(report_dir="", interval=3600)
+        policy.add_exporter(exporter)
+        self.as_connection.enable_metrics(policy)
+        self.as_connection.disable_metrics()
+        assert policy.exporters == [exporter]
+        calls_after_disable = len(calls)
+
+        self.as_connection.enable_metrics(policy)
+        self.as_connection.disable_metrics()
+        assert len(calls) == calls_after_disable + 1
+
+    def test_empty_report_dir_skips_file_exporter(self):
+        policy = MetricsPolicy(report_dir="", interval=1)
+        self.as_connection.enable_metrics(policy)
+        time.sleep(2)
+        self.as_connection.disable_metrics()
+        assert glob.glob("./metrics-*.log") == []
 
     def test_disable_metrics_throwing_exc(self):
         listeners = MetricsListeners(

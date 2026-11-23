@@ -33,6 +33,7 @@
 #include "conversions.h"
 #include "discovery.h"
 #include "exceptions.h"
+#include "metrics.h"
 #include "tls_config.h"
 #include "policy_config.h"
 #include "metrics.h"
@@ -340,6 +341,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
     {"enable_metrics", (PyCFunction)AerospikeClient_EnableMetrics,
      METH_VARARGS | METH_KEYWORDS, NULL},
     {"disable_metrics", (PyCFunction)AerospikeClient_DisableMetrics,
+     METH_NOARGS, NULL},
+    {"get_metrics_snapshot", (PyCFunction)AerospikeClient_GetMetricsSnapshot,
      METH_NOARGS, NULL},
 
     // ADMIN OPERATIONS
@@ -1099,7 +1102,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         else if (is_pyobj_correct_as_helpers_type(py_obj_metrics_policy,
                                                   "metrics", "MetricsPolicy",
                                                   false) == false) {
-            // set_as_metrics_policy_using_pyobject also checks the type of the pyobject
+            // as_metrics_policy_set_using_pyobject also checks the type of the pyobject
             // But we want to set a different error message here
             as_error_update(
                 &constructor_err, AEROSPIKE_ERR_PARAM,
@@ -1110,7 +1113,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             goto RAISE_EXCEPTION_WITH_AS_ERROR;
         }
         else {
-            int retval = set_as_metrics_policy_using_pyobject(
+            int retval = as_metrics_policy_set_using_pyobject(
                 &constructor_err, py_obj_metrics_policy,
                 &(config.policies.metrics));
             if (retval != AEROSPIKE_OK) {
@@ -1508,6 +1511,7 @@ RAISE_EXCEPTION_WITH_AS_ERROR:
     raise_exception(&constructor_err);
 RAISE_EXCEPTION_WITHOUT_AS_ERROR:
     destroy_ip_map(&config.ip_map, &config.ip_map_size);
+    as_metrics_policy_destroy_py_exporters(&config.policies.metrics);
     as_config_destroy(&config);
     return -1;
 }
@@ -1620,6 +1624,8 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
     if (client->as) {
         if (!client->has_connected) {
             destroy_ip_map(&client->ip_map, &client->ip_map_size);
+            as_metrics_policy_destroy_py_exporters(
+                &client->as->config.policies.metrics);
             aerospike_destroy(client->as);
         }
         else {
@@ -1652,10 +1658,13 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
                     Py_END_ALLOW_THREADS
                 }
                 destroy_ip_map(&client->ip_map, &client->ip_map_size);
+                as_metrics_policy_destroy_py_exporters(
+                    &client->as->config.policies.metrics);
                 aerospike_destroy(client->as);
             }
         }
     }
+    py_metrics_exporters_destroy(client->active_metrics_exporters);
     self->ob_type->tp_free((PyObject *)self);
 }
 
