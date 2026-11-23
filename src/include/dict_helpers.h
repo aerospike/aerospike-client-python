@@ -17,7 +17,7 @@
 #pragma once
 
 // Helpers that read one value from a Python dict by key, such as
-// get_uint32_from_py_dict(). They use conversions.h to convert the value, and
+// get_int_from_py_dict(). They use conversions.h to convert the value, and
 // conversions.c uses some of them to convert a Python dict to a C client struct.
 // To convert a Python object to or from a C type, see conversions.h.
 
