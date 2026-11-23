@@ -15,6 +15,12 @@
  ******************************************************************************/
 
 #pragma once
+
+// Helpers that read one value from a Python dict by key, such as
+// get_uint32_from_py_dict(). They use conversions.h to convert the value, and
+// conversions.c uses some of them to read the extra arguments of a conversion.
+// For converting a whole Python object, see conversions.h.
+
 #include <Python.h>
 #include <stdbool.h>
 #include <aerospike/as_error.h>

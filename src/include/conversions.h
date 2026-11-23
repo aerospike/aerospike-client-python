@@ -16,6 +16,9 @@
 
 #pragma once
 
+// Conversions between whole Python objects and C client types. To read one
+// value from a Python dict by key, see dict_helpers.h.
+
 #include <Python.h>
 #include <stdbool.h>
 
