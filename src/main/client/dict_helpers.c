@@ -1,11 +1,11 @@
 #include <Python.h>
 
-#include "dict_helpers.h"
 #include "client.h"
 #include "conversions.h"
+#include "dict_helpers.h"
 #include "exceptions.h"
 #include "policy.h"
-#include "conversions.h"
+#include "pythoncapi_compat.h"
 
 as_status get_bool_from_pyargs(as_error *err, char *key, PyObject *op_dict,
                                bool *boolean)
@@ -272,6 +272,43 @@ as_status get_int_from_py_dict(as_error *err, PyObject *py_dict, const char *key
                                       INT_MAX, is_optional, false, int_was_found);
 }
 // clang-format on
+
+int get_pyobject_from_py_dict(as_error *err, PyObject *py_dict, const char *key,
+                              const char *option_name, PyObject **py_value)
+{
+    int retval = PyDict_GetItemStringRef(py_dict, key, py_value);
+    if (retval == -1) {
+        as_error_update_from_raised_exc(err, AEROSPIKE_ERR_CLIENT, option_name);
+        return -1;
+    }
+    if (retval == 1 && Py_IsNone(*py_value)) {
+        Py_DECREF(*py_value);
+        *py_value = NULL;
+        return 0;
+    }
+    return retval;
+}
+
+as_status get_uint32_from_py_dict(as_error *err, PyObject *py_dict,
+                                  const char *key, const char *option_name,
+                                  uint32_t *value)
+{
+    PyObject *py_value = NULL;
+    int retval =
+        get_pyobject_from_py_dict(err, py_dict, key, option_name, &py_value);
+    if (retval != 1) {
+        return err->code;
+    }
+
+    uint32_t number = convert_pyobject_to_uint32_t(py_value);
+    Py_DECREF(py_value);
+    if (PyErr_Occurred()) {
+        return as_error_update_from_raised_exc(err, AEROSPIKE_ERR_PARAM,
+                                               option_name);
+    }
+    *value = number;
+    return AEROSPIKE_OK;
+}
 
 as_status get_list_return_type(as_error *err, PyObject *op_dict,
                                int *return_type)
