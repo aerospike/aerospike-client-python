@@ -37,7 +37,7 @@
 #include "policy.h"
 #include "macros.h"
 #include "policy_config.h"
-#include "cdt_operation_utils.h"
+#include "dict_helpers.h"
 
 #define MAP_WRITE_FLAGS_KEY "map_write_flags"
 #define BIT_WRITE_FLAGS_KEY "bit_write_flags"

@@ -37,7 +37,7 @@
 #include "hll_operations.h"
 #include "pythoncapi_compat.h"
 #include "expression_operations.h"
-#include "cdt_operation_utils.h"
+#include "dict_helpers.h"
 
 #include <aerospike/as_double.h>
 #include <aerospike/as_integer.h>

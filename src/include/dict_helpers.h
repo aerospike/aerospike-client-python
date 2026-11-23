@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,6 +102,37 @@ as_status get_int_from_py_dict(
     int *int_pointer,
     bool is_optional,
     bool *int_was_found
+);
+
+// Return 1 with a new reference in *py_value if key is set and not None,
+// 0 if it is not, or -1 with err set.
+// option_name is the full name of the option, such as "discovery.dns.port", and
+// is only used in error messages.
+int get_pyobject_from_py_dict(
+    as_error *err,
+    PyObject *py_dict,
+    const char *key,
+    const char *option_name,
+    PyObject **py_value
+);
+
+// *value is only assigned if key is set and not None. option_name is the same
+// as for get_pyobject_from_py_dict().
+as_status get_uint32_from_py_dict(
+    as_error *err,
+    PyObject *py_dict,
+    const char *key,
+    const char *option_name,
+    uint32_t *value
+);
+
+// Same as get_uint32_from_py_dict(), but for a uint16_t.
+as_status get_uint16_from_py_dict(
+    as_error *err,
+    PyObject *py_dict,
+    const char *key,
+    const char *option_name,
+    uint16_t *value
 );
 
 // clang-format on

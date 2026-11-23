@@ -46,7 +46,7 @@
 #include "serializer.h"
 #include "exceptions.h"
 #include "cdt_types.h"
-#include "cdt_operation_utils.h"
+#include "dict_helpers.h"
 #include "key_ordered_dict.h"
 
 #define PY_KEYT_NAMESPACE 0
