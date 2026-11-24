@@ -574,12 +574,13 @@ char *return_search_string(aerospike *as);
 void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search,
                             PyObject *py_persistent_item, bool do_destroy);
 /**
- * Free the ip_map allocated by the client constructor.
+ * Free an ip_map allocated by the client constructor and reset it.
  * as_config_destroy() does not free ip_map, so this must be called before every
  * aerospike_destroy() and as_config_destroy() on a config built by the
- * constructor.
+ * constructor. Pass the constructor's map, not as->config.ip_map, which a config
+ * file can replace with a map the C client owns.
  */
-void destroy_ip_map(as_config *config);
+void destroy_ip_map(as_addr_map **ip_map, uint32_t *ip_map_size);
 /**
  * Check type for 'operate' operation
  */
