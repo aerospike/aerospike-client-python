@@ -16,6 +16,11 @@
 
 #pragma once
 
+// Conversions between Python objects and C types, in both directions: from a
+// Python object to a C client type (such as as_val or as_key) or a plain C type
+// (such as an integer or a string), and from a C client type to a Python object.
+// To read one value from a Python dict by key, see dict_helpers.h.
+
 #include <Python.h>
 #include <stdbool.h>
 

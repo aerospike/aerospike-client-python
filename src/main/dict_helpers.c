@@ -1,6 +1,6 @@
 #include <Python.h>
 
-#include "cdt_operation_utils.h"
+#include "dict_helpers.h"
 #include "client.h"
 #include "conversions.h"
 #include "exceptions.h"
