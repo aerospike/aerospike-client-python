@@ -16,11 +16,15 @@ BACKUP_RESTORE_PRIVILEGES: list[tuple[str, int]] = [
     ("PRIV_RESTORE_ADMIN", 6),
 ]
 
+# The server only lists these in the "help" info command if it supports backup and restore
+BACKUP_RESTORE_COMMANDS: set[str] = {"backup", "restore"}
+
 
 class TestBackupRestorePrivileges(object):
     """
     These privileges require server 8.2.1+. In server 8.2.1, the server only accepts them when it is started with
-    --preview backup-restore, so the tests that send them to the server skip if the server refuses them.
+    --preview backup-restore, so the tests that send them to the server skip if the server doesn't support backup
+    and restore.
     """
 
     config = TestBaseClass.get_connection_config()
@@ -51,17 +55,21 @@ class TestBackupRestorePrivileges(object):
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
-    def skip_because_server_refuses_privilege(self, err: e.InvalidPrivilege) -> None:
-        reason = f"Server refused the privilege ({err}). Requires server 8.2.1+ started with --preview backup-restore"
-        pytest.skip(reason=reason)
+    def skip_unless_server_supports_backup_restore(self) -> None:
+        help_responses = self.client.info_all("help")
+        for error, response in help_responses.values():
+            assert error is None
+            command_list = response.strip().split(";")
+            listed_commands = set(command_list)
+            if not BACKUP_RESTORE_COMMANDS.issubset(listed_commands):
+                pytest.skip(reason="Requires server 8.2.1+ started with --preview backup-restore")
 
     @pytest.mark.parametrize("priv_name, priv_code", BACKUP_RESTORE_PRIVILEGES)
     def test_create_role_positive(self, priv_name: str, priv_code: int) -> None:
+        self.skip_unless_server_supports_backup_restore()
+
         priv_constant = getattr(aerospike, priv_name)
-        try:
-            self.client.admin_create_role(self.ROLE_NAME, [{"code": priv_constant}])
-        except e.InvalidPrivilege as err:
-            self.skip_because_server_refuses_privilege(err)
+        self.client.admin_create_role(self.ROLE_NAME, [{"code": priv_constant}])
         time.sleep(1)
 
         # The server must see the code we expect, not just whatever the constant happens to be
@@ -74,14 +82,13 @@ class TestBackupRestorePrivileges(object):
 
     @pytest.mark.parametrize("priv_name, priv_code", BACKUP_RESTORE_PRIVILEGES)
     def test_grant_and_revoke_privileges_positive(self, priv_name: str, priv_code: int) -> None:
+        self.skip_unless_server_supports_backup_restore()
+
         priv_constant = getattr(aerospike, priv_name)
         self.client.admin_create_role(self.ROLE_NAME, self.GLOBAL_PRIVILEGES)
         time.sleep(1)
 
-        try:
-            status = self.client.admin_grant_privileges(self.ROLE_NAME, [{"code": priv_constant}])
-        except e.InvalidPrivilege as err:
-            self.skip_because_server_refuses_privilege(err)
+        status = self.client.admin_grant_privileges(self.ROLE_NAME, [{"code": priv_constant}])
         assert status == 0
         time.sleep(1)
 
