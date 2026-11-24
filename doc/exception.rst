@@ -79,6 +79,12 @@ Base Class
 
     Inherits from :py:exc:`Exception`.
 
+.. py:exception:: TimeoutError
+
+    Request timed out. Can be triggered by client or server.
+
+    Error code: ``9``
+
 Client Errors
 -------------
 
