@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import math
+import re
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
@@ -9,6 +10,7 @@ import aerospike_helpers.expressions as exp
 from aerospike import exception as e
 from aerospike import predicates as p
 from aerospike_helpers import Vector
+from aerospike_helpers.batch import records as br
 from aerospike_helpers.operations import hll_operations, list_operations, operations
 
 from .index_helpers import ensure_dropped_index, wait_for_index
@@ -22,6 +24,15 @@ TYPE_REQUIRED_MSG = "orderBy requires a type declaration (INTEGER, DOUBLE, or BY
 
 def noop_callback(record):
     pass
+
+
+def attempts_made(error: e.AerospikeError) -> int:
+    # The error message of a retried query lists each failed attempt as "<code>,<attempt>,<node>,<status>",
+    # and the message of a first attempt that timed out says "iterations=<attempt>".
+    sub_error_attempts = re.findall(r"^\d+,(\d+),", error.msg, flags=re.MULTILINE)
+    command_attempts = re.findall(r"iterations=(\d+)", error.msg)
+    attempt_numbers = [int(attempt) for attempt in sub_error_attempts + command_attempts]
+    return max(attempt_numbers, default=0)
 
 
 @pytest.mark.usefixtures("as_connection")
@@ -820,3 +831,36 @@ class TestQueryTopKBytesWithVectorAndHll:
         query.top_k = len(self.BLOBS)
         values = [bins[BIN] for _, _, bins in query.results()]
         assert [type(value) for value in values] == [bytes] * len(self.BLOBS)
+
+
+class TestQueryTopKTimeout:
+    SET_NAME = "demo-top-k-timeout"
+    RECORD_COUNT = 20000
+    # A node sends nothing until it has read the whole set, and a socket timeout of 1 ms ends before that.
+    POLICY = {"socket_timeout": 1, "total_timeout": 5000, "max_retries": 2}
+
+    @pytest.fixture(autouse=True)
+    def setup(self, as_connection, skip_if_server_older_than_8_2_1):
+        self.keys = [("test", self.SET_NAME, i) for i in range(self.RECORD_COUNT)]
+        writes = [br.Write(key, [operations.write(BIN, key[2])]) for key in self.keys]
+        as_connection.batch_write(br.BatchRecords(writes))
+        yield
+        as_connection.batch_remove(self.keys)
+
+    # A retry would run the whole scan again, so the client stops a Top-K query at its first timeout.
+    def test_top_k_socket_timeout_is_not_retried(self):
+        query = self.as_connection.query("test", self.SET_NAME)
+        query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
+        query.top_k = 10
+        with pytest.raises(e.TimeoutError) as excinfo:
+            query.results(self.POLICY)
+        assert attempts_made(excinfo.value) == 1
+
+    # Any other long query retries a timeout until max_retries is used up.
+    def test_query_without_top_k_retries_socket_timeout(self):
+        # No record matches, so the node has nothing to send until it has read the whole set.
+        matches_no_record = exp.Eq(exp.IntBin(BIN), -1).compile()
+        query = self.as_connection.query("test", self.SET_NAME)
+        with pytest.raises(e.TimeoutError) as excinfo:
+            query.results({**self.POLICY, "expressions": matches_no_record})
+        assert attempts_made(excinfo.value) == self.POLICY["max_retries"] + 1

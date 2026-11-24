@@ -322,9 +322,21 @@ Assume this boilerplate code is run before all examples below:
             :exc:`~aerospike.exception.ParamError` before the query is sent. See
             :attr:`~aerospike.Query.top_k` for a query without ``top_k``. A cluster with an older
             node, or an order key that isn't projected or that more than one operation produces,
-            also raises :exc:`~aerospike.exception.ParamError` before the query is sent. A node
-            that is at its Top-K memory limit refuses a new Top-K query with
-            :exc:`~aerospike.exception.ForbiddenError`; retry it later.
+            also raises :exc:`~aerospike.exception.ParamError` before the query is sent.
+
+        .. note::
+            The client doesn't retry a Top-K query that fails with one of these errors, whatever the
+            ``max_retries`` policy is, since a retry would only run the scan again. Run the query again
+            yourself, for example later and with backoff.
+
+            * :exc:`~aerospike.exception.TimeoutError`: ``socket_timeout`` or ``total_timeout`` passed. A node
+              sends no records until it has ranked every record it holds, so over a large set a socket timeout can
+              expire first. A query that isn't a Top-K query still retries this error within ``max_retries``.
+            * :exc:`~aerospike.exception.QueryTimeout`: the server stopped the query because it ran longer than
+              its ``query-max-run-time-ms`` setting. A stopped Top-K query returns no partial result.
+            * :exc:`~aerospike.exception.ForbiddenError`: a node is at its limit on Top-K queries that run at
+              once, and refuses a new one. Set the policy's ``error_detail_verbosity`` to
+              :py:data:`aerospike.ERROR_DETAIL_MESSAGE` to get the server's reason in the error's ``msg``.
 
         Example: hybrid vector similarity search - among the records whose "category" bin is "shoes", find
         the 2 whose "embedding" :class:`~aerospike_helpers.Vector` bin is closest (by squared Euclidean
