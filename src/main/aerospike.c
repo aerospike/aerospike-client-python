@@ -198,6 +198,8 @@ static struct module_constant_name_to_value module_constants[] = {
     {"PRIV_TRUNCATE", .value.integer = AS_PRIVILEGE_TRUNCATE},
     {"PRIV_UDF_ADMIN", .value.integer = AS_PRIVILEGE_UDF_ADMIN},
     {"PRIV_SINDEX_ADMIN", .value.integer = AS_PRIVILEGE_SINDEX_ADMIN},
+    {"PRIV_BACKUP_ADMIN", .value.integer = AS_PRIVILEGE_BACKUP_ADMIN},
+    {"PRIV_RESTORE_ADMIN", .value.integer = AS_PRIVILEGE_RESTORE_ADMIN},
 
     // TODO: If only aerospike_helpers relies on these constants,
     // maybe move these constants to aerospike_helpers package
