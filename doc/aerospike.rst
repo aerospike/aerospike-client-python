@@ -1867,6 +1867,17 @@ Permission codes define the type of permission granted for a user's role.
 
     User can perform secondary index administration actions. Examples include create/drop index. Global scope only. Requires server version 6.0+
 
+.. data:: PRIV_BACKUP_ADMIN
+
+    User can perform backup administration actions. Examples include starting and aborting a backup. Global scope only.
+    Requires server version 8.2.1+. In server version 8.2.1, the server only accepts this privilege when it is started
+    with ``--preview backup-restore``. Otherwise, it raises :exc:`~aerospike.exception.InvalidPrivilege`.
+
+.. data:: PRIV_RESTORE_ADMIN
+
+    User can perform restore administration actions. Examples include starting and aborting a restore. Global scope only.
+    See :data:`PRIV_BACKUP_ADMIN` for server version and preview requirements.
+
 
 .. _regex_constants:
 
