@@ -1332,19 +1332,20 @@ class TestGeneralPlanServerSettings:
         )
 
     # Vector Phase 1 general test plan: AE-07
+    # The server ends a query past query-max-run-time-ms with QUERY_TIMEOUT, not TIMEOUT.
     def test_top_k_past_query_max_run_time(self):
         with self._max_run_time_of_1_ms():
-            with pytest.raises(e.TimeoutError):
+            with pytest.raises(e.QueryTimeout):
                 self._top_k_query().results({"max_retries": 0})
 
     # Vector Phase 1 general test plan: AE-07
     # Each retry rescans every node, so the client shouldn't retry a Top-K query the server stopped.
-    @pytest.mark.xfail(strict=True, reason="The C client retries a Top-K query the server stopped (CLIENT-5778)")
+    # The C client retries TIMEOUT but not QUERY_TIMEOUT.
     def test_top_k_past_query_max_run_time_is_not_retried(self):
         with self._max_run_time_of_1_ms():
-            with pytest.raises(e.TimeoutError) as excinfo:
+            with pytest.raises(e.QueryTimeout) as excinfo:
                 self._top_k_query().results({"max_retries": 2})
-        attempts = [line for line in excinfo.value.msg.splitlines() if ",AEROSPIKE_ERR_TIMEOUT" in line]
+        attempts = [line for line in excinfo.value.msg.splitlines() if ",AEROSPIKE_ERR_QUERY_TIMEOUT" in line]
         assert len(attempts) <= 1
 
     # Vector Phase 1 general test plan: AE-08
@@ -1356,7 +1357,9 @@ class TestGeneralPlanServerSettings:
             except e.ForbiddenError as error:
                 return error
 
-        with set_server_dynamic_config(self.as_connection, context=SERVICE_CONTEXT, name="top-k-max-jobs", value="1"):
+        with set_server_dynamic_config(
+            self.as_connection, context=SERVICE_CONTEXT, name="order-by-jobs-limit", value="1"
+        ):
             with ThreadPoolExecutor(max_workers=16) as pool:
                 futures = [pool.submit(run) for _ in range(16)]
                 outcomes = [future.result(timeout=120) for future in futures]
