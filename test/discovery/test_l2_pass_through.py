@@ -127,8 +127,8 @@ def test_n16_new_node_on_shared_name_active_within_two_tend_intervals(
 
 
 # N-18 on pass-through: two nodes started mid-test advertise the same hostname and port. Seeded through
-# a node that does not collide, neither becomes a node, the collision is logged on every tend naming
-# both nodes, the address and the translator, and the other nodes keep serving the keys they are
+# a node that does not collide, neither becomes a node, each is logged on every tend as a peer with no
+# address of its own (see di.is_collision_message), and the other nodes keep serving the keys they are
 # master of. Only one of the two gets the shared port's listener, once both are in the cluster.
 @pytest.mark.l2("pass-through-ports")
 def test_n18_pass_through_colliding_nodes_create_no_node(
@@ -158,9 +158,10 @@ def test_n18_pass_through_colliding_nodes_create_no_node(
         retried = di.wait_for(logged, JOIN_TIMEOUT_SEC)
         assert sorted(di.client_nodes(client)) == sorted(names)
         assert retried, f"Collision of {colliding} not logged every tend: {warnings}"
-        message = di.logged_collisions(warnings, colliding[0])[0]
+        peer, owner = colliding
+        message = di.logged_collisions(warnings, peer)[0]
         print(f"L2-N18-LOG {message}")
-        assert message in di.expected_collision_messages(translator="pass-through", endpoint=endpoint, names=colliding)
+        assert di.is_collision_message(message, translator="pass-through", peer=peer, owner=owner, endpoint=endpoint)
         infos = {node.name: node.info for node in nodes}
         di.assert_keys_on_masters_work(client, NAMESPACE, SET_NAME, row="L2-N18-pass-through", infos=infos)
     finally:

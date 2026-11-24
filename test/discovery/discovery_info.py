@@ -23,7 +23,7 @@ import uuid
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Collection, Iterable, Optional, Sequence, TypeVar
+from typing import Any, Callable, Collection, Iterable, Optional, TypeVar
 
 import aerospike
 
@@ -410,18 +410,19 @@ def logged_legacy_matches(messages: list[str]) -> list[str]:
 
 
 def logged_collisions(messages: list[str], name: str) -> list[str]:
-    """Return the translation collision messages that name a node."""
-    return [message for message in messages if "translated nodes" in message and name in message]
+    """Return the messages that report the named peer as having no address of its own, which the C
+    client logs on every tend for each peer that collides."""
+    prefix = f"Peer {name} has no address of its own: "
+    return [message for message in messages if message.startswith(prefix)]
 
 
-def expected_collision_messages(translator: str, endpoint: str, names: Sequence[str]) -> list[str]:
-    """Return the C client's collision message for two nodes translated to endpoint, in either order."""
-    first, second = names
-    return [
-        f"Address translator {translator} translated nodes {a} and {b} to the same address {endpoint}. "
-        "Give each node its own reachable address or mapping"
-        for a, b in ((first, second), (second, first))
-    ]
+def is_collision_message(message: str, translator: str, peer: str, owner: str, endpoint: str) -> bool:
+    """Return whether message is the C client's report that peer has no address of its own because
+    owner has endpoint. A peer that advertises several addresses lists each one that is shared, so
+    endpoint may be listed more than once."""
+    prefix = f"Peer {peer} has no address of its own: "
+    suffix = f" (address translator {translator}). Give each node its own reachable address or mapping"
+    return message.startswith(prefix) and f"{endpoint} is used by {owner}" in message and message.endswith(suffix)
 
 
 def assert_keys_on_masters_work(

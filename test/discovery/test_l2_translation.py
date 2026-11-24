@@ -447,8 +447,8 @@ def test_n14_use_services_alternate_without_alternate_fails_init(nodes: list[di.
 
 
 # N-18 on port-map: two peers are mapped to the same listener. Seeded through the third node, neither
-# becomes a node, the collision is logged on every tend naming both nodes, the address and the
-# translator, and the seed keeps serving the keys it is master of
+# becomes a node, each is logged on every tend as a peer with no address of its own (see
+# di.is_collision_message), and the seed keeps serving the keys it is master of
 @pytest.mark.l2("default")
 def test_n18_port_map_colliding_nodes_create_no_node(nodes: list[di.ToxiproxyNode], warnings: list[str]) -> None:
     assert len(nodes) >= 3, f"N-18 needs a seed and two colliding peers: {nodes}"
@@ -468,8 +468,7 @@ def test_n18_port_map_colliding_nodes_create_no_node(nodes: list[di.ToxiproxyNod
         assert retried, f"Collision of {a.name} and {b.name} not logged every tend: {warnings}"
         message = di.logged_collisions(warnings, a.name)[0]
         print(f"L2-N18-LOG {message}")
-        expected = di.expected_collision_messages(translator="port-map", endpoint=a.listener, names=[a.name, b.name])
-        assert message in expected
+        assert di.is_collision_message(message, translator="port-map", peer=a.name, owner=b.name, endpoint=a.listener)
         di.assert_keys_on_masters_work(client, NAMESPACE, SET_NAME, row="L2-N18-port-map", infos={seed.name: seed.info})
     finally:
         client.close()
