@@ -1340,7 +1340,8 @@ class TestGeneralPlanServerSettings:
 
     # Vector Phase 1 general test plan: AE-07
     # Each retry rescans every node, so the client shouldn't retry a Top-K query the server stopped.
-    # The C client retries TIMEOUT but not QUERY_TIMEOUT.
+    # The C client doesn't retry QUERY_TIMEOUT, nor TIMEOUT on a Top-K query. See
+    # TestQueryTopKTimeout in test_query_top_k.py.
     def test_top_k_past_query_max_run_time_is_not_retried(self):
         with self._max_run_time_of_1_ms():
             with pytest.raises(e.QueryTimeout) as excinfo:
