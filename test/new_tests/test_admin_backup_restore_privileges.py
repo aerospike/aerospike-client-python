@@ -37,8 +37,7 @@ class TestBackupRestorePrivileges(object):
     ]
 
     def setup_method(self, method: Any) -> None:
-        config = self.config
-        self.client = aerospike.client(config).connect(config["user"], config["password"])
+        self.client = aerospike.client(self.config)
         self.drop_role_if_exists()
 
     def teardown_method(self, method: Any) -> None:
