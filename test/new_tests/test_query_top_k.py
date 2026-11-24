@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import math
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
@@ -9,6 +10,7 @@ import aerospike_helpers.expressions as exp
 from aerospike import exception as e
 from aerospike import predicates as p
 from aerospike_helpers import Vector
+from aerospike_helpers.batch import records as br
 from aerospike_helpers.operations import hll_operations, list_operations, operations
 
 from .index_helpers import ensure_dropped_index, wait_for_index
@@ -22,6 +24,31 @@ TYPE_REQUIRED_MSG = "orderBy requires a type declaration (INTEGER, DOUBLE, or BY
 
 def noop_callback(record):
     pass
+
+
+# A node counts each long query job it runs as exactly one of these namespace statistics when the job
+# ends, however it ended.
+LONG_QUERY_JOB_STATS = [
+    "pi_query_long_basic_complete",
+    "pi_query_long_basic_error",
+    "pi_query_long_basic_abort",
+    "pi_query_long_basic_timeout",
+]
+
+
+def sum_namespace_stats(client: aerospike.Client, namespace: str, names: list[str]) -> int:
+    """Return the sum of the named namespace statistics over every node."""
+    responses = client.info_all(command=f"namespace/{namespace}")
+    total = 0
+    for error, response in responses.values():
+        assert error is None, error
+        stats = {}
+        for item in response.strip().split(";"):
+            stat_name, _, stat_value = item.partition("=")
+            stats[stat_name] = stat_value
+        for name in names:
+            total += int(stats[name])
+    return total
 
 
 @pytest.mark.usefixtures("as_connection")
@@ -820,3 +847,59 @@ class TestQueryTopKBytesWithVectorAndHll:
         query.top_k = len(self.BLOBS)
         values = [bins[BIN] for _, _, bins in query.results()]
         assert [type(value) for value in values] == [bytes] * len(self.BLOBS)
+
+
+class TestQueryTopKTimeout:
+    SET_NAME = "demo-top-k-timeout"
+    RECORD_COUNT = 20000
+    # A node sends nothing until it has read the whole set, and a socket timeout of 1 ms ends before that.
+    POLICY = {"socket_timeout": 1, "total_timeout": 5000, "max_retries": 2}
+    JOBS_END_TIMEOUT_SEC = 10
+    EXTRA_JOBS_WAIT_SEC = 0.5
+
+    @pytest.fixture(autouse=True)
+    def setup(self, as_connection, skip_if_server_older_than_8_2_1):
+        self.keys = [("test", self.SET_NAME, i) for i in range(self.RECORD_COUNT)]
+        writes = [br.Write(key, [operations.write(BIN, key[2])]) for key in self.keys]
+        as_connection.batch_write(br.BatchRecords(writes))
+        yield
+        as_connection.batch_remove(self.keys)
+
+    def ended_jobs(self) -> int:
+        return sum_namespace_stats(self.as_connection, namespace="test", names=LONG_QUERY_JOB_STATS)
+
+    # Every attempt of a query runs one job on every node, and a node counts its job when it ends, which can
+    # be after the client has given up on it. So wait for the jobs of the expected attempts to end, then for
+    # the nodes to count the jobs of any attempt that was not expected. The C client's query guardrail tests
+    # count attempts the same way.
+    def assert_attempts_made(self, jobs_before: int, attempts: int) -> None:
+        node_names = self.as_connection.get_node_names()
+        expected_jobs = attempts * len(node_names)
+        deadline = time.monotonic() + self.JOBS_END_TIMEOUT_SEC
+        while self.ended_jobs() - jobs_before < expected_jobs and time.monotonic() < deadline:
+            time.sleep(0.1)
+        time.sleep(self.EXTRA_JOBS_WAIT_SEC)
+        jobs = self.ended_jobs() - jobs_before
+        assert jobs == expected_jobs, (
+            f"{jobs} jobs ended on {len(node_names)} nodes, expected {expected_jobs} for {attempts} attempt(s)"
+        )
+
+    # A retry would run the whole scan again, so the client stops a Top-K query at its first timeout.
+    def test_top_k_socket_timeout_is_not_retried(self):
+        query = self.as_connection.query("test", self.SET_NAME)
+        query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
+        query.top_k = 10
+        jobs_before = self.ended_jobs()
+        with pytest.raises(e.TimeoutError):
+            query.results(self.POLICY)
+        self.assert_attempts_made(jobs_before, attempts=1)
+
+    # Any other long query retries a timeout until max_retries is used up.
+    def test_query_without_top_k_retries_socket_timeout(self):
+        # No record matches, so the node has nothing to send until it has read the whole set.
+        matches_no_record = exp.Eq(exp.IntBin(BIN), -1).compile()
+        query = self.as_connection.query("test", self.SET_NAME)
+        jobs_before = self.ended_jobs()
+        with pytest.raises(e.TimeoutError):
+            query.results({**self.POLICY, "expressions": matches_no_record})
+        self.assert_attempts_made(jobs_before, attempts=self.POLICY["max_retries"] + 1)
