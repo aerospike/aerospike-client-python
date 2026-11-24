@@ -211,7 +211,8 @@ Client Errors
 
 .. py:exception:: TranslationCollision
 
-    An address translator translated two nodes to the same address.
+    A peer has no address that another node does not also have, or two nodes answer at one transport
+    endpoint. The message names the nodes, the shared address and the address translator.
 
     Error code: ``-26``
 
